@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server'
 
-const BACKEND_GRAPHQL_URL = 'http://host.docker.internal:8080/graphql'
-const BACKEND_API_KEY = 'your-api-key-here' // Optional: for future auth
+// GraphQLバックエンドAPIのURL（環境変数から取得）
+const BACKEND_GRAPHQL_URL =
+  process.env.INT_API_GQL_URL || 'http://host.docker.internal:8080/graphql'
+
+// GraphQLバックエンドAPIの認証キー（環境変数から取得、オプション）
+const BACKEND_API_KEY = process.env.INT_API_KEY || ''
 
 // GraphQLレスポンスの基本型
 export interface GraphQLResponse<T = Record<string, unknown>> {

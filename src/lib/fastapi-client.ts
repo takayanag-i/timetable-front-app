@@ -3,7 +3,7 @@
  */
 
 // FastAPI のベースURL（Docker内部通信）
-const FASTAPI_BASE_URL = process.env.FASTAPI_URL || 'http://fastapi:8000'
+const FASTAPI_BASE_URL = process.env.OPT_API_URL || 'http://fastapi:8000'
 
 export interface OptimizeAnnualTimetableInput {
   ttid: string

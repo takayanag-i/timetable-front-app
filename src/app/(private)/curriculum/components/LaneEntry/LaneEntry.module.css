@@ -1,0 +1,52 @@
+.lane {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-2xs);
+  width: 75px;
+  flex-shrink: 0;
+  margin: var(--space-3xs) 0;
+}
+
+.courseContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+  flex: 1;
+  min-width: 0;
+}
+
+.name {
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  color: var(--color-accent);
+}
+
+.addCourseButton {
+  display: block;
+  width: 100%;
+  padding: var(--space-3xs) var(--space-2xs);
+  font-size: var(--font-size-xs);
+  background-color: var(--color-surface-2);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.addCourseButton:hover {
+  background-color: var(--color-surface-1);
+  border-color: var(--color-border-focus);
+  color: var(--color-accent);
+}
+
+.addCourseButton:focus-visible {
+  outline: none;
+  border-color: var(--color-border-focus);
+  box-shadow: var(--focus-ring);
+}

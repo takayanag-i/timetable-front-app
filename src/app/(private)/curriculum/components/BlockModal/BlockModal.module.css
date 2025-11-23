@@ -1,0 +1,134 @@
+.header {
+  margin-bottom: var(--space-2xl);
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--color-text-strong);
+}
+
+.wrapper {
+  margin-bottom: var(--space-xl);
+  width: 100%;
+}
+
+.laneCountDisplay {
+  display: inline-block;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-2);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.label {
+  display: block;
+  margin-bottom: var(--space-2xs);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.buttonGroup {
+  display: flex;
+  gap: var(--space-lg);
+  justify-content: center;
+  margin-top: var(--space-2xl);
+  flex-wrap: wrap;
+}
+
+.buttonGroup button,
+.buttonGroup input[type='submit'] {
+  appearance: none;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  padding: var(--space-sm) var(--space-lg);
+  margin: 0;
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    color var(--transition-base),
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.buttonGroup form {
+  display: inline;
+}
+
+.saveButton {
+  background: var(--color-success);
+  color: var(--color-text-inverse);
+  border-color: var(--color-success);
+}
+
+.saveButton:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-success) 80%, #ffffff 20%);
+  border-color: color-mix(in srgb, var(--color-success) 90%, #ffffff 10%);
+}
+
+.saveButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.deleteButton {
+  background: var(--color-error-subtle);
+  color: var(--color-error);
+  border-color: color-mix(in srgb, var(--color-error) 55%, transparent);
+}
+
+.deleteButton:hover:not(:disabled) {
+  background: color-mix(
+    in srgb,
+    var(--color-error-subtle) 70%,
+    var(--color-error) 30%
+  );
+  color: var(--color-text-inverse);
+  border-color: var(--color-error);
+}
+
+.deleteButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.cancelButton {
+  background: var(--color-surface-2);
+  color: var(--color-text-secondary);
+  border-color: var(--color-border);
+}
+
+.cancelButton:hover {
+  background: var(--color-surface-3);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-focus);
+}
+
+.buttonGroup button:focus-visible,
+.buttonGroup input[type='submit']:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.errorMessage {
+  background: var(--color-error-subtle);
+  color: var(--color-error);
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-sm);
+  border-left: 4px solid var(--color-error);
+  margin-bottom: var(--space-lg);
+  font-size: 0.9rem;
+  width: 100%;
+  text-align: left;
+}
+
+.fieldError {
+  margin-top: var(--space-2xs);
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+}

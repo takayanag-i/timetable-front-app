@@ -1,0 +1,434 @@
+.header {
+  margin-bottom: var(--space-xl);
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--color-text-strong);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+}
+
+.label {
+  font-weight: 500;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-strong);
+  text-align: left;
+}
+
+.select {
+  padding: var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  background-color: var(--color-surface-1);
+  color: var(--color-text-primary);
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base),
+    color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.select:focus {
+  outline: none;
+  border-color: var(--color-border-focus);
+  box-shadow: var(--focus-ring);
+}
+
+.courseNameWrapper {
+  position: relative;
+}
+
+.suggestionList {
+  position: absolute;
+  top: calc(100% + var(--space-3xs));
+  left: 0;
+  right: 0;
+  background-color: var(--color-surface-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  z-index: 10;
+  max-height: 12rem;
+  overflow-y: auto;
+  padding: var(--space-3xs) 0;
+}
+
+.suggestionItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: var(--space-2xs) var(--space-sm);
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.suggestionItem:hover {
+  background-color: var(--color-surface-2);
+}
+
+.suggestionName {
+  font-weight: 500;
+}
+
+.suggestionMeta {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin-left: var(--space-sm);
+}
+
+.helperText {
+  margin: var(--space-2xs) 0 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.existingCourseInfo {
+  margin-top: var(--space-2xs);
+  padding: var(--space-2xs) var(--space-sm);
+  background-color: var(--color-surface-2);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+  align-items: center;
+}
+
+.existingCourseInfoLabel {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.existingCourseInfoValue {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.instructorList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.instructorRow {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.removeInstructorButton {
+  background-color: var(--color-surface-1);
+  color: var(--color-error);
+  border: 1px solid var(--color-error);
+  padding: 0.2rem 0.45rem;
+  border-radius: var(--radius-xs);
+  font-size: 0.65rem;
+  font-weight: 500;
+  line-height: 1.1;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    box-shadow var(--transition-fast);
+  height: fit-content;
+}
+
+.removeInstructorButton:hover:not(:disabled) {
+  background-color: var(--color-error-subtle);
+  color: var(--color-error);
+}
+
+.removeInstructorButton:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.addInstructorButton {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3xs);
+  appearance: none;
+  background: var(--color-surface-2);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-xs);
+  font-size: 0.65rem;
+  font-weight: 600;
+  line-height: 1.1;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.addInstructorIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.75rem;
+  height: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--color-text-strong);
+  line-height: 1;
+}
+
+.addInstructorButton:hover:not(:disabled) {
+  background-color: var(--color-surface-3);
+  border-color: var(--color-border-focus);
+  color: var(--color-text-strong);
+}
+
+.addInstructorButton:disabled {
+  background-color: var(--color-surface-1);
+  color: var(--color-text-muted);
+  border-color: var(--color-border);
+  cursor: not-allowed;
+}
+
+.addInstructorButton:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: flex-end;
+  margin-top: var(--space-xl);
+  flex-wrap: wrap;
+}
+
+.primaryButton {
+  background-color: var(--color-surface-1);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base),
+    color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.primaryButton:hover:not(:disabled) {
+  background-color: var(--color-surface-2);
+  border-color: var(--color-border-focus);
+  color: var(--color-accent);
+}
+
+.primaryButton:disabled {
+  background-color: var(--color-surface-2);
+  color: var(--color-text-muted);
+  border-color: var(--color-border);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.secondaryButton {
+  background-color: transparent;
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base),
+    color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.secondaryButton:hover:not(:disabled) {
+  background-color: var(--color-surface-1);
+  border-color: var(--color-border-focus);
+  color: var(--color-accent);
+}
+
+.secondaryButton:disabled {
+  background-color: var(--color-surface-2);
+  color: var(--color-text-muted);
+  border-color: var(--color-border);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.primaryButton:focus-visible,
+.secondaryButton:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.error {
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+  padding: var(--space-sm);
+  background-color: var(--color-error-subtle);
+  border: 1px solid color-mix(in srgb, var(--color-error) 46%, transparent);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-lg);
+}
+
+.deleteButton {
+  background-color: transparent;
+  color: var(--color-error);
+  border: 1px solid var(--color-error);
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-xs);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.deleteButton:hover:not(:disabled) {
+  background-color: var(--color-error-subtle);
+  color: var(--color-error);
+}
+
+.deleteButton:disabled {
+  background-color: var(--color-surface-2);
+  color: var(--color-text-muted);
+  border-color: var(--color-border);
+  cursor: not-allowed;
+}
+
+.deleteButton:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.deleteForm {
+  margin-top: var(--space-lg);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  justify-content: center;
+}
+
+.sectionSwitch {
+  display: flex;
+  gap: var(--space-lg);
+  padding: var(--space-md);
+  background-color: var(--color-surface-2);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-md);
+}
+
+.radioLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+}
+
+.radioLabel input[type='radio'] {
+  cursor: pointer;
+}
+
+.existingCourseSelection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.courseList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  max-height: 400px;
+  overflow-y: auto;
+  padding: var(--space-sm);
+  background-color: var(--color-surface-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.courseItem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  padding: var(--space-sm);
+  background-color: var(--color-surface-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.courseItem:hover {
+  background-color: var(--color-surface-2);
+  border-color: var(--color-border-focus);
+}
+
+.courseItemSelected {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  padding: var(--space-sm);
+  background-color: var(--color-surface-3);
+  border: 2px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: left;
+}
+
+.courseItemName {
+  font-weight: 500;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-strong);
+}
+
+.courseItemInstructors {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.emptyState {
+  padding: var(--space-lg);
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  background-color: var(--color-surface-2);
+  border-radius: var(--radius-sm);
+}

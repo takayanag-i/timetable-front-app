@@ -1,0 +1,75 @@
+.homeroomEntry {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-lg);
+  padding: var(--space-lg) 0;
+  flex: 0 0 auto;
+  min-width: fit-content;
+}
+
+.homeroomTitle {
+  width: 100%;
+  min-width: fit-content;
+  padding: var(--space-md) var(--space-lg);
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base),
+    color var(--transition-base),
+    box-shadow var(--transition-base);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.homeroomTitle:hover {
+  background: var(--color-surface-2);
+  border-color: var(--color-border-focus);
+}
+
+.homeroomTitle:focus-visible {
+  outline: none;
+  border-color: var(--color-border-focus);
+  box-shadow: var(--focus-ring);
+}
+
+.addBlockButton {
+  width: 100%;
+  padding: var(--space-sm) var(--space-lg);
+  background: var(--color-surface-1);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base),
+    color var(--transition-base),
+    box-shadow var(--transition-base);
+  text-align: center;
+}
+
+.addBlockButton:hover {
+  background: var(--color-surface-2);
+  border-color: var(--color-border-focus);
+  color: var(--color-text-primary);
+}
+
+.addBlockButton:focus-visible {
+  outline: none;
+  border-color: var(--color-border-focus);
+  box-shadow: var(--focus-ring);
+}
+
+@media (max-width: 600px) {
+  .homeroomEntry {
+    padding: var(--space-lg) 0;
+  }
+}

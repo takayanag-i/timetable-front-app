@@ -91,14 +91,7 @@ export function CourseModal({
             isOpen={isOpen}
             onClose={onClose}
             onSuccess={onSuccess}
-            courseModalOptions={
-              courseModalOptions
-                ? {
-                    subjects: courseModalOptions.subjects,
-                    instructors: courseModalOptions.instructors,
-                  }
-                : null
-            }
+            courseModalOptions={courseModalOptions}
             laneId={laneId!}
             courseId={courseId!}
             initialValues={initialValues}

@@ -2,7 +2,7 @@
 
 import { useState, useActionState, useEffect, useRef, useCallback } from 'react'
 import styles from '../CourseModal.module.css'
-import type { CourseFormValues } from '@/types/ui-types'
+import type { CourseModalOptions, CourseFormValues } from '@/types/ui-types'
 import { updateCourse, removeCourseFromLane } from '../actions'
 import { useFilteredInstructors } from '../hooks/useFilteredInstructors'
 import { SubjectSelectField } from './SubjectSelectField'
@@ -14,10 +14,7 @@ interface CourseEditProps {
   isOpen: boolean
   onClose: () => void
   onSuccess?: () => void
-  courseModalOptions: {
-    subjects: Array<{ id: string; subjectName: string }>
-    instructors: Array<{ id: string; instructorName: string }>
-  } | null
+  courseModalOptions: CourseModalOptions | null
   laneId: string
   courseId: string
   initialValues: CourseFormValues

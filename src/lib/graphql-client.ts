@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 
-// GraphQLバックエンドAPIのURL（環境変数から取得）
-const BACKEND_GRAPHQL_URL =
-  process.env.INT_API_GQL_URL || 'http://host.docker.internal:8080/graphql'
+// GraphQLバックエンドAPIのURL（環境変数から取得、/graphqlは含めない）
+const BACKEND_API_URL =
+  process.env.INT_API_URL || 'http://host.docker.internal:8080'
 
 // GraphQLバックエンドAPIの認証キー（環境変数から取得、オプション）
 const BACKEND_API_KEY = process.env.INT_API_KEY || ''
@@ -50,7 +50,7 @@ function createHeaders(): Record<string, string> {
 export async function executeGraphQL<T = Record<string, unknown>>(
   request: GraphQLRequest
 ): Promise<GraphQLResponse<T>> {
-  const response = await fetch(BACKEND_GRAPHQL_URL, {
+  const response = await fetch(`${BACKEND_API_URL}/graphql`, {
     method: 'POST',
     headers: createHeaders(),
     body: JSON.stringify(request),

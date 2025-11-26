@@ -158,3 +158,102 @@ export const GET_GRADES = `
     }
   }
 `
+
+// 複合クエリ: 学級一覧と学年一覧を同時に取得（リクエスト数削減）
+export const GET_HOMEROOMS_AND_GRADES = `
+  query GetHomeroomsAndGrades($homeroomsInput: RetrieveHomeroomsInput!, $gradesInput: RetrieveGradesInput!) {
+    homerooms(input: $homeroomsInput) {
+      id
+      homeroomName
+      grade {
+        id
+        gradeName
+      }
+      homeroomDays {
+        id
+        dayOfWeek
+        periods
+      }
+      blocks {
+        id
+        blockName
+        lanes {
+          id
+          courses {
+            id
+            courseName
+            subject {
+              id
+              subjectName
+            }
+            courseDetails {
+              instructor {
+                id
+                instructorName
+              }
+              room {
+                id
+                roomName
+              }
+            }
+          }
+        }
+      }
+    }
+    grades(input: $gradesInput) {
+      id
+      gradeName
+    }
+  }
+`
+
+// 複合クエリ: 科目・教員・講座を同時に取得（リクエスト数削減）
+export const GET_COURSE_MODAL_OPTIONS = `
+  query GetCourseModalOptions($ttid: UUID!, $coursesInput: RetrieveCoursesInput!) {
+    subjects(input: { ttid: $ttid }) {
+      id
+      subjectName
+      discipline {
+        disciplineCode
+        disciplineName
+      }
+      credits
+      grade {
+        id
+        gradeName
+      }
+    }
+    instructors(input: { ttid: $ttid }) {
+      id
+      instructorName
+      disciplineCode
+    }
+    courses(input: $coursesInput) {
+      id
+      courseName
+      subject {
+        id
+        subjectName
+        grade {
+          id
+          gradeName
+        }
+        discipline {
+          disciplineCode
+          disciplineName
+        }
+      }
+      courseDetails {
+        instructor {
+          id
+          instructorName
+          disciplineCode
+        }
+        room {
+          id
+          roomName
+        }
+      }
+    }
+  }
+`

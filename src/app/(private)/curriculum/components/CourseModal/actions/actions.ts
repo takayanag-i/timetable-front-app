@@ -10,15 +10,31 @@ import {
   getDefaultTtid,
 } from '@/lib/graphql-client'
 import {
-  GET_SUBJECTS,
-  GET_INSTRUCTORS,
   GET_LANES,
   GET_COURSE_WITH_SUBJECT,
+  GET_COURSE_MODAL_OPTIONS,
 } from '@/lib/graphql/queries'
 import { UPSERT_COURSES, UPSERT_LANES } from '@/lib/graphql/mutations'
 
+// 講座モーダルオプション取得用の複合レスポンス型
+interface CourseModalOptionsResponse {
+  subjects: Subject[]
+  instructors: Instructor[]
+  courses: Array<
+    Course & {
+      subject?: {
+        id: string
+        subjectName: string | null
+        grade?: { id: string; gradeName: string }
+        discipline?: { disciplineCode: string; disciplineName: string }
+      }
+    }
+  >
+}
+
 /**
- * 講座作成に必要なデータ（科目・教員一覧）を取得するServer Action
+ * 講座作成に必要なデータ（科目・教員・講座一覧）を取得するServer Action
+ * 1回のGraphQLリクエストで全データを取得（リクエスト数削減によるパフォーマンス向上）
  */
 export async function fetchCourseModalOptions(
   _prevState: ActionResult<CourseModalOptions> | null
@@ -28,36 +44,36 @@ export async function fetchCourseModalOptions(
 
     const ttid = getDefaultTtid()
 
-    // 科目と教員のデータを並列で取得（GraphQLから直接）
-    const [subjectsResult, instructorsResult] = await Promise.all([
-      executeGraphQLForServerAction<Subject[]>(
+    // 科目・教員・講座を1回のリクエストで取得（リクエスト数削減）
+    const result =
+      await executeGraphQLForServerAction<CourseModalOptionsResponse>(
         {
-          query: GET_SUBJECTS,
-          variables: { ttid },
+          query: GET_COURSE_MODAL_OPTIONS,
+          variables: {
+            ttid,
+            coursesInput: { ttid },
+          },
         },
-        'subjects'
-      ),
-      executeGraphQLForServerAction<Instructor[]>(
-        {
-          query: GET_INSTRUCTORS,
-          variables: { ttid },
-        },
-        'instructors'
-      ),
-    ])
+        undefined // 複数フィールドを取得するため、dataFieldNameは指定しない
+      )
 
-    if (!subjectsResult.success || !subjectsResult.data) {
+    if (!result.success || !result.data) {
       return errorResult(
-        `科目データの取得に失敗しました: ${subjectsResult.error || '不明なエラー'}`
+        `講座フォームデータの取得に失敗しました: ${result.error || '不明なエラー'}`
       )
     }
 
-    if (!instructorsResult.success || !instructorsResult.data) {
-      return errorResult(
-        `教員データの取得に失敗しました: ${instructorsResult.error || '不明なエラー'}`
-      )
+    const { subjects, instructors, courses } = result.data
+
+    if (!subjects) {
+      return errorResult('科目データの取得に失敗しました')
     }
 
+    if (!instructors) {
+      return errorResult('教員データの取得に失敗しました')
+    }
+
+    // 講座データの正規化
     let normalizedCourses: {
       id: string
       courseName: string
@@ -66,51 +82,29 @@ export async function fetchCourseModalOptions(
       instructorNames: string[]
     }[] = []
 
-    try {
-      const coursesResult = await executeGraphQLForServerAction<
-        Array<
-          Course & {
-            subject?: { id: string; subjectName: string | null }
-          }
-        >
-      >(
-        {
-          query: GET_COURSE_WITH_SUBJECT,
-          variables: { input: { ttid } },
-        },
-        'courses'
-      )
-
-      if (coursesResult.success && coursesResult.data) {
-        normalizedCourses = coursesResult.data
-          .filter(course => course.subject?.id)
-          .map(course => ({
-            id: course.id,
-            courseName: course.courseName,
-            subjectId: course.subject!.id,
-            instructorIds: course.courseDetails
-              .map(detail => detail.instructor?.id)
-              .filter((id): id is string => Boolean(id)),
-            instructorNames: course.courseDetails
-              .map(detail => detail.instructor?.instructorName)
-              .filter((name): name is string => Boolean(name)),
-          }))
-      } else {
-        console.warn(
-          'WARN: 講座データの取得に失敗しました。既存講座の選択は表示されません。',
-          coursesResult.error
-        )
-      }
-    } catch (courseFetchError) {
+    if (courses) {
+      normalizedCourses = courses
+        .filter(course => course.subject?.id)
+        .map(course => ({
+          id: course.id,
+          courseName: course.courseName,
+          subjectId: course.subject!.id,
+          instructorIds: course.courseDetails
+            .map(detail => detail.instructor?.id)
+            .filter((id): id is string => Boolean(id)),
+          instructorNames: course.courseDetails
+            .map(detail => detail.instructor?.instructorName)
+            .filter((name): name is string => Boolean(name)),
+        }))
+    } else {
       console.warn(
-        'WARN: 講座データ取得中に例外が発生しました。既存講座の選択は表示されません。',
-        courseFetchError
+        'WARN: 講座データの取得に失敗しました。既存講座の選択は表示されません。'
       )
     }
 
     return successResult({
-      subjects: subjectsResult.data,
-      instructors: instructorsResult.data,
+      subjects,
+      instructors,
       courses: normalizedCourses,
     })
   } catch (error) {

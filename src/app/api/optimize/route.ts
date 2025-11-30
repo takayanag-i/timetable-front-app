@@ -2,15 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { executeGraphQL } from '@/lib/graphql-client'
 import { optimizeAnnualTimetable } from '@/lib/fastapi-client'
 import { convertGraphQLToFastAPI } from '@/lib/optimization-helpers'
+import { GET_ANNUAL_DATA_WITH_CONSTRAINTS } from '@/lib/graphql/queries'
 import type {
   GraphQLAnnualData,
   ConstraintDefinition,
 } from '@/lib/optimization-helpers'
+import type { ConstraintDefinitionResponse } from '@/types/graphql-types'
 
 /**
  * 年次時間割最適化エンドポイント
  *
- * 1. Spring GraphQL APIから全データ取得
+ * 1. Spring GraphQL APIから全データ取得（年次データ + 制約定義）
  * 2. FastAPI形式に変換
  * 3. FastAPI最適化API呼び出し
  * 4. 結果を返却
@@ -19,9 +21,8 @@ export async function POST(request: NextRequest) {
   try {
     // リクエストボディを取得
     const body = await request.json()
-    const { ttid, constraintDefinitions } = body as {
+    const { ttid } = body as {
       ttid: string
-      constraintDefinitions: ConstraintDefinition[]
     }
 
     if (!ttid) {
@@ -31,72 +32,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 1. Spring GraphQL APIから全データを取得
-    const graphqlQuery = `
-      query GetAnnualData($ttid: UUID!) {
-        schoolDays(input: { ttid: $ttid }) {
-          id
-          dayOfWeek
-          isAvailable
-          amPeriods
-          pmPeriods
-        }
-        homerooms(input: { ttid: $ttid }) {
-          id
-          homeroomName
-          homeroomDays {
-            id
-            dayOfWeek
-            periods
-          }
-          blocks {
-            id
-            blockName
-            lanes {
-              id
-              courses {
-                id
-                courseName
-              }
-            }
-          }
-        }
-        instructors(input: { ttid: $ttid }) {
-          id
-          instructorName
-          attendanceDays {
-            id
-            dayOfWeek
-            unavailablePeriods
-          }
-        }
-        rooms(input: { ttid: $ttid }) {
-          id
-          roomName
-        }
-        subjects(input: { ttid: $ttid }) {
-          id
-          subjectName
-          credits
-          courses {
-            id
-            courseName
-            courseDetails {
-              id
-              instructor {
-                id
-                instructorName
-              }
-              room {
-                id
-                roomName
-              }
-            }
-          }
-        }
-      }
-    `
-
+    // 1. Spring GraphQL APIから全データを取得（年次データ + 制約定義）
     const graphqlResult = await executeGraphQL<{
       schoolDays: GraphQLAnnualData['schoolDays']
       homerooms: GraphQLAnnualData['homerooms']
@@ -106,8 +42,9 @@ export async function POST(request: NextRequest) {
         id: string
         courses: GraphQLAnnualData['courses']
       }>
+      constraintDefinitions: ConstraintDefinitionResponse[]
     }>({
-      query: graphqlQuery,
+      query: GET_ANNUAL_DATA_WITH_CONSTRAINTS,
       variables: { ttid },
     })
 
@@ -136,11 +73,43 @@ export async function POST(request: NextRequest) {
       courses,
     }
 
+    // 制約定義をFastAPI形式に変換
+    const constraintDefinitions: ConstraintDefinition[] =
+      graphqlResult.data.constraintDefinitions.map(cd => {
+        // parametersをConstraintParameterの配列に変換
+        let parameters: Array<{ key: string; value: string }> | undefined
+        if (cd.parameters) {
+          if (typeof cd.parameters === 'object' && cd.parameters !== null) {
+            if (Array.isArray(cd.parameters)) {
+              parameters = cd.parameters as Array<{
+                key: string
+                value: string
+              }>
+            } else {
+              // オブジェクトの場合は配列に変換
+              parameters = Object.entries(cd.parameters).map(
+                ([key, value]) => ({
+                  key,
+                  value: String(value),
+                })
+              )
+            }
+          }
+        }
+
+        return {
+          constraintDefinitionCode: cd.constraintDefinitionCode,
+          softFlag: cd.softFlag,
+          penaltyWeight: cd.penaltyWeight ?? undefined,
+          parameters,
+        }
+      })
+
     // 2. FastAPI形式に変換
     const fastapiInput = convertGraphQLToFastAPI(
       annualData,
       ttid,
-      constraintDefinitions || []
+      constraintDefinitions
     )
 
     // 3. FastAPI最適化APIを呼び出し

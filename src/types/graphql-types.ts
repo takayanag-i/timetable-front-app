@@ -44,3 +44,58 @@ export interface UpsertHomeroomsInput {
     >
   }[]
 }
+
+// --------------------------------------
+// ConstraintDefinition Types (for GraphQL API)
+// --------------------------------------
+
+// 制約定義 GraphQLレスポンス型
+export interface ConstraintDefinitionResponse {
+  id: string
+  ttid: string
+  constraintDefinitionCode: string
+  softFlag: boolean
+  penaltyWeight?: number | null
+  parameters?: unknown | null
+}
+
+// 制約定義一覧のレスポンス型
+export interface ConstraintDefinitionsResponse {
+  constraintDefinitions: ConstraintDefinitionResponse[]
+}
+
+// --------------------------------------
+// ConstraintDefinitionMaster Types (for GraphQL API)
+// --------------------------------------
+
+// 制約定義マスタ GraphQLレスポンス型
+export interface ConstraintDefinitionMasterResponse {
+  constraintDefinitionCode: string
+  constraintDefinitionName: string
+  description?: string | null
+  mandatoryFlag: boolean
+  softFlag: boolean
+  parameterMasters: ConstraintParameterMasterResponse[]
+}
+
+// 制約定義マスタ一覧のレスポンス型
+export interface ConstraintDefinitionMastersResponse {
+  constraintDefinitionMasters: ConstraintDefinitionMasterResponse[]
+}
+
+// --------------------------------------
+// ConstraintParameterMaster Types (for GraphQL API)
+// --------------------------------------
+
+// 制約パラメータマスタ GraphQLレスポンス型
+export interface ConstraintParameterMasterResponse {
+  parameterKey: string
+  parameterName: string
+  arrayFlag: boolean
+  optionList?: unknown | null
+}
+
+// 制約パラメータマスタ一覧のレスポンス型
+export interface ConstraintParameterMastersResponse {
+  constraintParameterMasters: ConstraintParameterMasterResponse[]
+}

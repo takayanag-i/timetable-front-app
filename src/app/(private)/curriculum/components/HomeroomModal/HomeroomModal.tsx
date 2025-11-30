@@ -1,10 +1,11 @@
 'use client'
-import { useEffect } from 'react'
+import { useEffect, useState, useActionState, useRef, useCallback } from 'react'
 import Modal from '@/components/shared/Modal'
 import Input from '@/components/shared/Input'
-import { useHomeroomModal } from './hooks/useHomeroomModal'
 import type { Grade } from '@/core/domain/entity'
-import type { HomeroomModalData } from '@/types/ui-types'
+import { createHomeroom, deleteHomeroom } from './actions'
+import type { ActionResult } from '@/types/bff-types'
+import type { HomeroomFormValues } from './hooks/useHomeroomModal'
 import styles from './HomeroomModal.module.css'
 import { useForm, useFieldArray } from 'react-hook-form'
 
@@ -27,8 +28,8 @@ interface Props {
   isOpen: boolean
   /** モーダルのタイトル */
   title: string
-  /** 編集対象の学級データ（新規作成時はnull） */
-  homeroomModalData: HomeroomModalData | null
+  /** フォームの初期値 */
+  initialValues: HomeroomFormValues
   /** 学年の選択肢 */
   grades: Grade[]
   /** 処理成功時のコールバック */
@@ -42,28 +43,32 @@ interface Props {
  *
  * @param props.isOpen - モーダルの表示状態
  * @param props.title - モーダルのタイトル
- * @param props.homeroomModalData - 編集対象の学級データ（新規作成時はnull）
+ * @param props.initialValues - フォームの初期値
  * @param props.onSuccess - 処理成功時のコールバック
  * @param props.onClose - モーダルを閉じる際のコールバック
  */
 export default function HomeroomModal({
   isOpen,
   title,
-  homeroomModalData,
+  initialValues,
   grades,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  onSuccess: _onSuccess,
+  onSuccess,
   onClose,
 }: Props) {
-  const {
-    initialValues,
-    error,
-    clearError,
-    saveAction,
-    savePending,
-    deleteAction,
-    deletePending,
-  } = useHomeroomModal(homeroomModalData)
+  const [error, setError] = useState<string | null>(null)
+
+  const [saveResult, saveAction, savePending] = useActionState(
+    createHomeroom,
+    null as ActionResult | null
+  )
+  const [deleteResult, deleteAction, deletePending] = useActionState(
+    deleteHomeroom,
+    null as ActionResult | null
+  )
+
+  const clearError = useCallback(() => {
+    setError(null)
+  }, [])
 
   const {
     control,
@@ -72,7 +77,7 @@ export default function HomeroomModal({
     watch,
     setValue,
     formState: { errors },
-  } = useForm({
+  } = useForm<HomeroomFormValues>({
     defaultValues: initialValues,
     mode: 'onChange',
   })
@@ -82,11 +87,56 @@ export default function HomeroomModal({
     name: 'homeroomDays',
   })
 
+  // モーダルが開いたときに初期値をリセット
   useEffect(() => {
-    reset(initialValues)
-    replace(initialValues.homeroomDays)
-    clearError()
-  }, [initialValues, reset, replace, clearError])
+    if (isOpen) {
+      reset(initialValues)
+      replace(initialValues.homeroomDays)
+      clearError()
+    }
+  }, [isOpen, reset, replace, initialValues, clearError])
+
+  // 保存結果を監視してエラーを表示
+  useEffect(() => {
+    if (saveResult?.success === false) {
+      setError(saveResult.error || '学級の保存に失敗しました')
+    }
+  }, [saveResult])
+
+  useEffect(() => {
+    if (deleteResult?.success === false) {
+      setError(deleteResult.error || '学級の削除に失敗しました')
+    }
+  }, [deleteResult])
+
+  const onSuccessRef = useRef(onSuccess)
+  useEffect(() => {
+    onSuccessRef.current = onSuccess
+  }, [onSuccess])
+
+  // 保存成功時の処理
+  const prevSaveSuccessRef = useRef(false)
+  useEffect(() => {
+    const saveSuccess = Boolean(saveResult?.success)
+    if (saveSuccess && !prevSaveSuccessRef.current) {
+      reset(initialValues)
+      clearError()
+      onSuccessRef.current?.()
+    }
+    prevSaveSuccessRef.current = saveSuccess
+  }, [saveResult?.success, reset, initialValues, clearError])
+
+  // 削除成功時の処理
+  const prevDeleteSuccessRef = useRef(false)
+  useEffect(() => {
+    const deleteSuccess = Boolean(deleteResult?.success)
+    if (deleteSuccess && !prevDeleteSuccessRef.current) {
+      reset(initialValues)
+      clearError()
+      onSuccessRef.current?.()
+    }
+    prevDeleteSuccessRef.current = deleteSuccess
+  }, [deleteResult?.success, reset, initialValues, clearError])
 
   const homeroomNameValue = watch('homeroomName') ?? ''
   const gradeIdValue = watch('gradeId') ?? ''
@@ -237,7 +287,7 @@ export default function HomeroomModal({
         </form>
 
         {/* 削除フォーム（編集時のみ表示） */}
-        {homeroomModalData?.id && (
+        {initialValues.id && (
           <form id="deleteForm" action={deleteAction}>
             <input type="hidden" name="id" value={homeroomIdValue} />
             <input type="hidden" name="gradeId" value={gradeIdValue} />

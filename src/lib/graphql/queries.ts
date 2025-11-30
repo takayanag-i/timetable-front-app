@@ -159,6 +159,109 @@ export const GET_GRADES = `
   }
 `
 
+export const GET_CONSTRAINT_DEFINITIONS = `
+  query GetConstraintDefinitions($input: RetrieveConstraintDefinitionsInput!) {
+    constraintDefinitions(input: $input) {
+      id
+      ttid
+      constraintDefinitionCode
+      softFlag
+      penaltyWeight
+      parameters
+    }
+  }
+`
+
+export const GET_CONSTRAINT_DEFINITION_MASTERS = `
+  query GetConstraintDefinitionMasters {
+    constraintDefinitionMasters {
+      constraintDefinitionCode
+      constraintDefinitionName
+      description
+      mandatoryFlag
+      softFlag
+      parameterMasters {
+        parameterKey
+        parameterName
+        arrayFlag
+        optionList
+      }
+    }
+  }
+`
+
+export const GET_ANNUAL_DATA_WITH_CONSTRAINTS = `
+  query GetAnnualData($ttid: UUID!) {
+    schoolDays(input: { ttid: $ttid }) {
+      id
+      dayOfWeek
+      isAvailable
+      amPeriods
+      pmPeriods
+    }
+    homerooms(input: { ttid: $ttid }) {
+      id
+      homeroomName
+      homeroomDays {
+        id
+        dayOfWeek
+        periods
+      }
+      blocks {
+        id
+        blockName
+        lanes {
+          id
+          courses {
+            id
+            courseName
+          }
+        }
+      }
+    }
+    instructors(input: { ttid: $ttid }) {
+      id
+      instructorName
+      attendanceDays {
+        id
+        dayOfWeek
+        unavailablePeriods
+      }
+    }
+    rooms(input: { ttid: $ttid }) {
+      id
+      roomName
+    }
+    subjects(input: { ttid: $ttid }) {
+      id
+      subjectName
+      credits
+      courses {
+        id
+        courseName
+        courseDetails {
+          id
+          instructor {
+            id
+            instructorName
+          }
+          room {
+            id
+            roomName
+          }
+        }
+      }
+    }
+    constraintDefinitions(input: { ttid: $ttid }) {
+      id
+      constraintDefinitionCode
+      softFlag
+      penaltyWeight
+      parameters
+    }
+  }
+`
+
 // 複合クエリ: 学級一覧と学年一覧を同時に取得（リクエスト数削減）
 export const GET_HOMEROOMS_AND_GRADES = `
   query GetHomeroomsAndGrades($homeroomsInput: RetrieveHomeroomsInput!, $gradesInput: RetrieveGradesInput!) {

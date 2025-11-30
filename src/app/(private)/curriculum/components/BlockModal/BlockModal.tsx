@@ -1,11 +1,21 @@
 'use client'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import type { FormEvent } from 'react'
 import Modal from '@/components/shared/Modal'
 import Input from '@/components/shared/Input'
 import { useBlockModal } from './hooks/useBlockModal'
 import styles from './BlockModal.module.css'
 import { useForm } from 'react-hook-form'
+
+/**
+ * BlockFormValues 型定義
+ */
+export interface BlockFormValues {
+  blockName: string
+  laneCount: number
+  homeroomId: string
+  blockId: string
+}
 
 /**
  * BlockModal コンポーネントのProps
@@ -21,10 +31,8 @@ interface Props {
   homeroomId: string | null
   /** ブロックID（編集時のみ） */
   blockId?: string | null
-  /** 初期ブロック名（編集時のみ） */
-  initialBlockName?: string
-  /** 初期レーン数（編集時のみ表示） */
-  initialLaneCount?: number
+  /** フォームの初期値 */
+  initialValues: BlockFormValues
   /** 処理成功時のコールバック */
   onSuccess: () => void
   /** 削除成功時のコールバック */
@@ -40,8 +48,7 @@ export default function BlockModal({
   title,
   homeroomId,
   blockId,
-  initialBlockName,
-  initialLaneCount,
+  initialValues,
   onSuccess,
   onDeleteSuccess,
   onClose,
@@ -67,30 +74,10 @@ export default function BlockModal({
   const modalTitle =
     title ??
     (mode === 'edit'
-      ? initialBlockName
-        ? `${initialBlockName}を編集`
+      ? initialValues.blockName
+        ? `${initialValues.blockName}を編集`
         : 'ブロックを編集'
       : 'ブロックを追加')
-
-  /** RHF で扱うフィールド定義（hidden で送る ID も含む） */
-  type BlockFormValues = {
-    blockName: string
-    laneCount: number
-    homeroomId: string
-    blockId: string
-  }
-
-  // モーダルの初期値（mode/props 依存）
-  const defaultValues = useMemo<BlockFormValues>(
-    () => ({
-      blockName: initialBlockName ?? '',
-      laneCount:
-        mode === 'edit' && initialLaneCount ? Math.max(1, initialLaneCount) : 1,
-      homeroomId: homeroomId ?? '',
-      blockId: blockId ?? '',
-    }),
-    [blockId, homeroomId, initialBlockName, initialLaneCount, mode]
-  )
 
   // RHF hooks
   const {
@@ -99,7 +86,7 @@ export default function BlockModal({
     watch,
     formState: { errors },
   } = useForm<BlockFormValues>({
-    defaultValues,
+    defaultValues: initialValues,
     mode: 'onChange',
   })
 
@@ -119,11 +106,13 @@ export default function BlockModal({
   const homeroomIdRegister = register('homeroomId')
   const blockIdRegister = register('blockId')
 
-  // props 変更時にフォームを初期化
+  // モーダルが開いたときに初期値をリセット
   useEffect(() => {
-    reset(defaultValues)
-    clearError()
-  }, [defaultValues, reset, clearError])
+    if (isOpen) {
+      reset(initialValues)
+      clearError()
+    }
+  }, [isOpen, reset, initialValues, clearError])
 
   // Button の制御用に各フィールドの値を取得
   const blockNameValue = watch('blockName') ?? ''
@@ -137,17 +126,17 @@ export default function BlockModal({
     if (saveResult?.success && saveResult !== prevSaveResultRef.current) {
       onSuccess()
       reset({
-        ...defaultValues,
-        blockName: mode === 'create' ? '' : defaultValues.blockName,
+        ...initialValues,
+        blockName: mode === 'create' ? '' : initialValues.blockName,
         laneCount:
-          mode === 'create' ? 1 : defaultValues.laneCount || laneCountValue,
+          mode === 'create' ? 1 : initialValues.laneCount || laneCountValue,
       })
       clearError()
     }
     prevSaveResultRef.current = saveResult
   }, [
     clearError,
-    defaultValues,
+    initialValues,
     laneCountValue,
     mode,
     onSuccess,
@@ -160,17 +149,17 @@ export default function BlockModal({
   useEffect(() => {
     if (deleteResult?.success && deleteResult !== prevDeleteResultRef.current) {
       onDeleteSuccess?.()
-      reset(defaultValues)
+      reset(initialValues)
       clearError()
     } else if (deleteResult?.success === false) {
       // 削除失敗時はエラー表示を保持するためリセットしない
     }
     prevDeleteResultRef.current = deleteResult
-  }, [clearError, defaultValues, deleteResult, onDeleteSuccess, reset])
+  }, [clearError, initialValues, deleteResult, onDeleteSuccess, reset])
 
   // 閉じる際は状態を初期化
   const handleClose = () => {
-    reset(defaultValues)
+    reset(initialValues)
     clearError()
     onClose()
   }

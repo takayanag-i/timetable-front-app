@@ -17,6 +17,9 @@ import {
 import { CourseModalOptions } from '@/types/ui-types'
 import { ActionResult } from '@/types/bff-types'
 import type { CourseFormValues } from '@/types/ui-types'
+import type { BlockFormValues } from '@/app/(private)/curriculum/components/BlockModal/BlockModal'
+import type { HomeroomFormValues } from '@/app/(private)/curriculum/components/HomeroomModal/hooks/useHomeroomModal'
+import { defaultHomeroomDays } from '@/app/(private)/curriculum/components/HomeroomModal/hooks/useHomeroomModal'
 import styles from './CurriculumUi.module.css'
 
 interface Props {
@@ -57,16 +60,16 @@ export default function CurriculumUi({ homerooms, grades }: Props) {
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false)
   type BlockModalContext =
     | {
-        mode: 'create'
-        homeroomId: string | null
-      }
+      mode: 'create'
+      homeroomId: string | null
+    }
     | {
-        mode: 'edit'
-        homeroomId: string
-        blockId: string
-        blockName: string
-        laneCount: number
-      }
+      mode: 'edit'
+      homeroomId: string
+      blockId: string
+      blockName: string
+      laneCount: number
+    }
 
   const [blockModalContext, setBlockModalContext] =
     useState<BlockModalContext | null>(null)
@@ -104,6 +107,47 @@ export default function CurriculumUi({ homerooms, grades }: Props) {
       courseDetails,
     }
   }, [isEditMode, editingCourseName, editingSubjectId, editingInstructorIds])
+
+  // ブロックモーダルの初期値を計算
+  const blockModalInitialValues = useMemo<BlockFormValues>(() => {
+    if (blockModalContext?.mode === 'edit') {
+      return {
+        blockName: blockModalContext.blockName || '',
+        laneCount: Math.max(1, blockModalContext.laneCount || 1),
+        homeroomId: blockModalContext.homeroomId || '',
+        blockId: blockModalContext.blockId || '',
+      }
+    }
+    // 新規作成モードのデフォルト値
+    return {
+      blockName: '',
+      laneCount: 1,
+      homeroomId: blockModalContext?.homeroomId || '',
+      blockId: '',
+    }
+  }, [blockModalContext])
+
+  // 学級モーダルの初期値を計算
+  const homeroomModalInitialValues = useMemo<HomeroomFormValues>(() => {
+    if (homeroomModalData) {
+      return {
+        id: homeroomModalData.id ?? '',
+        homeroomName: homeroomModalData.homeroomName ?? '',
+        homeroomDays:
+          homeroomModalData.homeroomDays && homeroomModalData.homeroomDays.length
+            ? homeroomModalData.homeroomDays
+            : defaultHomeroomDays,
+        gradeId: homeroomModalData.gradeId ?? '',
+      }
+    }
+    // 新規作成モードのデフォルト値
+    return {
+      id: '',
+      homeroomName: '',
+      homeroomDays: defaultHomeroomDays,
+      gradeId: '',
+    }
+  }, [homeroomModalData])
 
   useEffect(() => {
     if (!selectedGradeId) {
@@ -246,9 +290,8 @@ export default function CurriculumUi({ homerooms, grades }: Props) {
           <>
             <button
               type="button"
-              className={`${styles.gradeButton} ${
-                selectedGradeId === null ? styles.gradeButtonActive : ''
-              }`}
+              className={`${styles.gradeButton} ${selectedGradeId === null ? styles.gradeButtonActive : ''
+                }`}
               onClick={() => setSelectedGradeId(null)}
               aria-pressed={selectedGradeId === null}
             >
@@ -258,9 +301,8 @@ export default function CurriculumUi({ homerooms, grades }: Props) {
               <button
                 key={grade.id}
                 type="button"
-                className={`${styles.gradeButton} ${
-                  selectedGradeId === grade.id ? styles.gradeButtonActive : ''
-                }`}
+                className={`${styles.gradeButton} ${selectedGradeId === grade.id ? styles.gradeButtonActive : ''
+                  }`}
                 onClick={() => setSelectedGradeId(grade.id)}
                 aria-pressed={selectedGradeId === grade.id}
               >
@@ -323,15 +365,17 @@ export default function CurriculumUi({ homerooms, grades }: Props) {
             />
           ))
         )}
-        <form action={fetchSchoolDaysAction}>
-          <button
-            type="submit"
-            disabled={isPending}
-            className={styles.addHomeroomButton}
-          >
-            {isPending ? '読み込み中...' : '学級を追加する'}
-          </button>
-        </form>
+        <div className={styles.addHomeroomWrapper}>
+          <form action={fetchSchoolDaysAction}>
+            <button
+              type="submit"
+              disabled={isPending}
+              className={styles.addHomeroomButton}
+            >
+              {isPending ? '読み込み中...' : '+ 学級を追加'}
+            </button>
+          </form>
+        </div>
       </div>
 
       <HomeroomModal
@@ -342,7 +386,7 @@ export default function CurriculumUi({ homerooms, grades }: Props) {
             ? `${homeroomModalData.homeroomName}を編集`
             : '学級を追加しましょう！'
         }
-        homeroomModalData={homeroomModalData}
+        initialValues={homeroomModalInitialValues}
         grades={grades}
         onSuccess={closeModal}
         onClose={closeModal}
@@ -379,16 +423,7 @@ export default function CurriculumUi({ homerooms, grades }: Props) {
         blockId={
           blockModalContext?.mode === 'edit' ? blockModalContext.blockId : null
         }
-        initialBlockName={
-          blockModalContext?.mode === 'edit'
-            ? blockModalContext.blockName
-            : undefined
-        }
-        initialLaneCount={
-          blockModalContext?.mode === 'edit'
-            ? blockModalContext.laneCount
-            : undefined
-        }
+        initialValues={blockModalInitialValues}
         onSuccess={handleBlockModalSuccess}
         onDeleteSuccess={handleBlockModalDeleteSuccess}
         onClose={handleBlockModalClose}

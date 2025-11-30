@@ -106,3 +106,15 @@ export interface SchoolDay {
   pmPeriods: number
   isAvailable: boolean
 }
+
+// --------------------------------------
+// ConstraintDefinition (制約定義)
+// --------------------------------------
+export interface ConstraintDefinition {
+  id: string
+  ttid: string
+  constraintDefinitionCode: string
+  softFlag: boolean
+  penaltyWeight?: number | null
+  parameters?: unknown | null
+}

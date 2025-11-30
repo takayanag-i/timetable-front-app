@@ -1,0 +1,85 @@
+.entry {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background-color: white;
+  transition: box-shadow 0.2s;
+}
+
+.entry:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.content {
+  flex: 1;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.code {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.flag {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.flag.soft {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.flag.hard {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.penaltyWeight {
+  font-size: 0.9rem;
+  color: #666;
+  margin-top: 0.25rem;
+}
+
+.parameters {
+  font-size: 0.85rem;
+  color: #888;
+  margin-top: 0.25rem;
+  word-break: break-all;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.editForm {
+  display: inline-block;
+}
+
+.editButton {
+  padding: 0.5rem 1rem;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+}
+
+.editButton:hover {
+  background-color: #5a6268;
+}

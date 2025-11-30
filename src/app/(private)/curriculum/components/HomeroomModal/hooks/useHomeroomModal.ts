@@ -10,7 +10,7 @@ import type { HomeroomModalData } from '@/types/ui-types'
 import { createHomeroom, deleteHomeroom } from '../actions'
 import type { ActionResult } from '@/types/bff-types'
 
-const defaultHomeroomDays: HomeroomDay[] = [
+export const defaultHomeroomDays: HomeroomDay[] = [
   { id: 'mon', dayOfWeek: 'mon', periods: 0 },
   { id: 'tue', dayOfWeek: 'tue', periods: 0 },
   { id: 'wed', dayOfWeek: 'wed', periods: 0 },

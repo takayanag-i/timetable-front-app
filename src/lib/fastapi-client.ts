@@ -1,6 +1,7 @@
 /**
  * FastAPI最適化APIクライアント
  */
+import { logApiRequest, logApiResponse } from '@/lib/api-logger'
 
 // FastAPI のベースURL（Docker内部通信）
 const FASTAPI_BASE_URL = process.env.OPT_API_URL || 'http://fastapi:8000'
@@ -111,26 +112,34 @@ export interface ConstraintViolation {
 export async function optimizeAnnualTimetable(
   input: OptimizeAnnualTimetableInput
 ): Promise<OptimizationResult> {
+  const endpoint = `${FASTAPI_BASE_URL}/optimise-annual-timetable`
+
   try {
-    const response = await fetch(
-      `${FASTAPI_BASE_URL}/optimise-annual-timetable`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(input),
-      }
-    )
+    // リクエストをログ出力
+    logApiRequest(endpoint, 'POST', input)
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(input),
+    })
 
     if (!response.ok) {
       const errorText = await response.text()
+      // エラーレスポンスをログ出力
+      logApiResponse(endpoint, response.status, errorText)
       throw new Error(
         `FastAPI returned ${response.status}: ${response.statusText}. ${errorText}`
       )
     }
 
     const result = await response.json()
+
+    // 成功レスポンスをログ出力
+    logApiResponse(endpoint, response.status, result)
+
     return result
   } catch (error) {
     console.error('FastAPI optimization error:', error)
@@ -142,16 +151,28 @@ export async function optimizeAnnualTimetable(
  * FastAPIの年次データ取得API（スタブ）を呼び出す
  */
 export async function getAnnualData(ttid: string): Promise<AnnualData> {
+  const endpoint = `${FASTAPI_BASE_URL}/annual-data/${ttid}`
+
   try {
-    const response = await fetch(`${FASTAPI_BASE_URL}/annual-data/${ttid}`)
+    // リクエストをログ出力
+    logApiRequest(endpoint, 'GET')
+
+    const response = await fetch(endpoint)
 
     if (!response.ok) {
+      // エラーレスポンスをログ出力
+      logApiResponse(endpoint, response.status)
       throw new Error(
         `FastAPI returned ${response.status}: ${response.statusText}`
       )
     }
 
-    return await response.json()
+    const result = await response.json()
+
+    // 成功レスポンスをログ出力
+    logApiResponse(endpoint, response.status, result)
+
+    return result
   } catch (error) {
     console.error('FastAPI annual data fetch error:', error)
     throw error

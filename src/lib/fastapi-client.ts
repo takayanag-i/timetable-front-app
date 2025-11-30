@@ -146,35 +146,3 @@ export async function optimizeAnnualTimetable(
     throw error
   }
 }
-
-/**
- * FastAPIの年次データ取得API（スタブ）を呼び出す
- */
-export async function getAnnualData(ttid: string): Promise<AnnualData> {
-  const endpoint = `${FASTAPI_BASE_URL}/annual-data/${ttid}`
-
-  try {
-    // リクエストをログ出力
-    logApiRequest(endpoint, 'GET')
-
-    const response = await fetch(endpoint)
-
-    if (!response.ok) {
-      // エラーレスポンスをログ出力
-      logApiResponse(endpoint, response.status)
-      throw new Error(
-        `FastAPI returned ${response.status}: ${response.statusText}`
-      )
-    }
-
-    const result = await response.json()
-
-    // 成功レスポンスをログ出力
-    logApiResponse(endpoint, response.status, result)
-
-    return result
-  } catch (error) {
-    console.error('FastAPI annual data fetch error:', error)
-    throw error
-  }
-}

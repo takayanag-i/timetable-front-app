@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState, useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import HomeroomEntry from '@/app/(private)/curriculum/components/HomeroomEntry/HomeroomEntry'
 import HomeroomModal from '@/app/(private)/curriculum/components/HomeroomModal/HomeroomModal'
 import { CourseModal } from '@/app/(private)/curriculum/components/CourseModal/CourseModal'
@@ -31,6 +32,7 @@ interface Props {
  * カリキュラム設定画面
  */
 export default function CurriculumUi({ homerooms, grades }: Props) {
+  const router = useRouter()
   // モーダルの状態と操作関数を取得
   const {
     isOpen,
@@ -246,6 +248,8 @@ export default function CurriculumUi({ homerooms, grades }: Props) {
     setEditingCourseName('')
     setEditingSubjectId('')
     setEditingInstructorIds([])
+    // サーバーコンポーネントのデータを再フェッチ
+    router.refresh()
   }
 
   // モーダルクローズ時のハンドラー
@@ -265,11 +269,15 @@ export default function CurriculumUi({ homerooms, grades }: Props) {
   const handleBlockModalSuccess = () => {
     setIsBlockModalOpen(false)
     setBlockModalContext(null)
+    // サーバーコンポーネントのデータを再フェッチ
+    router.refresh()
   }
 
   const handleBlockModalDeleteSuccess = () => {
     setIsBlockModalOpen(false)
     setBlockModalContext(null)
+    // サーバーコンポーネントのデータを再フェッチ
+    router.refresh()
   }
 
   // ブロックモーダルクローズ時のハンドラー

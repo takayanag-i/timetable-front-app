@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState, useEffect, useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { ConstraintDefinition } from '@/core/domain/entity'
 import ConstraintDefinitionModal from '@/app/(private)/constraints/components/ConstraintDefinitionModal/ConstraintDefinitionModal'
 import ConstraintDefinitionEntry from '@/app/(private)/constraints/components/ConstraintDefinitionEntry/ConstraintDefinitionEntry'
@@ -22,9 +23,15 @@ export default function ConstraintDefinitionsUi({
   constraintDefinitions: initialConstraintDefinitions,
   constraintDefinitionMasters,
 }: Props) {
+  const router = useRouter()
   const [constraintDefinitions, setConstraintDefinitions] = useState(
     initialConstraintDefinitions
   )
+
+  // propsの変更を監視して状態を更新
+  useEffect(() => {
+    setConstraintDefinitions(initialConstraintDefinitions)
+  }, [initialConstraintDefinitions])
 
   // モーダルの状態管理
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -82,8 +89,8 @@ export default function ConstraintDefinitionsUi({
     setIsModalOpen(false)
     setEditingId(null)
     setModalMode('create')
-    // ページをリロードして最新データを取得
-    window.location.reload()
+    // サーバーコンポーネントのデータを再フェッチ
+    router.refresh()
   }
 
   // モーダルクローズ時のハンドラー

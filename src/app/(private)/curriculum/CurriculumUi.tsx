@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import HomeroomEntry from '@/app/(private)/curriculum/components/HomeroomEntry/HomeroomEntry'
 import HomeroomModal from '@/app/(private)/curriculum/components/HomeroomModal/HomeroomModal'
 import { CourseModal } from '@/app/(private)/curriculum/components/CourseModal/CourseModal'
@@ -288,7 +289,36 @@ export default function CurriculumUi({ homerooms, grades }: Props) {
 
   return (
     <>
-      <h1>カリキュラム設定</h1>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '1rem',
+        }}
+      >
+        <h1>カリキュラム設定</h1>
+        <Link
+          href="/constraints"
+          style={{
+            padding: '0.75rem 1.5rem',
+            backgroundColor: '#0070f3',
+            color: 'white',
+            textDecoration: 'none',
+            borderRadius: '4px',
+            fontSize: '1rem',
+            transition: 'background-color 0.2s',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.backgroundColor = '#0051cc'
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.backgroundColor = '#0070f3'
+          }}
+        >
+          制約設定画面へ
+        </Link>
+      </div>
 
       <div className={styles.gradeSwitcher}>
         {grades.length === 0 ? (

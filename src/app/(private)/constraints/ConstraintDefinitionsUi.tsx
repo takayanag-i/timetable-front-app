@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
+import { getDefaultTtid } from '@/lib/graphql-client'
 import { ConstraintDefinition } from '@/core/domain/entity'
 import ConstraintDefinitionModal from '@/app/(private)/constraints/components/ConstraintDefinitionModal/ConstraintDefinitionModal'
 import ConstraintDefinitionEntry from '@/app/(private)/constraints/components/ConstraintDefinitionEntry/ConstraintDefinitionEntry'
@@ -107,9 +108,82 @@ export default function ConstraintDefinitionsUi({
     setIsModalOpen(true)
   }
 
+  // 最適化実行ボタンのハンドラー
+  const [isOptimizing, setIsOptimizing] = useState(false)
+  const handleOptimize = async () => {
+    setIsOptimizing(true)
+    try {
+      const ttid = getDefaultTtid()
+      const response = await fetch('/api/optimize', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ttid }),
+      })
+
+      const result = await response.json()
+
+      if (!result.success) {
+        alert(`最適化に失敗しました: ${result.error}`)
+        return
+      }
+
+      // 結果画面に遷移
+      if (result.timetableResultId) {
+        router.push(`/results/${result.timetableResultId}`)
+      } else {
+        alert('結果IDが取得できませんでした')
+      }
+    } catch (error) {
+      console.error('Optimization error:', error)
+      alert(
+        `最適化中にエラーが発生しました: ${error instanceof Error ? error.message : 'Unknown error'}`
+      )
+    } finally {
+      setIsOptimizing(false)
+    }
+  }
+
   return (
     <>
-      <h1>制約設定</h1>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '1rem',
+        }}
+      >
+        <h1>制約設定</h1>
+        <button
+          type="button"
+          onClick={handleOptimize}
+          disabled={isOptimizing}
+          style={{
+            padding: '0.75rem 1.5rem',
+            backgroundColor: isOptimizing ? '#ccc' : '#28a745',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: isOptimizing ? 'not-allowed' : 'pointer',
+            fontSize: '1rem',
+            transition: 'background-color 0.2s',
+          }}
+          onMouseEnter={e => {
+            if (!isOptimizing) {
+              e.currentTarget.style.backgroundColor = '#218838'
+            }
+          }}
+          onMouseLeave={e => {
+            if (!isOptimizing) {
+              e.currentTarget.style.backgroundColor = '#28a745'
+            }
+          }}
+        >
+          {isOptimizing ? '最適化中...' : '最適化を実行'}
+        </button>
+      </div>
 
       <div className={styles.constraintDefinitionsContainer}>
         {constraintDefinitions.length === 0 ? (

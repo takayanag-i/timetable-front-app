@@ -39,24 +39,31 @@ export default function ConstraintDefinitionsUi({
     )
 
   // モーダルの初期値を計算
-  const constraintDefinitionModalInitialValues = useMemo<ConstraintDefinitionFormValues>(() => {
-    if (modalMode === 'edit' && fetchedConstraintDefinitionResult?.success && fetchedConstraintDefinitionResult.data) {
-      const data = fetchedConstraintDefinitionResult.data
-      return {
-        constraintDefinitionCode: data.constraintDefinitionCode,
-        softFlag: data.softFlag,
-        penaltyWeight: data.penaltyWeight?.toString() || '0.5',
-        parameters: data.parameters ? JSON.stringify(data.parameters, null, 2) : '',
+  const constraintDefinitionModalInitialValues =
+    useMemo<ConstraintDefinitionFormValues>(() => {
+      if (
+        modalMode === 'edit' &&
+        fetchedConstraintDefinitionResult?.success &&
+        fetchedConstraintDefinitionResult.data
+      ) {
+        const data = fetchedConstraintDefinitionResult.data
+        return {
+          constraintDefinitionCode: data.constraintDefinitionCode,
+          softFlag: data.softFlag,
+          penaltyWeight: data.penaltyWeight?.toString() || '0.5',
+          parameters: data.parameters
+            ? JSON.stringify(data.parameters, null, 2)
+            : '',
+        }
       }
-    }
-    // 新規作成モードのデフォルト値
-    return {
-      constraintDefinitionCode: '',
-      softFlag: false,
-      penaltyWeight: '0.5',
-      parameters: '',
-    }
-  }, [modalMode, fetchedConstraintDefinitionResult])
+      // 新規作成モードのデフォルト値
+      return {
+        constraintDefinitionCode: '',
+        softFlag: false,
+        penaltyWeight: '0.5',
+        parameters: '',
+      }
+    }, [modalMode, fetchedConstraintDefinitionResult])
 
   // 制約定義取得が成功したらモーダルを開く
   useEffect(() => {
@@ -122,9 +129,7 @@ export default function ConstraintDefinitionsUi({
         key={editingId || 'new'}
         isOpen={isModalOpen}
         mode={modalMode}
-        title={
-          modalMode === 'edit' ? '制約を編集' : '制約を追加しましょう！'
-        }
+        title={modalMode === 'edit' ? '制約を編集' : '制約を追加しましょう！'}
         constraintDefinitionId={editingId || undefined}
         constraintDefinitionMasters={constraintDefinitionMasters}
         existingConstraintDefinitions={constraintDefinitions}

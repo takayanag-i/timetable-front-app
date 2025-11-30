@@ -11,4 +11,3 @@ export interface ConstraintDefinitionFormValues {
   penaltyWeight: string
   parameters: string
 }
-

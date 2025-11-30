@@ -9,9 +9,7 @@ import {
   GET_CONSTRAINT_DEFINITIONS,
   GET_CONSTRAINT_DEFINITION_MASTERS,
 } from '@/lib/graphql/queries'
-import type {
-  ConstraintDefinitionMasterResponse,
-} from '@/types/graphql-types'
+import type { ConstraintDefinitionMasterResponse } from '@/types/graphql-types'
 
 export async function getConstraintDefinitions(): Promise<
   ConstraintDefinition[]
@@ -75,4 +73,3 @@ export async function getConstraintDefinitionMasters(): Promise<
     return []
   }
 }
-

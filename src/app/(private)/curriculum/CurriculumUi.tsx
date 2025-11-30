@@ -60,16 +60,16 @@ export default function CurriculumUi({ homerooms, grades }: Props) {
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false)
   type BlockModalContext =
     | {
-      mode: 'create'
-      homeroomId: string | null
-    }
+        mode: 'create'
+        homeroomId: string | null
+      }
     | {
-      mode: 'edit'
-      homeroomId: string
-      blockId: string
-      blockName: string
-      laneCount: number
-    }
+        mode: 'edit'
+        homeroomId: string
+        blockId: string
+        blockName: string
+        laneCount: number
+      }
 
   const [blockModalContext, setBlockModalContext] =
     useState<BlockModalContext | null>(null)
@@ -134,7 +134,8 @@ export default function CurriculumUi({ homerooms, grades }: Props) {
         id: homeroomModalData.id ?? '',
         homeroomName: homeroomModalData.homeroomName ?? '',
         homeroomDays:
-          homeroomModalData.homeroomDays && homeroomModalData.homeroomDays.length
+          homeroomModalData.homeroomDays &&
+          homeroomModalData.homeroomDays.length
             ? homeroomModalData.homeroomDays
             : defaultHomeroomDays,
         gradeId: homeroomModalData.gradeId ?? '',
@@ -290,8 +291,9 @@ export default function CurriculumUi({ homerooms, grades }: Props) {
           <>
             <button
               type="button"
-              className={`${styles.gradeButton} ${selectedGradeId === null ? styles.gradeButtonActive : ''
-                }`}
+              className={`${styles.gradeButton} ${
+                selectedGradeId === null ? styles.gradeButtonActive : ''
+              }`}
               onClick={() => setSelectedGradeId(null)}
               aria-pressed={selectedGradeId === null}
             >
@@ -301,8 +303,9 @@ export default function CurriculumUi({ homerooms, grades }: Props) {
               <button
                 key={grade.id}
                 type="button"
-                className={`${styles.gradeButton} ${selectedGradeId === grade.id ? styles.gradeButtonActive : ''
-                  }`}
+                className={`${styles.gradeButton} ${
+                  selectedGradeId === grade.id ? styles.gradeButtonActive : ''
+                }`}
                 onClick={() => setSelectedGradeId(grade.id)}
                 aria-pressed={selectedGradeId === grade.id}
               >

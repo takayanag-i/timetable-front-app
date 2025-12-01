@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import type { TimetableResult } from '@/types/graphql-types'
 import { DAYS_OF_WEEK } from '@/constants'
+import { calculateMaxPeriod } from '../utils/timetable-utils'
 import styles from './TimetableResultUi.module.css'
 
 interface HomeroomViewProps {
@@ -43,14 +44,10 @@ export default function HomeroomView({ timetableResult }: HomeroomViewProps) {
   }, [timetableResult.timetableEntries])
 
   // 最大時限数を計算
-  const maxPeriod = useMemo(() => {
-    return Math.max(
-      ...Array.from(timetableByHomeroom.values()).flatMap(group =>
-        Array.from(group.entries.values()).map(e => e.period)
-      ),
-      0
-    )
-  }, [timetableByHomeroom])
+  const maxPeriod = useMemo(
+    () => calculateMaxPeriod(timetableByHomeroom),
+    [timetableByHomeroom]
+  )
 
   return (
     <div className={styles.timetablesSection}>

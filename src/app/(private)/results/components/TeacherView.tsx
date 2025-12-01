@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import type { TimetableResult } from '@/types/graphql-types'
 import { DAYS_OF_WEEK } from '@/constants'
+import { calculateMaxPeriod } from '../utils/timetable-utils'
 import styles from './TimetableResultUi.module.css'
 
 interface TeacherViewProps {
@@ -52,14 +53,10 @@ export default function TeacherView({ timetableResult }: TeacherViewProps) {
   }, [timetableResult.timetableEntries])
 
   // 最大時限数を計算
-  const maxPeriod = useMemo(() => {
-    return Math.max(
-      ...Array.from(timetableByTeacher.values()).flatMap(group =>
-        Array.from(group.entries.values()).map(e => e.period)
-      ),
-      0
-    )
-  }, [timetableByTeacher])
+  const maxPeriod = useMemo(
+    () => calculateMaxPeriod(timetableByTeacher),
+    [timetableByTeacher]
+  )
 
   // 教員名でソート
   const sortedTeachers = useMemo(() => {

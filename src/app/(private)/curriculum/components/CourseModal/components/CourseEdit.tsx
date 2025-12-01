@@ -260,7 +260,7 @@ export function CourseEdit({
             className={styles.primaryButton}
             disabled={isPending || !isFormValid}
           >
-            {isPending ? '更新中...' : '講座を更新'}
+            {isPending ? '保存中...' : '保存'}
           </button>
         </div>
       </form>

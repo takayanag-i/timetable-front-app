@@ -68,3 +68,12 @@ export const DELETE_CONSTRAINT_DEFINITION = `
     deleteConstraintDefinition(id: $id)
   }
 `
+
+export const UPSERT_TIMETABLE_RESULTS = `
+  mutation UpsertTimetableResults($input: UpsertTimetableResultsInput!) {
+    upsertTimetableResults(input: $input) {
+      id
+      ttid
+    }
+  }
+`

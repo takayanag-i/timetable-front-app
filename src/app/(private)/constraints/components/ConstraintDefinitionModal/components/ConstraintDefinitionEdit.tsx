@@ -9,7 +9,7 @@ import {
   deleteConstraintDefinition,
 } from '../actions'
 import type { ConstraintDefinitionMasterResponse } from '@/types/graphql-types'
-import type { ConstraintDefinitionFormValues } from '@/lib/constraint-definition-types'
+import type { ConstraintDefinitionFormValues } from '@/types/ui-types'
 import type { ConstraintDefinition } from '@/core/domain/entity'
 
 interface ConstraintDefinitionEditProps {

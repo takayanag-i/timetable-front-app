@@ -15,6 +15,7 @@ import {
   GET_COURSE_MODAL_OPTIONS,
 } from '@/lib/graphql/queries'
 import { UPSERT_COURSES, UPSERT_LANES } from '@/lib/graphql/mutations'
+import { revalidatePath } from 'next/cache'
 
 // 講座モーダルオプション取得用の複合レスポンス型
 interface CourseModalOptionsResponse {
@@ -263,6 +264,8 @@ export async function createCourseAndAddToLane(
 
     console.log('DEBUG - Updated lanes:', updatedLanesResult.data)
 
+    // キャッシュを再検証
+    revalidatePath('/curriculum')
     return successResult({ message })
   }
 
@@ -383,6 +386,8 @@ export async function updateCourse(
 
     console.log('DEBUG - Updated course:', { courseId })
 
+    // キャッシュを再検証
+    revalidatePath('/curriculum')
     return successResult({ message: '講座を更新しました' })
   } catch (error) {
     console.error('Error updating course:', error)
@@ -479,6 +484,8 @@ export async function removeCourseFromLane(
 
     console.log('DEBUG - Updated lanes after removal:', updatedLanesResult.data)
 
+    // キャッシュを再検証
+    revalidatePath('/curriculum')
     return successResult({ message: 'レーンから講座を削除しました' })
   } catch (error) {
     console.error('Error removing course from lane:', error)

@@ -1,0 +1,154 @@
+.container {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+  color: #333;
+}
+
+.violationsSection {
+  margin-bottom: 3rem;
+  padding: 1.5rem;
+  background-color: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 8px;
+}
+
+.sectionTitle {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  color: #856404;
+}
+
+.violationsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.violationItem {
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  background-color: #fff;
+  border-radius: 4px;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.violationCode {
+  font-weight: bold;
+  color: #856404;
+  min-width: 200px;
+}
+
+.violationKeys {
+  color: #666;
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+
+.timetablesSection {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.homeroomTimetable {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.homeroomTitle {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+.gradeName {
+  font-size: 1rem;
+  font-weight: normal;
+  color: #666;
+  margin-left: 0.5rem;
+}
+
+.timetableTable {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.headerCell {
+  background-color: #f8f9fa;
+  padding: 0.75rem;
+  text-align: center;
+  font-weight: bold;
+  border: 1px solid #dee2e6;
+  color: #495057;
+}
+
+.periodCell {
+  background-color: #f8f9fa;
+  padding: 0.75rem;
+  text-align: center;
+  font-weight: bold;
+  border: 1px solid #dee2e6;
+  color: #495057;
+  width: 60px;
+}
+
+.cell {
+  padding: 0.5rem;
+  border: 1px solid #dee2e6;
+  vertical-align: top;
+  min-height: 80px;
+}
+
+.entry {
+  padding: 0.5rem;
+  background-color: #e7f3ff;
+  border-radius: 4px;
+  min-height: 60px;
+}
+
+.courseName {
+  font-weight: bold;
+  font-size: 0.9rem;
+  color: #0066cc;
+  margin-bottom: 0.25rem;
+}
+
+.subjectName {
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: #555;
+}
+
+.instructor,
+.room {
+  display: block;
+}
+
+.emptyCell {
+  color: #ccc;
+  text-align: center;
+  padding: 0.5rem;
+}

@@ -345,13 +345,7 @@ export function CourseRegister({
             className={styles.primaryButton}
             disabled={isPending || !isFormValid}
           >
-            {isPending
-              ? selectedCourseId
-                ? '変更中...'
-                : '作成中...'
-              : selectedCourseId
-                ? '講座を変更'
-                : '講座を作成'}
+            {isPending ? '保存中...' : '保存'}
           </button>
         </div>
       </form>

@@ -30,3 +30,11 @@ export interface CourseFormValues {
   courseName: string
   courseDetails: { instructorId: string }[]
 }
+
+// 制約定義モーダルで扱うフォーム値
+export interface ConstraintDefinitionFormValues {
+  constraintDefinitionCode: string
+  softFlag: boolean
+  penaltyWeight: string
+  parameters: string
+}

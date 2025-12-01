@@ -19,3 +19,11 @@ export type ActionResult<T = unknown> =
       success: false
       error: string
     }
+
+// 最適化API実行結果（Next.js API Route用）
+export interface OptimizeResult {
+  success: boolean
+  data?: unknown
+  error?: string
+  details?: unknown
+}

@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import Link from 'next/link'
-import type { TimetableResult } from '../fetcher'
+import type { TimetableResult } from '@/types/graphql-types'
 import { DAYS_OF_WEEK } from '@/constants'
 import styles from './TimetableResultUi.module.css'
 

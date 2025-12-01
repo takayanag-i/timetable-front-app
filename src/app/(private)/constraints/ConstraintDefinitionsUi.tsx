@@ -9,7 +9,7 @@ import ConstraintDefinitionEntry from '@/app/(private)/constraints/components/Co
 import { fetchConstraintDefinition } from '@/app/(private)/constraints/components/ConstraintDefinitionModal/actions'
 import { ActionResult } from '@/types/bff-types'
 import type { ConstraintDefinitionMasterResponse } from '@/types/graphql-types'
-import type { ConstraintDefinitionFormValues } from '@/lib/constraint-definition-types'
+import type { ConstraintDefinitionFormValues } from '@/types/ui-types'
 import styles from './ConstraintDefinitionsUi.module.css'
 
 interface Props {

@@ -11,16 +11,7 @@ import type {
   ConstraintDefinition,
 } from '@/lib/optimization-helpers'
 import type { OptimizeGraphQLResponse, CourseDto } from '@/lib/optimize-types'
-
-/**
- * 最適化実行結果
- */
-export interface OptimizeResult {
-  success: boolean
-  data?: unknown
-  error?: string
-  details?: unknown
-}
+import type { OptimizeResult } from '@/types/bff-types'
 
 /**
  * GraphQL APIから最適化用データを取得

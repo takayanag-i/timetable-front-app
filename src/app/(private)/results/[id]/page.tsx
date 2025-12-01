@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { getTimetableResult } from '../../fetcher'
+import { getTimetableResult } from '../fetcher'
 import TimetableResultUi from '../components/TimetableResultUi'
 
 interface PageProps {

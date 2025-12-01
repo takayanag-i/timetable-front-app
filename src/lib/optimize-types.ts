@@ -6,7 +6,7 @@ import type { GraphQLAnnualData } from '@/lib/optimization-helpers'
 import type { ConstraintDefinitionResponse } from '@/types/graphql-types'
 
 /**
- * GraphQL APIからの最適化データ取得レスポンス型
+ * GraphQL APIから取得し、FastAPIへ送信する最適化データの型
  */
 export interface OptimizeGraphQLResponse {
   schoolDays: GraphQLAnnualData['schoolDays']

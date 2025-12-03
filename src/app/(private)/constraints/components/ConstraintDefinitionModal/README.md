@@ -14,15 +14,12 @@ ConstraintDefinitionModal/
 ├── actions/                               # サーバーアクション
 │   ├── actions.ts                         # CRUD操作の実装
 │   └── index.ts                           # エクスポート
-├── components/                            # コンポーネント
-│   ├── ConstraintDefinitionEdit.tsx       # 編集モード用ラッパー
-│   ├── ConstraintDefinitionRegister.tsx   # 新規作成モード用ラッパー
-│   └── shared/                            # 共通UIコンポーネント
-│       ├── ConstraintDefinitionForm.tsx   # 共通フォームコンポーネント
-│       ├── ConstraintSelectField.tsx      # 制約選択フィールド
-│       ├── SoftConstraintCheckbox.tsx     # ソフト制約チェックボックス
-│       ├── PenaltyWeightSlider.tsx        # 重みスライダー
-│       └── ParametersField.tsx            # パラメータフィールド
+├── components/                            # UIコンポーネント
+│   ├── ConstraintDefinitionForm.tsx       # 共通フォームコンポーネント
+│   ├── ConstraintSelectField.tsx          # 制約選択フィールド
+│   ├── SoftConstraintCheckbox.tsx         # ソフト制約チェックボックス
+│   ├── PenaltyWeightSlider.tsx            # 重みスライダー
+│   └── ParametersField.tsx                # パラメータフィールド
 └── hooks/                                 # カスタムフック
     ├── useConstraintDefinitionForm.ts     # フォーム状態管理
     └── useConstraintDefinitionActions.ts  # サーバーアクション管理
@@ -35,6 +32,7 @@ ConstraintDefinitionModal/
 
 ### 2. ConstraintDefinitionForm.tsx（共通フォーム）
 新規作成と編集で共通のフォームロジックを提供します。
+`ConstraintDefinitionModal.tsx` から直接使用されます。
 
 **Props:**
 - `mode`: 'create' | 'edit' - 動作モード
@@ -45,10 +43,6 @@ ConstraintDefinitionModal/
 - `constraintDefinitionMasters`: ConstraintDefinitionMasterResponse[] - マスタデータ
 - `existingConstraintDefinitions`: ConstraintDefinition[] - 既存の制約定義
 - `initialValues`: ConstraintDefinitionFormValues - 初期値
-
-### 3. Register & Edit ラッパー
-`ConstraintDefinitionRegister.tsx` と `ConstraintDefinitionEdit.tsx` は、
-共通の `ConstraintDefinitionForm` を適切なモードで呼び出すシンプルなラッパーです。
 
 ## カスタムフック
 
@@ -123,20 +117,20 @@ ConstraintDefinitionModal/
 - 重複コードが多数存在
 
 ### After（リファクタリング後）
-- `ConstraintDefinitionRegister.tsx`: 35行（ラッパーのみ）
-- `ConstraintDefinitionEdit.tsx`: 38行（ラッパーのみ）
+- `ConstraintDefinitionModal.tsx`: モーダル本体から直接フォームを使用
 - 共通ロジックを以下に分離:
-  - `ConstraintDefinitionForm.tsx`: 183行
-  - `useConstraintDefinitionForm.ts`: 105行
-  - `useConstraintDefinitionActions.ts`: 100行
-  - その他UIコンポーネント: 各20-120行
+  - `ConstraintDefinitionForm.tsx`: 183行（共通フォーム）
+  - `useConstraintDefinitionForm.ts`: 105行（状態管理）
+  - `useConstraintDefinitionActions.ts`: 100行（アクション管理）
+  - UIコンポーネント（components/）: 各20-120行
 
 ### メリット
 1. **DRY原則の適用**: 重複コードを排除
 2. **保守性の向上**: 変更が必要な場合、1箇所を修正すれば良い
 3. **可読性の向上**: 各コンポーネントが単一の責任を持つ
-4. **テストの容易性**: 小さな単位でテスト可能
-5. **再利用性**: 個別のコンポーネントを他の場所でも利用可能
+4. **構造の簡潔性**: 不要なラッパーコンポーネントを削除
+5. **テストの容易性**: 小さな単位でテスト可能
+6. **再利用性**: 個別のコンポーネントを他の場所でも利用可能
 
 ## 使用例
 
@@ -173,6 +167,8 @@ import ConstraintDefinitionModal from './ConstraintDefinitionModal'
   onClose={handleClose}
 />
 ```
+
+モーダル内部では `mode` プロップに応じて `ConstraintDefinitionForm` が適切に動作します。
 
 ## 技術スタック
 

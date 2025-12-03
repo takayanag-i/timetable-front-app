@@ -39,11 +39,6 @@ export function useConstraintDefinitionActions({
 
   const isPending = isCreating || isUpdating || isDeleting
 
-  const onSuccessRef = useRef(onSuccess)
-  useEffect(() => {
-    onSuccessRef.current = onSuccess
-  }, [onSuccess])
-
   // エラー処理
   useEffect(() => {
     if (createResult && !createResult.success) {
@@ -61,10 +56,10 @@ export function useConstraintDefinitionActions({
     const createSuccess = Boolean(createResult?.success)
     if (createSuccess && !prevCreateSuccessRef.current) {
       resetFormState()
-      onSuccessRef.current?.()
+      onSuccess?.()
     }
     prevCreateSuccessRef.current = createSuccess
-  }, [createResult?.success, resetFormState])
+  }, [createResult?.success, resetFormState, onSuccess])
 
   // 更新成功時の処理
   const prevUpdateSuccessRef = useRef(false)
@@ -72,10 +67,10 @@ export function useConstraintDefinitionActions({
     const updateSuccess = Boolean(updateResult?.success)
     if (updateSuccess && !prevUpdateSuccessRef.current) {
       resetFormState()
-      onSuccessRef.current?.()
+      onSuccess?.()
     }
     prevUpdateSuccessRef.current = updateSuccess
-  }, [updateResult?.success, resetFormState])
+  }, [updateResult?.success, resetFormState, onSuccess])
 
   // 削除成功時の処理
   const prevDeleteSuccessRef = useRef(false)
@@ -83,10 +78,10 @@ export function useConstraintDefinitionActions({
     const deleteSuccess = Boolean(deleteResult?.success)
     if (deleteSuccess && !prevDeleteSuccessRef.current) {
       resetFormState()
-      onSuccessRef.current?.()
+      onSuccess?.()
     }
     prevDeleteSuccessRef.current = deleteSuccess
-  }, [deleteResult?.success, resetFormState])
+  }, [deleteResult?.success, resetFormState, onSuccess])
 
   return {
     // State

@@ -83,7 +83,7 @@ export function useConstraintDefinitionForm({
   // フォームの妥当性チェック
   const isFormValid =
     !!constraintDefinitionCodeValue &&
-    (softFlagValue ? !!penaltyWeightValue || penaltyWeightValue === '' : true)
+    (softFlagValue ? !!penaltyWeightValue : true)
 
   return {
     // Form control

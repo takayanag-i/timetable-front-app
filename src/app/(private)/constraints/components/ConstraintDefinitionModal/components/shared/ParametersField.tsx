@@ -37,8 +37,8 @@ export function ParametersField({
         params[paramKey] = value
       }
       onChange(JSON.stringify(params))
-    } catch {
-      // エラー時は何もしない
+    } catch (error) {
+      console.error('Failed to parse parameters JSON:', error)
     }
   }
 
@@ -52,7 +52,8 @@ export function ParametersField({
       } else {
         return params[paramKey]?.toString() || ''
       }
-    } catch {
+    } catch (error) {
+      console.error('Failed to parse parameters JSON:', error)
       return ''
     }
   }

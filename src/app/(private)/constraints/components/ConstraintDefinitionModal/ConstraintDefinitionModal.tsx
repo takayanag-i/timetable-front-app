@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import Modal from '@/components/shared/Modal'
 import styles from './ConstraintDefinitionModal.module.css'
 import { ConstraintDefinitionEdit } from './components/ConstraintDefinitionEdit'

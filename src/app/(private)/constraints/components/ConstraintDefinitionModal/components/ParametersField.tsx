@@ -1,5 +1,5 @@
 import type { ConstraintParameterMasterResponse } from '@/types/graphql-types'
-import styles from '../../ConstraintDefinitionModal.module.css'
+import styles from '../ConstraintDefinitionModal.module.css'
 
 interface ParametersFieldProps {
   selectedParameterMasters: ConstraintParameterMasterResponse[]

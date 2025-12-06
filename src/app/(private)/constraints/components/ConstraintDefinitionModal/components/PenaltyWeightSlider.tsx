@@ -1,6 +1,6 @@
 import * as Slider from '@radix-ui/react-slider'
 import type { ConstraintDefinition } from '@/core/domain/entity'
-import styles from '../../ConstraintDefinitionModal.module.css'
+import styles from '../ConstraintDefinitionModal.module.css'
 
 interface PenaltyWeightSliderProps {
   value: string

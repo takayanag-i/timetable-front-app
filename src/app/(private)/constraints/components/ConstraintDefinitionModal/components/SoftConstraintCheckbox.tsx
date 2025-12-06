@@ -1,4 +1,4 @@
-import styles from '../../ConstraintDefinitionModal.module.css'
+import styles from '../ConstraintDefinitionModal.module.css'
 
 interface SoftConstraintCheckboxProps {
   checked: boolean

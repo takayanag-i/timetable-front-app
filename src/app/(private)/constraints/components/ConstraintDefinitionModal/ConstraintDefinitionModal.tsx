@@ -1,10 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import Modal from '@/components/shared/Modal'
 import styles from './ConstraintDefinitionModal.module.css'
-import { ConstraintDefinitionEdit } from './components/ConstraintDefinitionEdit'
-import { ConstraintDefinitionRegister } from './components/ConstraintDefinitionRegister'
+import { ConstraintDefinitionForm } from './components/ConstraintDefinitionForm'
 import type { ConstraintDefinitionMasterResponse } from '@/types/graphql-types'
 import type { ConstraintDefinitionFormValues } from '@/types/ui-types'
 import type { ConstraintDefinition } from '@/core/domain/entity'
@@ -35,45 +33,19 @@ export default function ConstraintDefinitionModal({
   onSuccess,
   onClose,
 }: ConstraintDefinitionModalProps) {
-  // モーダルが開いたときに状態をリセット
-  useEffect(() => {
-    if (isOpen && mode === 'edit') {
-      // 編集モードの初期化処理があればここに記述
-    }
-  }, [isOpen, mode])
-
   if (!isOpen) return null
 
-  // 編集モード
-  if (mode === 'edit' && constraintDefinitionId) {
-    return (
-      <Modal isOpen={isOpen} onClose={onClose}>
-        <div className={styles.header}>
-          <h2 className={styles.title}>{title}</h2>
-        </div>
-        <ConstraintDefinitionEdit
-          isOpen={isOpen}
-          onClose={onClose}
-          onSuccess={onSuccess}
-          constraintDefinitionId={constraintDefinitionId}
-          constraintDefinitionMasters={constraintDefinitionMasters}
-          existingConstraintDefinitions={existingConstraintDefinitions}
-          initialValues={initialValues}
-        />
-      </Modal>
-    )
-  }
-
-  // 新規作成モード
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <div className={styles.header}>
         <h2 className={styles.title}>{title}</h2>
       </div>
-      <ConstraintDefinitionRegister
+      <ConstraintDefinitionForm
+        mode={mode}
         isOpen={isOpen}
         onClose={onClose}
         onSuccess={onSuccess}
+        constraintDefinitionId={constraintDefinitionId}
         constraintDefinitionMasters={constraintDefinitionMasters}
         existingConstraintDefinitions={existingConstraintDefinitions}
         initialValues={initialValues}

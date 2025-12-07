@@ -2,37 +2,32 @@
  * 最適化API用の型定義
  */
 
-import type { GraphQLAnnualData } from '@/lib/optimization-helpers'
+import type { GraphQLAnnualData } from '@/types/graphql-types'
 import type { ConstraintDefinitionResponse } from '@/types/graphql-types'
 
 /**
- * GraphQL APIから取得し、FastAPIへ送信する最適化データの型
+ * GraphQL APIから取得した年次時間割最適化用データの型
  */
-export interface OptimizeGraphQLResponse {
+export interface OptimiseAnnualTimetableGraphQLResponse {
   schoolDays: GraphQLAnnualData['schoolDays']
   homerooms: GraphQLAnnualData['homerooms']
   instructors: GraphQLAnnualData['instructors']
   rooms: GraphQLAnnualData['rooms']
   subjects: Array<{
     id: string
-    courses: GraphQLAnnualData['courses']
+    credits?: number
+    courses: Array<{
+      id: string
+      courseDetails: Array<{
+        id: string
+        instructor: {
+          id: string
+        }
+        room?: {
+          id: string
+        } | null
+      }>
+    }>
   }>
   constraintDefinitions: ConstraintDefinitionResponse[]
-}
-
-/**
- * FastAPI講座DTO（FastAPI側のスキーマと一致）
- */
-export interface CourseDto {
-  id: string
-  credits: number
-  courseDetails: CourseDetailDto[]
-}
-
-/**
- * FastAPI講座詳細DTO
- */
-export interface CourseDetailDto {
-  instructorId: string
-  roomId?: string
 }

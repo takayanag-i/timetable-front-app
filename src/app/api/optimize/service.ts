@@ -3,23 +3,28 @@
  */
 
 import { executeGraphQL } from '@/lib/graphql-client'
-import { optimizeAnnualTimetable } from '@/lib/fastapi-client'
+import {
+  optimizeAnnualTimetable,
+  type OptimizationResult,
+} from '@/lib/fastapi-client'
 import { convertGraphQLToFastAPI } from '@/lib/optimization-helpers'
 import { GET_ANNUAL_DATA_WITH_CONSTRAINTS } from '@/lib/graphql/queries'
+import { UPSERT_TIMETABLE_RESULTS } from '@/lib/graphql/mutations'
 import type {
   GraphQLAnnualData,
   ConstraintDefinition,
-} from '@/lib/optimization-helpers'
-import type { OptimizeGraphQLResponse, CourseDto } from '@/lib/optimize-types'
+} from '@/types/graphql-types'
+import type { OptimiseAnnualTimetableGraphQLResponse } from '@/lib/optimize-types'
 import type { OptimizeResult } from '@/types/bff-types'
 
 /**
  * GraphQL APIから最適化用データを取得
  */
-async function fetchOptimizeData(
-  ttid: string
-): Promise<{ data: OptimizeGraphQLResponse | null; errors?: unknown }> {
-  const result = await executeGraphQL<OptimizeGraphQLResponse>({
+async function fetchOptimizeData(ttid: string): Promise<{
+  data: OptimiseAnnualTimetableGraphQLResponse | null
+  errors?: unknown
+}> {
+  const result = await executeGraphQL<OptimiseAnnualTimetableGraphQLResponse>({
     query: GET_ANNUAL_DATA_WITH_CONSTRAINTS,
     variables: { ttid },
   })
@@ -31,28 +36,10 @@ async function fetchOptimizeData(
 }
 
 /**
- * 講座データを平坦化してCourseDto形式に変換
- */
-function flattenCourses(
-  subjects: OptimizeGraphQLResponse['subjects']
-): CourseDto[] {
-  return subjects.flatMap(subject =>
-    subject.courses.map(course => ({
-      id: course.id,
-      credits: course.subject.credits ?? 0,
-      courseDetails: course.courseDetails.map(cd => ({
-        instructorId: cd.instructor.id,
-        roomId: cd.room?.id,
-      })),
-    }))
-  )
-}
-
-/**
  * 制約定義をFastAPI形式に変換
  */
 function convertConstraintDefinitions(
-  constraintDefinitions: OptimizeGraphQLResponse['constraintDefinitions']
+  constraintDefinitions: OptimiseAnnualTimetableGraphQLResponse['constraintDefinitions']
 ): ConstraintDefinition[] {
   return constraintDefinitions.map(cd => {
     let parameters: Array<{ key: string; value: string }> | undefined
@@ -83,6 +70,72 @@ function convertConstraintDefinitions(
 }
 
 /**
+ * FastAPIの最適化結果をGraphQL Mutationの入力形式に変換
+ */
+function convertOptimizationResultToGraphQLInput(
+  optimizationResult: OptimizationResult
+): {
+  timetableEntries: Array<{
+    homeroomId: string
+    dayOfWeek: string
+    period: number
+    courseId: string
+  }>
+  constraintViolations: Array<{
+    constraintViolationCode: string
+    violatingKeys: unknown
+  }>
+} {
+  return {
+    timetableEntries: optimizationResult.entries.map(entry => ({
+      homeroomId: entry.homeroom,
+      dayOfWeek: entry.day,
+      period: entry.period,
+      courseId: entry.course,
+    })),
+    constraintViolations: optimizationResult.violations.map(violation => ({
+      constraintViolationCode: violation.violation_code,
+      violatingKeys: violation.violation_keys,
+    })),
+  }
+}
+
+/**
+ * 最適化結果をGraphQL APIに保存
+ */
+async function saveTimetableResult(
+  ttid: string,
+  optimizationResult: OptimizationResult
+): Promise<{ id: string } | null> {
+  const input = convertOptimizationResultToGraphQLInput(optimizationResult)
+
+  const result = await executeGraphQL<{
+    upsertTimetableResults: Array<{ id: string; ttid: string }>
+  }>({
+    query: UPSERT_TIMETABLE_RESULTS,
+    variables: {
+      input: {
+        ttid,
+        timetableResults: [
+          {
+            timetableEntries: input.timetableEntries,
+            constraintViolations: input.constraintViolations,
+          },
+        ],
+        by: 'system', // TODO: 実際のユーザー情報を使用
+      },
+    },
+  })
+
+  if (result.errors || !result.data?.upsertTimetableResults?.[0]) {
+    console.error('Failed to save timetable result:', result.errors)
+    return null
+  }
+
+  return { id: result.data.upsertTimetableResults[0].id }
+}
+
+/**
  * 年次時間割最適化を実行
  */
 export async function executeOptimization(
@@ -100,15 +153,30 @@ export async function executeOptimization(
     }
   }
 
-  // 2. 講座データを平坦化してCourseDto形式に変換
-  const courses = flattenCourses(graphqlResult.data.subjects)
-
+  // 2. GraphQLレスポンスをGraphQLAnnualData形式に変換
   const annualData: GraphQLAnnualData = {
     schoolDays: graphqlResult.data.schoolDays,
     homerooms: graphqlResult.data.homerooms,
     instructors: graphqlResult.data.instructors,
     rooms: graphqlResult.data.rooms,
-    courses: graphqlResult.data.subjects.flatMap(subject => subject.courses),
+    subjects: graphqlResult.data.subjects.map(subject => ({
+      id: subject.id,
+      credits: subject.credits,
+      courses: subject.courses.map(course => ({
+        id: course.id,
+        courseDetails: course.courseDetails.map(cd => ({
+          id: cd.id,
+          instructor: {
+            id: cd.instructor.id,
+          },
+          room: cd.room ? { id: cd.room.id } : undefined,
+        })),
+        subject: {
+          id: subject.id,
+          credits: subject.credits,
+        },
+      })),
+    })),
   }
 
   // 3. 制約定義をFastAPI形式に変換
@@ -123,14 +191,22 @@ export async function executeOptimization(
     constraintDefinitions
   )
 
-  // 講座データをCourseDto形式で上書き
-  fastapiInput.annualData.courses = courses
-
   // 5. FastAPI最適化APIを呼び出し
   const optimizationResult = await optimizeAnnualTimetable(fastapiInput)
+
+  // 6. 最適化結果をGraphQL APIに保存
+  const savedResult = await saveTimetableResult(ttid, optimizationResult)
+
+  if (!savedResult) {
+    return {
+      success: false,
+      error: 'Failed to save optimization result to database',
+    }
+  }
 
   return {
     success: true,
     data: optimizationResult,
+    timetableResultId: savedResult.id,
   }
 }

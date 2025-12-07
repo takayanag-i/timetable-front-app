@@ -11,9 +11,7 @@ export async function getTimetableResult(
   resultId: string
 ): Promise<TimetableResult | null> {
   try {
-    const result = await executeGraphQLForServerAction<{
-      timetableResults: TimetableResult[]
-    }>(
+    const result = await executeGraphQLForServerAction<TimetableResult[]>(
       {
         query: GET_TIMETABLE_RESULTS,
         variables: {
@@ -32,11 +30,11 @@ export async function getTimetableResult(
       return null
     }
 
-    if (result.data.timetableResults.length === 0) {
+    if (result.data.length === 0) {
       return null
     }
 
-    return result.data.timetableResults[0]
+    return result.data[0]
   } catch (error) {
     console.error('時間割結果取得で不明なエラーが発生しました', error)
     return null

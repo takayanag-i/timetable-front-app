@@ -1,11 +1,10 @@
 'use client'
-import { useEffect, useState, useActionState, useRef, useCallback } from 'react'
+import { useEffect, useRef } from 'react'
 import Modal from '@/components/shared/Modal'
 import Input from '@/components/shared/Input'
 import type { Grade } from '@/core/domain/entity'
-import { createHomeroom, deleteHomeroom } from './actions'
-import type { ActionResult } from '@/types/bff-types'
 import type { HomeroomFormValues } from './hooks/useHomeroomModal'
+import { useHomeroomModal } from './hooks/useHomeroomModal'
 import styles from './HomeroomModal.module.css'
 import { useForm, useFieldArray } from 'react-hook-form'
 
@@ -55,20 +54,18 @@ export default function HomeroomModal({
   onSuccess,
   onClose,
 }: Props) {
-  const [error, setError] = useState<string | null>(null)
-
-  const [saveResult, saveAction, savePending] = useActionState(
-    createHomeroom,
-    null as ActionResult | null
-  )
-  const [deleteResult, deleteAction, deletePending] = useActionState(
-    deleteHomeroom,
-    null as ActionResult | null
-  )
-
-  const clearError = useCallback(() => {
-    setError(null)
-  }, [])
+  const {
+    error,
+    clearError,
+    saveAction,
+    savePending,
+    saveResult,
+    deleteAction,
+    deletePending,
+    deleteResult,
+  } = useHomeroomModal({
+    initialValues,
+  })
 
   const {
     control,
@@ -96,47 +93,27 @@ export default function HomeroomModal({
     }
   }, [isOpen, reset, replace, initialValues, clearError])
 
-  // 保存結果を監視してエラーを表示
+  // 成功時の処理
+  const prevSaveResultRef = useRef<typeof saveResult>(null)
   useEffect(() => {
-    if (saveResult?.success === false) {
-      setError(saveResult.error || '学級の保存に失敗しました')
-    }
-  }, [saveResult])
-
-  useEffect(() => {
-    if (deleteResult?.success === false) {
-      setError(deleteResult.error || '学級の削除に失敗しました')
-    }
-  }, [deleteResult])
-
-  const onSuccessRef = useRef(onSuccess)
-  useEffect(() => {
-    onSuccessRef.current = onSuccess
-  }, [onSuccess])
-
-  // 保存成功時の処理
-  const prevSaveSuccessRef = useRef(false)
-  useEffect(() => {
-    const saveSuccess = Boolean(saveResult?.success)
-    if (saveSuccess && !prevSaveSuccessRef.current) {
+    if (saveResult?.success && saveResult !== prevSaveResultRef.current) {
       reset(initialValues)
       clearError()
-      onSuccessRef.current?.()
+      onSuccess()
     }
-    prevSaveSuccessRef.current = saveSuccess
-  }, [saveResult?.success, reset, initialValues, clearError])
+    prevSaveResultRef.current = saveResult
+  }, [saveResult, reset, initialValues, clearError, onSuccess])
 
   // 削除成功時の処理
-  const prevDeleteSuccessRef = useRef(false)
+  const prevDeleteResultRef = useRef<typeof deleteResult>(null)
   useEffect(() => {
-    const deleteSuccess = Boolean(deleteResult?.success)
-    if (deleteSuccess && !prevDeleteSuccessRef.current) {
+    if (deleteResult?.success && deleteResult !== prevDeleteResultRef.current) {
       reset(initialValues)
       clearError()
-      onSuccessRef.current?.()
+      onSuccess()
     }
-    prevDeleteSuccessRef.current = deleteSuccess
-  }, [deleteResult?.success, reset, initialValues, clearError])
+    prevDeleteResultRef.current = deleteResult
+  }, [deleteResult, reset, initialValues, clearError, onSuccess])
 
   const homeroomNameValue = watch('homeroomName') ?? ''
   const gradeIdValue = watch('gradeId') ?? ''
@@ -157,13 +134,26 @@ export default function HomeroomModal({
     }
   }
 
+  // 閉じる際は状態を初期化
+  const handleClose = () => {
+    reset(initialValues)
+    clearError()
+    onClose()
+  }
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={isOpen} onClose={handleClose}>
       {/* タイトル表示 */}
-      <div className={styles.header}>{title}</div>
+      <div className={styles.header}>
+        <h2 className={styles.title}>{title}</h2>
+      </div>
 
       {/* エラー表示 */}
-      {error && <div className={styles.errorMessage}>エラー: {error}</div>}
+      {error && (
+        <div className={styles.errorMessage} role="alert">
+          エラー: {error}
+        </div>
+      )}
 
       {/* 学級名入力 */}
       <Input
@@ -302,7 +292,11 @@ export default function HomeroomModal({
           </form>
         )}
 
-        <button type="button" onClick={onClose} className={styles.cancelButton}>
+        <button
+          type="button"
+          onClick={handleClose}
+          className={styles.cancelButton}
+        >
           閉じる
         </button>
       </div>

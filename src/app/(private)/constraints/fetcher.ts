@@ -10,6 +10,8 @@ import {
   GET_CONSTRAINT_DEFINITION_MASTERS,
 } from '@/lib/graphql/queries'
 import type { ConstraintDefinitionMasterResponse } from '@/types/graphql-types'
+import { logger } from '@/lib/logger'
+import { createAppError, ErrorCode } from '@/lib/errors'
 
 export async function getConstraintDefinitions(): Promise<
   ConstraintDefinition[]
@@ -29,18 +31,19 @@ export async function getConstraintDefinitions(): Promise<
       'constraintDefinitions'
     )
 
-    console.log('DEBUG: 制約定義一覧取得Server Componentが実行されました')
-
     if (!result.success || !result.data) {
-      console.error(
-        `制約定義一覧取得でエラーが発生しました: ${result.error || '不明なエラー'}`
+      const appError = createAppError(
+        new Error(result.error || '不明なエラー'),
+        ErrorCode.DATA_NOT_FOUND
       )
+      logger.error('Failed to fetch constraint definitions', appError)
       return []
     }
 
     return result.data
   } catch (error) {
-    console.error('制約定義一覧取得で不明なエラーが発生しました', error)
+    const appError = createAppError(error, ErrorCode.DATA_NOT_FOUND)
+    logger.error('Error fetching constraint definitions', appError)
     return []
   }
 }
@@ -60,16 +63,19 @@ export async function getConstraintDefinitionMasters(): Promise<
     )
 
     if (!result.success || !result.data) {
-      console.error(
-        `制約定義マスタ取得でエラーが発生しました: ${result.error || '不明なエラー'}`
+      const appError = createAppError(
+        new Error(result.error || '不明なエラー'),
+        ErrorCode.DATA_NOT_FOUND
       )
+      logger.error('Failed to fetch constraint definition masters', appError)
       return []
     }
 
     // 必須制約を除外（mandatoryFlagがtrueのものは除外）
     return result.data.filter(master => !master.mandatoryFlag)
   } catch (error) {
-    console.error('制約定義マスタ取得で不明なエラーが発生しました', error)
+    const appError = createAppError(error, ErrorCode.DATA_NOT_FOUND)
+    logger.error('Error fetching constraint definition masters', appError)
     return []
   }
 }

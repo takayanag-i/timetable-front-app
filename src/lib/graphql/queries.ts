@@ -201,7 +201,6 @@ export const GET_ANNUAL_DATA_WITH_CONSTRAINTS = `
     }
     homerooms(input: { ttid: $ttid }) {
       id
-      homeroomName
       homeroomDays {
         id
         dayOfWeek
@@ -209,19 +208,16 @@ export const GET_ANNUAL_DATA_WITH_CONSTRAINTS = `
       }
       blocks {
         id
-        blockName
         lanes {
           id
           courses {
             id
-            courseName
           }
         }
       }
     }
     instructors(input: { ttid: $ttid }) {
       id
-      instructorName
       attendanceDays {
         id
         dayOfWeek
@@ -230,24 +226,19 @@ export const GET_ANNUAL_DATA_WITH_CONSTRAINTS = `
     }
     rooms(input: { ttid: $ttid }) {
       id
-      roomName
     }
     subjects(input: { ttid: $ttid }) {
       id
-      subjectName
       credits
       courses {
         id
-        courseName
         courseDetails {
           id
           instructor {
             id
-            instructorName
           }
           room {
             id
-            roomName
           }
         }
       }

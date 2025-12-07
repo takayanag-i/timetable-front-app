@@ -2,6 +2,7 @@ import {
   useState,
   useEffect,
   useActionState,
+  useRef,
   useCallback,
   useMemo,
 } from 'react'
@@ -25,25 +26,21 @@ export interface HomeroomFormValues {
   gradeId: string
 }
 
-export function useHomeroomModal(homeroomModalData: HomeroomModalData | null) {
+interface UseHomeroomModalArgs {
+  initialValues: HomeroomFormValues
+}
+
+export function useHomeroomModal({ initialValues }: UseHomeroomModalArgs) {
   const [error, setError] = useState<string | null>(null)
 
-  const initialValues = useMemo<HomeroomFormValues>(
-    () => ({
-      id: homeroomModalData?.id ?? '',
-      homeroomName: homeroomModalData?.homeroomName ?? '',
-      homeroomDays:
-        homeroomModalData?.homeroomDays && homeroomModalData.homeroomDays.length
-          ? homeroomModalData.homeroomDays
-          : defaultHomeroomDays,
-      gradeId: homeroomModalData?.gradeId ?? '',
-    }),
-    [homeroomModalData]
-  )
+  const prevIdRef = useRef<string>(initialValues.id)
 
-  const clearError = useCallback(() => {
-    setError(null)
-  }, [])
+  useEffect(() => {
+    if (prevIdRef.current !== initialValues.id) {
+      setError(null)
+      prevIdRef.current = initialValues.id
+    }
+  }, [initialValues.id])
 
   const [saveResult, saveAction, savePending] = useActionState(
     createHomeroom,
@@ -54,6 +51,7 @@ export function useHomeroomModal(homeroomModalData: HomeroomModalData | null) {
     null as ActionResult | null
   )
 
+  // 保存結果を監視してエラーを表示
   useEffect(() => {
     if (saveResult?.success === false) {
       setError(saveResult.error || '学級の保存に失敗しました')
@@ -66,13 +64,18 @@ export function useHomeroomModal(homeroomModalData: HomeroomModalData | null) {
     }
   }, [deleteResult])
 
+  const clearError = useCallback(() => {
+    setError(null)
+  }, [])
+
   return {
-    initialValues,
     error,
     clearError,
     saveAction,
     savePending,
+    saveResult,
     deleteAction,
     deletePending,
+    deleteResult,
   }
 }

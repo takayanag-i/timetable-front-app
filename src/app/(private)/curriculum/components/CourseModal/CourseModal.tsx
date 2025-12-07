@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react'
 import Modal from '@/components/shared/Modal'
 import styles from './CourseModal.module.css'
 import type { CourseModalOptions, CourseFormValues } from '@/types/ui-types'
-import { CourseEdit } from './components/CourseEdit'
-import { CourseRegister } from './components/CourseRegister'
+import { CourseCurrent } from './components/CourseCurrent'
+import { CourseAddOrChange } from './components/CourseAddOrChange'
 
 interface CourseModalProps {
   isOpen: boolean // モーダル表示フラグ
@@ -53,12 +53,15 @@ export function CourseModal({
     }
   }, [isOpen, editMode])
 
-  if (!isOpen) return null
+  // 閉じる際は状態を初期化
+  const handleClose = () => {
+    onClose()
+  }
 
   // 編集モードの場合、まず選択肢を表示
   if (editMode) {
     return (
-      <Modal isOpen={isOpen} onClose={onClose}>
+      <Modal isOpen={isOpen} onClose={handleClose}>
         <div className={styles.header}>
           <h2 className={styles.title}>講座を編集</h2>
         </div>
@@ -87,9 +90,9 @@ export function CourseModal({
         </div>
 
         {editType === 'current' ? (
-          <CourseEdit
+          <CourseCurrent
             isOpen={isOpen}
-            onClose={onClose}
+            onClose={handleClose}
             onSuccess={onSuccess}
             courseModalOptions={courseModalOptions}
             laneId={laneId!}
@@ -97,9 +100,9 @@ export function CourseModal({
             initialValues={initialValues}
           />
         ) : (
-          <CourseRegister
+          <CourseAddOrChange
             isOpen={isOpen}
-            onClose={onClose}
+            onClose={handleClose}
             onSuccess={onSuccess}
             courseModalOptions={courseModalOptions}
             laneId={laneId}
@@ -117,13 +120,13 @@ export function CourseModal({
 
   // 新規作成モードの場合は登録モーダルを直接表示
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={isOpen} onClose={handleClose}>
       <div className={styles.header}>
         <h2 className={styles.title}>講座を追加</h2>
       </div>
-      <CourseRegister
+      <CourseAddOrChange
         isOpen={isOpen}
-        onClose={onClose}
+        onClose={handleClose}
         onSuccess={onSuccess}
         courseModalOptions={courseModalOptions}
         laneId={laneId}

@@ -1,11 +1,18 @@
 import { NextResponse } from 'next/server'
+import { env } from './env'
+import { logger } from './logger'
+import {
+  AppError,
+  ErrorCode,
+  createAppError,
+  createGraphQLError,
+} from './errors'
 
 // GraphQLバックエンドAPIのURL（環境変数から取得、/graphqlは含めない）
-const BACKEND_API_URL =
-  process.env.INT_API_URL || 'http://host.docker.internal:8080'
+const BACKEND_API_URL = env.INT_API_URL
 
 // GraphQLバックエンドAPIの認証キー（環境変数から取得、オプション）
-const BACKEND_API_KEY = process.env.INT_API_KEY || ''
+const BACKEND_API_KEY = env.INT_API_KEY || ''
 
 // GraphQLレスポンスの基本型
 export interface GraphQLResponse<T = Record<string, unknown>> {
@@ -44,29 +51,38 @@ function createHeaders(): Record<string, string> {
 
 /**
  * GraphQLクエリを実行
- * @param request GraphQLリクエスト
+ *
+ * @param request - GraphQLリクエスト
  * @returns GraphQLレスポンス
+ * @throws {AppError} ネットワークエラーまたはHTTPエラーが発生した場合
  */
 export async function executeGraphQL<T = Record<string, unknown>>(
   request: GraphQLRequest
 ): Promise<GraphQLResponse<T>> {
-  const response = await fetch(`${BACKEND_API_URL}/graphql`, {
-    method: 'POST',
-    headers: createHeaders(),
-    body: JSON.stringify(request),
-  })
+  try {
+    const response = await fetch(`${BACKEND_API_URL}/graphql`, {
+      method: 'POST',
+      headers: createHeaders(),
+      body: JSON.stringify(request),
+    })
 
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    if (!response.ok) {
+      const error = new Error(`HTTP ${response.status}: ${response.statusText}`)
+      throw createAppError(error, ErrorCode.FETCH_ERROR)
+    }
+
+    return response.json()
+  } catch (error) {
+    logger.error('GraphQL request failed', createAppError(error))
+    throw createAppError(error, ErrorCode.NETWORK_ERROR)
   }
-
-  return response.json()
 }
 
 /**
  * GraphQLレスポンスを検証し、エラーがあればNextResponseのエラーレスポンスを返す
- * @param result GraphQLレスポンス
- * @param dataFieldName データフィールド名（例: 'homerooms', 'schoolDays'）
+ *
+ * @param result - GraphQLレスポンス
+ * @param dataFieldName - データフィールド名（例: 'homerooms', 'schoolDays'）
  * @returns エラーレスポンス または null（エラーなし）
  */
 export function validateGraphQLResponse<T>(
@@ -75,10 +91,11 @@ export function validateGraphQLResponse<T>(
 ): NextResponse | null {
   // GraphQLエラーのチェック
   if (result.errors && result.errors.length > 0) {
+    const appError = createGraphQLError(result.errors)
+    logger.error('GraphQL validation error', appError)
     return NextResponse.json(
       {
-        error: 'GraphQLクエリのエラーが発生しました',
-        details: result.errors,
+        error: appError.toJSON(),
       },
       { status: 400 }
     )
@@ -86,18 +103,18 @@ export function validateGraphQLResponse<T>(
 
   // dataの存在確認
   if (!result.data) {
-    return NextResponse.json(
-      { error: 'GraphQLレスポンスのdataが存在しません' },
-      { status: 500 }
-    )
+    const appError = new AppError(ErrorCode.DATA_NOT_FOUND)
+    logger.error('GraphQL response missing data', appError)
+    return NextResponse.json({ error: appError.toJSON() }, { status: 500 })
   }
 
   // 指定されたデータフィールドの存在確認
   if (dataFieldName && !result.data[dataFieldName as keyof T]) {
-    return NextResponse.json(
-      { error: `GraphQLレスポンスの${dataFieldName}が存在しません` },
-      { status: 500 }
-    )
+    const appError = new AppError(ErrorCode.DATA_NOT_FOUND, undefined, {
+      field: dataFieldName,
+    })
+    logger.error('GraphQL response missing field', appError)
+    return NextResponse.json({ error: appError.toJSON() }, { status: 500 })
   }
 
   return null // エラーなし
@@ -124,28 +141,33 @@ export function createSuccessResponse(
 
 /**
  * エラーレスポンスを作成
- * @param error エラーメッセージ
- * @param status HTTPステータスコード
+ *
+ * @param error - エラーメッセージまたはAppError
+ * @param status - HTTPステータスコード
  * @returns NextResponse
  */
 export function createErrorResponse(
-  error: string,
+  error: string | AppError,
   status: number = 500
 ): NextResponse {
-  return NextResponse.json({ error }, { status })
+  const errorObj =
+    error instanceof AppError ? error.toJSON() : { message: error }
+  logger.error('API error response', errorObj)
+  return NextResponse.json({ error: errorObj }, { status })
 }
 
 /**
  * GraphQLリクエストを実行し、適切なNextResponseを返す
- * @param request GraphQLリクエスト
- * @param dataFieldName データフィールド名
- * @param errorMessage エラー時のメッセージ
+ *
+ * @param request - GraphQLリクエスト
+ * @param dataFieldName - データフィールド名
+ * @param errorMessage - エラー時のメッセージ（オプション）
  * @returns NextResponse
  */
 export async function executeGraphQLRequest<T = Record<string, unknown>>(
   request: GraphQLRequest,
   dataFieldName?: string,
-  errorMessage: string = '不明なエラーが発生しました'
+  errorMessage?: string
 ): Promise<NextResponse> {
   try {
     const result = await executeGraphQL<T>(request)
@@ -163,16 +185,9 @@ export async function executeGraphQLRequest<T = Record<string, unknown>>(
 
     return createSuccessResponse(data)
   } catch (error) {
-    console.error(errorMessage, error)
-
-    // HTTPエラーの場合
-    if (error instanceof Error && error.message.startsWith('HTTP')) {
-      const statusMatch = error.message.match(/HTTP (\d+)/)
-      const status = statusMatch ? parseInt(statusMatch[1]) : 502
-      return createErrorResponse('内部APIからエラーが返却されました', status)
-    }
-
-    return createErrorResponse(errorMessage)
+    const appError = createAppError(error)
+    logger.error(errorMessage || 'GraphQL request execution failed', appError)
+    return createErrorResponse(appError, 500)
   }
 }
 
@@ -194,9 +209,11 @@ export interface GraphQLExecutionResult<T> {
 
 /**
  * Server Actions用: GraphQLクエリを実行してデータを取得
+ *
  * エラー時もエラー詳細を含む結果を返すため、呼び出し側で適切にエラーハンドリング可能
- * @param request GraphQLリクエスト
- * @param dataFieldName データフィールド名
+ *
+ * @param request - GraphQLリクエスト
+ * @param dataFieldName - データフィールド名
  * @returns 実行結果（success、data、errorを含む）
  */
 export async function executeGraphQLForServerAction<
@@ -210,20 +227,21 @@ export async function executeGraphQLForServerAction<
 
     // GraphQLエラーのチェック
     if (result.errors && result.errors.length > 0) {
-      const errorMessages = result.errors.map(err => err.message).join(', ')
-      console.error('GraphQLエラー:', result.errors)
+      const appError = createGraphQLError(result.errors)
+      logger.error('GraphQL error in server action', appError)
       return {
         success: false,
-        error: errorMessages,
+        error: appError.getMessage(),
       }
     }
 
     // dataの存在確認
     if (!result.data) {
-      console.error('GraphQLレスポンスのdataが存在しません')
+      const appError = new AppError(ErrorCode.DATA_NOT_FOUND)
+      logger.error('GraphQL response missing data in server action', appError)
       return {
         success: false,
-        error: 'GraphQLレスポンスのdataが存在しません',
+        error: appError.getMessage(),
       }
     }
 
@@ -237,32 +255,20 @@ export async function executeGraphQLForServerAction<
       data: data as T,
     }
   } catch (error) {
-    console.error('GraphQL実行エラー:', error)
-    if (error instanceof Error) {
-      // fetchエラーの場合、より詳細な情報を提供
-      if (error.message.includes('fetch')) {
-        return {
-          success: false,
-          error:
-            'バックエンドへの接続に失敗しました。バックエンドサーバーが起動しているか確認してください。',
-        }
-      }
-      return {
-        success: false,
-        error: error.message,
-      }
-    }
+    const appError = createAppError(error)
+    logger.error('GraphQL execution error in server action', appError)
     return {
       success: false,
-      error: '不明なエラーが発生しました',
+      error: appError.getMessage(),
     }
   }
 }
 
 /**
  * Server Actions用: GraphQL Mutationを実行
- * @param request GraphQLリクエスト
- * @param dataFieldName データフィールド名
+ *
+ * @param request - GraphQLリクエスト
+ * @param dataFieldName - データフィールド名
  * @returns 実行結果（success、data、errorを含む）
  */
 export async function executeGraphQLMutation<T = Record<string, unknown>>(

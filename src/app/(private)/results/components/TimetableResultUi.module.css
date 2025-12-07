@@ -121,16 +121,17 @@
   min-height: 60px;
 }
 
-.courseName {
+.subjectName {
   font-weight: bold;
   font-size: 0.9rem;
   color: #0066cc;
   margin-bottom: 0.25rem;
 }
 
-.subjectName {
+.courseName {
+  font-weight: normal;
   font-size: 0.8rem;
-  color: #666;
+  color: #333;
   margin-bottom: 0.5rem;
 }
 
@@ -151,4 +152,11 @@
   color: #ccc;
   text-align: center;
   padding: 0.5rem;
+}
+
+.homeroomNameCell {
+  text-align: left !important;
+  width: auto !important;
+  min-width: 120px;
+  white-space: nowrap;
 }

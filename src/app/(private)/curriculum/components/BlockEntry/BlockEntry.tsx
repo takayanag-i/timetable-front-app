@@ -2,7 +2,10 @@ import styles from './BlockEntry.module.css'
 import LaneEntry from '@/app/(private)/curriculum/components/LaneEntry/LaneEntry'
 import { Lane } from '@/core/domain/entity'
 
-interface Props {
+/**
+ * BlockEntry コンポーネントのProps
+ */
+interface BlockEntryProps {
   blockId: string
   lanes: Lane[]
   blockName: string
@@ -27,7 +30,7 @@ export default function BlockEntry({
   onEditCourse,
   onEditBlock,
   homeroomId,
-}: Props) {
+}: BlockEntryProps) {
   // laneIdでソートして表示順を安定させる
   const sortedLanes = [...lanes].sort((a, b) => a.id.localeCompare(b.id))
 

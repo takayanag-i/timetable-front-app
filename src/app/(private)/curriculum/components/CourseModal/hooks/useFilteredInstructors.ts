@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import type { Subject, Instructor } from '@/core/domain/entity'
 
-interface UseFilteredInstructorsParams {
+interface UseFilteredInstructorsArgs {
   subjectId: string
   subjects: Subject[]
   instructors: Instructor[]
@@ -11,7 +11,7 @@ export function useFilteredInstructors({
   subjectId,
   subjects,
   instructors,
-}: UseFilteredInstructorsParams) {
+}: UseFilteredInstructorsArgs) {
   // 選択中の科目と同じ教科の教員のリスト
   const availableInstructors = useMemo(() => {
     // subjectIdで科目を取得

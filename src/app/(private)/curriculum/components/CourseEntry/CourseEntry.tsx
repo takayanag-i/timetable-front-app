@@ -1,6 +1,9 @@
 import styles from './CourseEntry.module.css'
 
-interface Props {
+/**
+ * CourseEntry コンポーネントのProps
+ */
+interface CourseEntryProps {
   courseId: string
   courseName: string
   instructorNames: string
@@ -9,7 +12,8 @@ interface Props {
   instructorIds?: string[]
   laneId?: string
   gradeId?: string | null
-  onEdit?: (formData: FormData) => void // Server Actionを受け取る
+  /** Server Actionを受け取る */
+  onEdit?: (formData: FormData) => void
 }
 
 // 文字数制限ユーティリティ関数
@@ -28,7 +32,7 @@ export default function CourseEntry({
   laneId,
   gradeId,
   onEdit,
-}: Props) {
+}: CourseEntryProps) {
   return (
     <form action={onEdit} className={styles.courseForm}>
       <input type="hidden" name="courseId" value={courseId} />

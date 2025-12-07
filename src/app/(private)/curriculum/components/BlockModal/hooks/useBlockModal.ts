@@ -2,7 +2,7 @@ import { useState, useEffect, useActionState, useRef, useCallback } from 'react'
 import { createBlockAndAddToHomeroom } from '../../../actions/createBlock'
 import { updateBlock } from '../../../actions/updateBlock'
 import { deleteBlock } from '../../../actions/deleteBlock'
-import type { ActionResult } from '@/types/bff-types'
+import type { ActionResult } from '@/types/server-action-types'
 
 interface UseBlockModalArgs {
   homeroomId: string | null

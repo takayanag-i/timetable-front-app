@@ -1,6 +1,6 @@
 'use server'
 
-import { ActionResult } from '@/types/bff-types'
+import { ActionResult } from '@/types/server-action-types'
 import { errorResult, successResult } from '@/lib/action-helpers'
 import { executeGraphQLMutation } from '@/lib/graphql-client'
 import { DELETE_BLOCK } from '@/lib/graphql/mutations'

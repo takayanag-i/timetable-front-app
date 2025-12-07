@@ -1,6 +1,6 @@
 'use server'
 
-import { ActionResult } from '@/types/bff-types'
+import { ActionResult } from '@/types/server-action-types'
 import { SchoolDay } from '@/core/domain/entity'
 import { errorResult, successResult } from '@/lib/action-helpers'
 import {

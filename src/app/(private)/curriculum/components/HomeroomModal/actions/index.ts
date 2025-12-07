@@ -5,4 +5,4 @@ export {
   deleteHomeroom,
 } from './actions'
 
-export type { HomeroomData } from '@/types/bff-types'
+export type { HomeroomData } from '@/types/server-action-types'

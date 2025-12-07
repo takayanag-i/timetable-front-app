@@ -20,7 +20,7 @@ export interface BlockFormValues {
 /**
  * BlockModal コンポーネントのProps
  */
-interface Props {
+interface BlockModalProps {
   /** モーダルの表示状態 */
   isOpen: boolean
   /** モーダルのモード */
@@ -41,7 +41,10 @@ interface Props {
   onClose: () => void
 }
 
-/** ブロック追加/編集モーダル。RHF を使いつつネイティブ submit で Server Action を呼ぶ */
+/**
+ * ブロック追加/編集モーダル
+ * RHF を使いつつネイティブ submit で Server Action を呼ぶ
+ */
 export default function BlockModal({
   isOpen,
   mode,
@@ -52,7 +55,7 @@ export default function BlockModal({
   onSuccess,
   onDeleteSuccess,
   onClose,
-}: Props) {
+}: BlockModalProps) {
   // 統合されたカスタムフック（Server Action処理 + エラーハンドリング）
   const {
     error,

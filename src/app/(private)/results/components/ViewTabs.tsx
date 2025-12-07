@@ -3,8 +3,8 @@
 import styles from './ViewTabs.module.css'
 
 interface ViewTabsProps {
-  activeView: 'homeroom' | 'teacher'
-  onViewChange: (view: 'homeroom' | 'teacher') => void
+  activeView: 'homeroom' | 'homeroom-list' | 'teacher'
+  onViewChange: (view: 'homeroom' | 'homeroom-list' | 'teacher') => void
 }
 
 /**
@@ -18,6 +18,12 @@ export default function ViewTabs({ activeView, onViewChange }: ViewTabsProps) {
         onClick={() => onViewChange('homeroom')}
       >
         学級ビュー
+      </button>
+      <button
+        className={`${styles.tab} ${activeView === 'homeroom-list' ? styles.active : ''}`}
+        onClick={() => onViewChange('homeroom-list')}
+      >
+        学級一覧ビュー
       </button>
       <button
         className={`${styles.tab} ${activeView === 'teacher' ? styles.active : ''}`}

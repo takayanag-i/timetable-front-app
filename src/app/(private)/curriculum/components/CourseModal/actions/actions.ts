@@ -1,8 +1,16 @@
 'use server'
 
-import { Subject, Instructor, Course } from '@/core/domain/entity'
-import { ActionResult } from '@/types/bff-types'
-import { CourseModalOptions } from '@/types/ui-types'
+import { Course } from '@/core/domain/entity'
+import { ActionResult } from '@/types/server-action-types'
+import {
+  CourseModalOptions,
+  UISubjectType,
+  UIInstructorType,
+} from '@/types/ui-types'
+import type {
+  GraphQLSubjectType,
+  GraphQLInstructorType,
+} from '@/lib/graphql/types'
 import { errorResult, successResult } from '@/lib/action-helpers'
 import {
   executeGraphQLForServerAction,
@@ -19,10 +27,10 @@ import { revalidatePath } from 'next/cache'
 import { logger } from '@/lib/logger'
 import { createAppError, ErrorCode } from '@/lib/errors'
 
-// 講座モーダルオプション取得用の複合レスポンス型
+// 講座モーダルオプション取得用の複合レスポンス型（GraphQL型）
 interface CourseModalOptionsResponse {
-  subjects: Subject[]
-  instructors: Instructor[]
+  subjects: GraphQLSubjectType[]
+  instructors: GraphQLInstructorType[]
   courses: Array<
     Course & {
       subject?: {
@@ -74,6 +82,26 @@ export async function fetchCourseModalOptions(
       return errorResult('教員データの取得に失敗しました')
     }
 
+    // GraphQL型からUI型に変換
+    const uiSubjects: UISubjectType[] = subjects.map(subject => ({
+      id: subject.id,
+      subjectName: subject.subjectName,
+      credits: subject.credits,
+      discipline: subject.discipline,
+      grade: subject.grade,
+    }))
+
+    const uiInstructors: UIInstructorType[] = instructors.map(instructor => ({
+      id: instructor.id,
+      instructorName: instructor.instructorName,
+      disciplineCode: instructor.disciplineCode,
+      attendanceDays: instructor.attendanceDays.map(ad => ({
+        id: ad.id,
+        dayOfWeek: ad.dayOfWeek,
+        unavailablePeriods: ad.unavailablePeriods,
+      })),
+    }))
+
     // 講座データの正規化
     let normalizedCourses: {
       id: string
@@ -104,8 +132,8 @@ export async function fetchCourseModalOptions(
     }
 
     return successResult({
-      subjects,
-      instructors,
+      subjects: uiSubjects,
+      instructors: uiInstructors,
       courses: normalizedCourses,
     })
   } catch (error) {

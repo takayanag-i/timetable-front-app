@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import type { TimetableResult } from '@/types/graphql-types'
+import type { TimetableResultType } from '@/lib/graphql/types'
 import { calculateMaxPeriod } from '../utils/timetable-utils'
 import styles from './TimetableResultUi.module.css'
 
@@ -19,7 +19,7 @@ const DAY_OF_WEEK_MAP: Record<string, string> = {
 }
 
 interface TeacherViewProps {
-  timetableResult: TimetableResult
+  timetableResult: TimetableResultType
 }
 
 /**
@@ -32,7 +32,7 @@ export default function TeacherView({ timetableResult }: TeacherViewProps) {
       string,
       {
         instructorName: string
-        entries: Map<string, TimetableResult['timetableEntries'][0]>
+        entries: Map<string, TimetableResultType['timetableEntries'][0]>
       }
     >()
 

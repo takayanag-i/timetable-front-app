@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { executeOptimization } from './service'
+import type { OptimizeRequest } from './types'
 
 /**
  * 年次時間割最適化エンドポイント
@@ -13,9 +14,7 @@ export async function POST(request: NextRequest) {
   try {
     // リクエストボディを取得
     const body = await request.json()
-    const { ttid } = body as {
-      ttid: string
-    }
+    const { ttid } = body as OptimizeRequest
 
     if (!ttid) {
       return NextResponse.json(

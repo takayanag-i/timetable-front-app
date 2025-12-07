@@ -2,13 +2,18 @@ import styles from './LaneEntry.module.css'
 import CourseEntry from '@/app/(private)/curriculum/components/CourseEntry/CourseEntry'
 import { Course as CourseEntity } from '@/core/domain/entity'
 
-interface LaneProps {
+/**
+ * LaneEntry コンポーネントのProps
+ */
+interface LaneEntryProps {
   id: string
   blockId: string
   gradeId?: string | null
   courses?: CourseEntity[]
-  onAddCourse?: (formData: FormData) => void // Server Actionを受け取る
-  onEditCourse?: (formData: FormData) => void // Server Actionを受け取る
+  /** Server Actionを受け取る */
+  onAddCourse?: (formData: FormData) => void
+  /** Server Actionを受け取る */
+  onEditCourse?: (formData: FormData) => void
 }
 
 export default function LaneEntry({
@@ -18,7 +23,7 @@ export default function LaneEntry({
   courses = [],
   onAddCourse,
   onEditCourse,
-}: LaneProps) {
+}: LaneEntryProps) {
   return (
     <div className={styles.lane}>
       <div className={styles.courseContainer}>

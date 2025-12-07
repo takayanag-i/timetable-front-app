@@ -5,13 +5,13 @@ import {
   getDefaultTtid,
 } from '@/lib/graphql-client'
 import { GET_TIMETABLE_RESULTS } from '@/lib/graphql/queries'
-import type { TimetableResult } from '@/types/graphql-types'
+import type { TimetableResultType } from '@/lib/graphql/types'
 
 export async function getTimetableResult(
   resultId: string
-): Promise<TimetableResult | null> {
+): Promise<TimetableResultType | null> {
   try {
-    const result = await executeGraphQLForServerAction<TimetableResult[]>(
+    const result = await executeGraphQLForServerAction<TimetableResultType[]>(
       {
         query: GET_TIMETABLE_RESULTS,
         variables: {

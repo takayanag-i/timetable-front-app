@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import type { TimetableResult } from '@/types/graphql-types'
+import type { TimetableResultType } from '@/lib/graphql/types'
 import { calculateMaxPeriod } from '../utils/timetable-utils'
 import styles from './TimetableResultUi.module.css'
 
@@ -19,7 +19,7 @@ const DAY_OF_WEEK_MAP: Record<string, string> = {
 }
 
 interface HomeroomViewProps {
-  timetableResult: TimetableResult
+  timetableResult: TimetableResultType
 }
 
 /**
@@ -33,7 +33,7 @@ export default function HomeroomView({ timetableResult }: HomeroomViewProps) {
       {
         homeroomName: string
         gradeName?: string
-        entries: Map<string, TimetableResult['timetableEntries'][0]>
+        entries: Map<string, TimetableResultType['timetableEntries'][0]>
       }
     >()
 
@@ -74,7 +74,7 @@ export default function HomeroomView({ timetableResult }: HomeroomViewProps) {
           <table className={styles.timetableTable}>
             <thead>
               <tr>
-                <th className={styles.headerCell}>時限</th>
+                <th className={styles.headerCell}></th>
                 {ENGLISH_DAYS_OF_WEEK.map(day => (
                   <th key={day} className={styles.headerCell}>
                     {DAY_OF_WEEK_MAP[day]}
@@ -93,36 +93,32 @@ export default function HomeroomView({ timetableResult }: HomeroomViewProps) {
                         <td key={day} className={styles.cell}>
                           {entry ? (
                             <div className={styles.entry}>
-                              <div className={styles.courseName}>
-                                {entry.course.courseName}
-                              </div>
                               {entry.course.subject && (
                                 <div className={styles.subjectName}>
                                   {entry.course.subject.subjectName}
                                 </div>
                               )}
+                              <div className={styles.courseName}>
+                                {entry.course.courseName}
+                              </div>
                               {entry.course.courseDetails &&
                                 entry.course.courseDetails.length > 0 && (
                                   <div className={styles.details}>
                                     {entry.course.courseDetails[0]
                                       .instructor && (
                                       <span className={styles.instructor}>
-                                        教員:
                                         {
                                           entry.course.courseDetails[0]
                                             .instructor.instructorName
                                         }
                                       </span>
                                     )}
-                                    {entry.course.courseDetails[0].room && (
-                                      <span className={styles.room}>
-                                        教室:
-                                        {
-                                          entry.course.courseDetails[0].room
+                                    <span className={styles.room}>
+                                      {entry.course.courseDetails[0].room
+                                        ? entry.course.courseDetails[0].room
                                             .roomName
-                                        }
-                                      </span>
-                                    )}
+                                        : '*'}
+                                    </span>
                                   </div>
                                 )}
                             </div>

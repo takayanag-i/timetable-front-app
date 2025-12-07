@@ -22,7 +22,7 @@ const dayOfWeekMap: Record<string, string> = {
 /**
  * HomeroomModal コンポーネントのProps
  */
-interface Props {
+interface HomeroomModalProps {
   /** モーダルの表示状態 */
   isOpen: boolean
   /** モーダルのタイトル */
@@ -53,7 +53,7 @@ export default function HomeroomModal({
   grades,
   onSuccess,
   onClose,
-}: Props) {
+}: HomeroomModalProps) {
   const {
     error,
     clearError,

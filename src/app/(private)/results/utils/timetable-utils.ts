@@ -1,7 +1,7 @@
-import type { TimetableResult } from '@/types/graphql-types'
+import type { TimetableResultType } from '@/lib/graphql/types'
 
 type TimetableGroup = {
-  entries: Map<string, TimetableResult['timetableEntries'][0]>
+  entries: Map<string, TimetableResultType['timetableEntries'][0]>
 }
 
 /**

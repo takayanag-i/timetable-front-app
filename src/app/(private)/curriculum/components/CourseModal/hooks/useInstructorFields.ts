@@ -9,7 +9,7 @@ import type { CourseFormValues } from '@/types/ui-types'
 
 type CourseDetailRow = { instructorId: string }
 
-interface UseInstructorFieldsParams {
+interface UseInstructorFieldsArgs {
   courseDetailsValue: CourseFormValues['courseDetails']
   append: UseFieldArrayAppend<CourseFormValues, 'courseDetails'>
   remove: UseFieldArrayRemove
@@ -23,7 +23,7 @@ export function useInstructorFields({
   remove,
   replace,
   setValue,
-}: UseInstructorFieldsParams) {
+}: UseInstructorFieldsArgs) {
   const addInstructorField = useCallback(() => {
     append({ instructorId: '' })
   }, [append])

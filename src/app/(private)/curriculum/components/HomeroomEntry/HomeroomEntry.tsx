@@ -2,15 +2,22 @@ import BlockEntry from '@/app/(private)/curriculum/components/BlockEntry/BlockEn
 import styles from './HomeroomEntry.module.css'
 import { Block as BlockEntity } from '@/core/domain/entity'
 
-interface Props {
+/**
+ * HomeroomEntry コンポーネントのProps
+ */
+interface HomeroomEntryProps {
   blocks: BlockEntity[]
   homeroomId: string
   homeroomName: string
   gradeId?: string | null
-  onEdit: (formData: FormData) => void // Server Actionを受け取る
-  onAddCourse?: (formData: FormData) => void // 講座追加Server Actionを受け取る
-  onEditCourse?: (formData: FormData) => void // 講座編集Server Actionを受け取る
-  onAddBlock?: (formData: FormData) => void // ブロック追加Server Actionを受け取る
+  /** Server Actionを受け取る */
+  onEdit: (formData: FormData) => void
+  /** 講座追加Server Actionを受け取る */
+  onAddCourse?: (formData: FormData) => void
+  /** 講座編集Server Actionを受け取る */
+  onEditCourse?: (formData: FormData) => void
+  /** ブロック追加Server Actionを受け取る */
+  onAddBlock?: (formData: FormData) => void
   onEditBlock?: (data: {
     blockId: string
     blockName: string
@@ -29,7 +36,7 @@ export default function HomeroomEntry({
   onEditCourse,
   onAddBlock,
   onEditBlock,
-}: Props) {
+}: HomeroomEntryProps) {
   return (
     <div className={styles.homeroomEntry}>
       <form action={onEdit}>

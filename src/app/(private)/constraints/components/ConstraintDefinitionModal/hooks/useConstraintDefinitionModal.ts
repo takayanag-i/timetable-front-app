@@ -4,9 +4,9 @@ import {
   updateConstraintDefinition,
   deleteConstraintDefinition,
 } from '../actions'
-import type { ActionResult } from '@/types/bff-types'
+import type { ActionResult } from '@/types/server-action-types'
 
-interface UseConstraintDefinitionModalProps {
+interface UseConstraintDefinitionModalArgs {
   mode: 'create' | 'edit'
   constraintDefinitionId?: string
 }
@@ -17,7 +17,7 @@ interface UseConstraintDefinitionModalProps {
 export function useConstraintDefinitionModal({
   mode,
   constraintDefinitionId,
-}: UseConstraintDefinitionModalProps) {
+}: UseConstraintDefinitionModalArgs) {
   const [error, setError] = useState<string | null>(null)
 
   const prevIdRef = useRef<string | undefined>(constraintDefinitionId)

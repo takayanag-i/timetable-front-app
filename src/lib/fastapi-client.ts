@@ -1,12 +1,18 @@
 /**
  * FastAPI最適化APIクライアント
+ *
+ * 注意: このファイルの型定義はFastAPI API専用です。
+ * ドメインエンティティとは異なる構造を持つ場合があります。
  */
 import { logApiRequest, logApiResponse } from '@/lib/api-logger'
 
 // FastAPI のベースURL（Docker内部通信）
 const FASTAPI_BASE_URL = process.env.OPT_API_URL || 'http://fastapi:8000'
 
-export interface OptimizeAnnualTimetableInput {
+/**
+ * FastAPI最適化API用のリクエスト型
+ */
+export interface OptimizeAnnualTimetableRequest {
   ttid: string
   annualData: AnnualData
   constraintDefinitions: ConstraintDefinition[]
@@ -77,6 +83,10 @@ export interface Lane {
   courseIds: string[]
 }
 
+/**
+ * FastAPI API用の制約定義型
+ * 注意: ドメインエンティティのConstraintDefinitionとは異なります
+ */
 export interface ConstraintDefinition {
   constraintDefinitionCode: string
   softFlag: boolean
@@ -89,7 +99,10 @@ export interface ConstraintParameter {
   value: string
 }
 
-export interface OptimizationResult {
+/**
+ * FastAPI最適化API用のレスポンス型
+ */
+export interface OptimizationResponse {
   entries: TimetableEntry[]
   violations: ConstraintViolation[]
 }
@@ -110,8 +123,8 @@ export interface ConstraintViolation {
  * FastAPI最適化APIを呼び出す
  */
 export async function optimizeAnnualTimetable(
-  input: OptimizeAnnualTimetableInput
-): Promise<OptimizationResult> {
+  input: OptimizeAnnualTimetableRequest
+): Promise<OptimizationResponse> {
   const endpoint = `${FASTAPI_BASE_URL}/api/optimise-annual-timetable`
 
   try {

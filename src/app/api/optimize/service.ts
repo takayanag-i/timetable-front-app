@@ -5,17 +5,15 @@
 import { executeGraphQL } from '@/lib/graphql-client'
 import {
   optimizeAnnualTimetable,
-  type OptimizationResult,
+  type OptimizationResponse,
 } from '@/lib/fastapi-client'
 import { convertGraphQLToFastAPI } from '@/lib/optimization-helpers'
 import { GET_ANNUAL_DATA_WITH_CONSTRAINTS } from '@/lib/graphql/queries'
 import { UPSERT_TIMETABLE_RESULTS } from '@/lib/graphql/mutations'
-import type {
-  GraphQLAnnualData,
-  ConstraintDefinition,
-} from '@/types/graphql-types'
+import type { GraphQLAnnualDataType } from '@/lib/graphql/types'
+import type { ConstraintDefinition } from '@/lib/fastapi-client'
 import type { OptimiseAnnualTimetableGraphQLResponse } from '@/lib/optimize-types'
-import type { OptimizeResult } from '@/types/bff-types'
+import type { OptimizeResult } from './types'
 
 /**
  * GraphQL APIから最適化用データを取得
@@ -73,7 +71,7 @@ function convertConstraintDefinitions(
  * FastAPIの最適化結果をGraphQL Mutationの入力形式に変換
  */
 function convertOptimizationResultToGraphQLInput(
-  optimizationResult: OptimizationResult
+  optimizationResult: OptimizationResponse
 ): {
   timetableEntries: Array<{
     homeroomId: string
@@ -105,7 +103,7 @@ function convertOptimizationResultToGraphQLInput(
  */
 async function saveTimetableResult(
   ttid: string,
-  optimizationResult: OptimizationResult
+  optimizationResult: OptimizationResponse
 ): Promise<{ id: string } | null> {
   const input = convertOptimizationResultToGraphQLInput(optimizationResult)
 
@@ -153,8 +151,8 @@ export async function executeOptimization(
     }
   }
 
-  // 2. GraphQLレスポンスをGraphQLAnnualData形式に変換
-  const annualData: GraphQLAnnualData = {
+  // 2. GraphQLレスポンスをGraphQLAnnualDataType形式に変換
+  const annualData: GraphQLAnnualDataType = {
     schoolDays: graphqlResult.data.schoolDays,
     homerooms: graphqlResult.data.homerooms,
     instructors: graphqlResult.data.instructors,

@@ -1,6 +1,6 @@
 import { useState, useEffect, useActionState, useRef, useCallback } from 'react'
 import { updateCourse, removeCourseFromLane } from '../actions'
-import type { ActionResult } from '@/types/bff-types'
+import type { ActionResult } from '@/types/server-action-types'
 
 interface UseCourseCurrentArgs {
   laneId: string

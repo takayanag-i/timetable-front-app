@@ -3,18 +3,21 @@ import { ReactNode } from 'react'
 import styles from './Modal.module.css'
 
 /**
- * Props
+ * Modal コンポーネントのProps
  */
-interface Props {
+interface ModalProps {
+  /** モーダルの表示状態 */
   isOpen: boolean
+  /** モーダルを閉じる際のコールバック */
   onClose: () => void
+  /** モーダルの内容 */
   children: ReactNode
 }
 
 /**
  * 汎用モーダル
  */
-export default function Modal({ isOpen, onClose, children }: Props) {
+export default function Modal({ isOpen, onClose, children }: ModalProps) {
   if (!isOpen) return null
 
   return (

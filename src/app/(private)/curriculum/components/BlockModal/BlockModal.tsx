@@ -185,10 +185,16 @@ export default function BlockModal({
   return (
     <Modal isOpen={isOpen} onClose={handleClose}>
       {/* タイトル表示 */}
-      <div className={styles.header}>{modalTitle}</div>
+      <div className={styles.header}>
+        <h2 className={styles.title}>{modalTitle}</h2>
+      </div>
 
       {/* エラー表示 */}
-      {error && <div className={styles.errorMessage}>エラー: {error}</div>}
+      {error && (
+        <div className={styles.errorMessage} role="alert">
+          エラー: {error}
+        </div>
+      )}
 
       {/* RHF + ネイティブ submit のフォーム */}
       <form action={saveAction}>

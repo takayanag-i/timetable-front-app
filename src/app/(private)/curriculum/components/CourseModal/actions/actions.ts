@@ -16,6 +16,8 @@ import {
 } from '@/lib/graphql/queries'
 import { UPSERT_COURSES, UPSERT_LANES } from '@/lib/graphql/mutations'
 import { revalidatePath } from 'next/cache'
+import { logger } from '@/lib/logger'
+import { createAppError, ErrorCode } from '@/lib/errors'
 
 // 講座モーダルオプション取得用の複合レスポンス型
 interface CourseModalOptionsResponse {
@@ -41,8 +43,6 @@ export async function fetchCourseModalOptions(
   _prevState: ActionResult<CourseModalOptions> | null
 ): Promise<ActionResult<CourseModalOptions>> {
   try {
-    console.log('DEBUG: 講座フォームデータ取得Server Actionが実行されました')
-
     const ttid = getDefaultTtid()
 
     // 科目・教員・講座を1回のリクエストで取得（リクエスト数削減）
@@ -98,8 +98,8 @@ export async function fetchCourseModalOptions(
             .filter((name): name is string => Boolean(name)),
         }))
     } else {
-      console.warn(
-        'WARN: 講座データの取得に失敗しました。既存講座の選択は表示されません。'
+      logger.warn(
+        'Course data not found, existing courses will not be displayed'
       )
     }
 
@@ -109,12 +109,9 @@ export async function fetchCourseModalOptions(
       courses: normalizedCourses,
     })
   } catch (error) {
-    console.error('Error fetching course form data:', error)
-    return errorResult(
-      error instanceof Error
-        ? error.message
-        : '講座フォームデータの取得に失敗しました'
-    )
+    const appError = createAppError(error, ErrorCode.DATA_NOT_FOUND)
+    logger.error('Error fetching course form data', appError)
+    return errorResult(appError)
   }
 }
 

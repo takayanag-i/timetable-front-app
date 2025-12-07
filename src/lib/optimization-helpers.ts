@@ -3,6 +3,10 @@
  */
 
 import type { OptimizeAnnualTimetableInput } from './fastapi-client'
+import type {
+  GraphQLAnnualData,
+  ConstraintDefinition,
+} from '@/types/graphql-types'
 
 /**
  * Spring GraphQLから取得したデータをFastAPI形式に変換
@@ -38,118 +42,26 @@ export function convertGraphQLToFastAPI(
       rooms: graphqlData.rooms.map(rm => ({
         id: rm.id,
       })),
-      courses: graphqlData.courses.map(course => ({
-        id: course.id,
-        credits: course.subject.credits ?? 0,
-        courseDetails: course.courseDetails.map(cd => ({
-          instructorId: cd.instructor.id,
-          roomId: cd.room?.id,
-        })),
-      })),
+      courses: graphqlData.subjects.flatMap(subject =>
+        subject.courses.map(course => ({
+          id: course.id,
+          credits: subject.credits ?? 0,
+          courseDetails: course.courseDetails.map(cd => ({
+            instructorId: cd.instructor.id,
+            roomId: cd.room?.id,
+          })),
+        }))
+      ),
       curriculums: graphqlData.homerooms.map(hr => ({
         homeroomId: hr.id,
-        blocks:
-          hr.blocks?.map(block => ({
-            id: block.id,
-            lanes: block.lanes.map(lane => ({
-              courseIds: lane.courses.map(c => c.id),
-            })),
-          })) ?? [],
+        blocks: (hr.blocks || []).map(block => ({
+          id: block.id,
+          lanes: block.lanes.map(lane => ({
+            courseIds: lane.courses.map(c => c.id),
+          })),
+        })),
       })),
     },
     constraintDefinitions,
   }
-}
-
-// GraphQL型定義（Spring APIの構造に合わせる）
-export interface GraphQLAnnualData {
-  schoolDays: GraphQLSchoolDay[]
-  homerooms: GraphQLHomeroom[]
-  instructors: GraphQLInstructor[]
-  rooms: GraphQLRoom[]
-  courses: GraphQLCourse[]
-}
-
-export interface GraphQLSchoolDay {
-  id: string
-  dayOfWeek: string
-  isAvailable: boolean
-  amPeriods?: number
-  pmPeriods?: number
-}
-
-export interface GraphQLHomeroom {
-  id: string
-  homeroomName: string
-  homeroomDays: GraphQLHomeroomDay[]
-  blocks?: GraphQLBlock[]
-}
-
-export interface GraphQLHomeroomDay {
-  id: string
-  dayOfWeek: string
-  periods: number
-}
-
-export interface GraphQLInstructor {
-  id: string
-  instructorName: string
-  attendanceDays: GraphQLAttendanceDay[]
-}
-
-export interface GraphQLAttendanceDay {
-  id: string
-  dayOfWeek: string
-  unavailablePeriods: number[]
-}
-
-export interface GraphQLRoom {
-  id: string
-  roomName: string
-}
-
-export interface GraphQLCourse {
-  id: string
-  courseName: string
-  subject: {
-    id: string
-    credits?: number
-  }
-  courseDetails: GraphQLCourseDetail[]
-}
-
-export interface GraphQLCourseDetail {
-  id: string
-  instructor: {
-    id: string
-    instructorName: string
-  }
-  room?: {
-    id: string
-    roomName: string
-  }
-}
-
-export interface GraphQLBlock {
-  id: string
-  blockName: string
-  lanes: GraphQLLane[]
-}
-
-export interface GraphQLLane {
-  id: string
-  courses: {
-    id: string
-    courseName: string
-  }[]
-}
-
-export interface ConstraintDefinition {
-  constraintDefinitionCode: string
-  softFlag: boolean
-  penaltyWeight?: number
-  parameters?: Array<{
-    key: string
-    value: string
-  }>
 }

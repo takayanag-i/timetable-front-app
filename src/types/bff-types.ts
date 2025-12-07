@@ -24,6 +24,7 @@ export type ActionResult<T = unknown> =
 export interface OptimizeResult {
   success: boolean
   data?: unknown
+  timetableResultId?: string
   error?: string
   details?: unknown
 }

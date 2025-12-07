@@ -1,0 +1,180 @@
+---
+alwaysApply: true
+---
+
+# チャットルール
+- 質問に文章で回答するときは、mdファイルを作成せず、チャットに表示すること。
+
+# Next.js コーディング標準
+
+## 環境変数
+
+- `@/lib/env`から環境変数を取得する。
+
+```typescript
+import { env } from '@/lib/env'
+const apiUrl = env.INT_API_URL
+```
+
+## JSDocコメント
+
+- すべての公開関数にJSDocコメントを記述する。
+
+```typescript
+/**
+ * データを取得する
+ *
+ * @param id - データID
+ * @param options - オプション
+ * @returns 取得結果
+ * @throws {AppError} データが見つからない場合
+ */
+```
+
+## ロギング
+
+- `console.log`、`console.error`、`console.warn`の直接使用は禁止。`@/lib/logger`を使用すること。
+- ログレベル: `logger.debug()`（開発環境のみ）、`logger.info()`、`logger.warn()`、`logger.error()`
+- 本番環境では構造化ログ（JSON形式）として出力される
+
+```typescript
+import { logger } from '@/lib/logger'
+logger.error('Error message', error)
+```
+
+## エラーハンドリング
+
+- `@/lib/errors`の`AppError`クラスと`ErrorCode`を使用すること
+- `createAppError()`でエラーを変換し、適切なエラーコードを指定すること
+
+```typescript
+import { createAppError, ErrorCode } from '@/lib/errors'
+import { logger } from '@/lib/logger'
+
+try {
+  // 処理
+} catch (error) {
+  const appError = createAppError(error, ErrorCode.DATA_NOT_FOUND)
+  logger.error('Failed to fetch data', appError)
+  return errorResult(appError)
+}
+```
+
+## Server Actions
+
+- 統一的なエラーハンドリングパターンを使用すること
+- `errorResult()`と`successResult()`を使用すること
+
+```typescript
+'use server'
+import { errorResult, successResult } from '@/lib/action-helpers'
+import { logger } from '@/lib/logger'
+import { createAppError, ErrorCode } from '@/lib/errors'
+
+export async function myServerAction(
+  _prevState: ActionResult<Data> | null,
+  formData: FormData
+): Promise<ActionResult<Data>> {
+  try {
+    return successResult(data)
+  } catch (error) {
+    const appError = createAppError(error, ErrorCode.DATA_NOT_FOUND)
+    logger.error('Server action error', appError)
+    return errorResult(appError)
+  }
+}
+```
+
+## GraphQLクライアント
+
+- `@/lib/graphql-client`の`executeGraphQLForServerAction`または`executeGraphQLMutation`を使用すること
+
+## 型定義
+
+- 可能な限り明示的な型定義を使用すること
+
+## インポート順序
+
+1. React関連
+2. Next.js関連
+3. サードパーティライブラリ
+4. 内部モジュール（`@/`エイリアス）
+5. 相対パス
+
+## モーダル実装の書き方パターン
+
+- 各モーダルは個別のフックを実装するが、書き方のパターンは統一すること
+
+### エラーハンドリングパターン
+
+```typescript
+// エラーメッセージ
+const [error, setError] = useState<string | null>(null)
+
+// 保存結果を監視してエラーを表示
+useEffect(() => {
+  if (saveResult?.success === false) {
+    setError(saveResult.error || 'デフォルトエラーメッセージ')
+  }
+}, [saveResult])
+
+useEffect(() => {
+  if (deleteResult?.success === false) {
+    setError(deleteResult.error || 'デフォルトエラーメッセージ')
+  }
+}, [deleteResult])
+
+const clearError = useCallback(() => {
+  setError(null)
+}, [])
+```
+
+### 成功時の処理パターン
+
+```typescript
+// 成功時の処理（prevSaveResultRefを使用）
+const prevSaveResultRef = useRef<typeof saveResult>(null)
+useEffect(() => {
+  if (saveResult?.success && saveResult !== prevSaveResultRef.current) {
+    reset(initialValues)
+    clearError()
+    onSuccess()
+  }
+  prevSaveResultRef.current = saveResult
+}, [saveResult, reset, initialValues, clearError, onSuccess])
+```
+
+### UI構造パターン
+
+```typescript
+<Modal isOpen={isOpen} onClose={handleClose}>
+  {/* タイトル表示 */}
+  <div className={styles.header}>{title}</div>
+
+  {/* エラー表示 */}
+  {error && (
+    <div className={styles.errorMessage} role="alert">
+      エラー: {error}
+    </div>
+  )}
+
+  {/* フォーム内容 */}
+
+  <div className={styles.buttonGroup}>
+    {/* 保存ボタン */}
+    {/* 削除ボタン（編集時のみ） */}
+    {/* 閉じるボタン */}
+  </div>
+</Modal>
+```
+
+### 閉じる処理パターン
+
+```typescript
+// 閉じる際は状態を初期化
+const handleClose = () => {
+  reset(initialValues)
+  clearError()
+  onClose()
+}
+```

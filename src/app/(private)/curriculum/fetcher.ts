@@ -10,6 +10,8 @@ import {
   GET_HOMEROOMS,
   GET_HOMEROOMS_AND_GRADES,
 } from '@/lib/graphql/queries'
+import { logger } from '@/lib/logger'
+import { createAppError, ErrorCode } from '@/lib/errors'
 
 // 学級・学年一覧の複合レスポンス型
 interface HomeroomsAndGradesResponse {
@@ -41,12 +43,12 @@ export async function getHomeroomsAndGrades(): Promise<{
         undefined // 複数フィールドを取得するため、dataFieldNameは指定しない
       )
 
-    console.log('DEBUG: 学級・学年一覧取得Server Componentが実行されました')
-
     if (!result.success || !result.data) {
-      console.error(
-        `学級・学年一覧取得でエラーが発生しました: ${result.error || '不明なエラー'}`
+      const appError = createAppError(
+        new Error(result.error || '不明なエラー'),
+        ErrorCode.DATA_NOT_FOUND
       )
+      logger.error('Failed to fetch homerooms and grades', appError)
       return { homerooms: [], grades: [] }
     }
 
@@ -55,7 +57,8 @@ export async function getHomeroomsAndGrades(): Promise<{
       grades: result.data.grades || [],
     }
   } catch (error) {
-    console.error('学級・学年一覧取得で不明なエラーが発生しました', error)
+    const appError = createAppError(error, ErrorCode.DATA_NOT_FOUND)
+    logger.error('Error fetching homerooms and grades', appError)
     return { homerooms: [], grades: [] }
   }
 }
@@ -77,21 +80,19 @@ export async function getHomerooms(): Promise<Homeroom[]> {
       'homerooms'
     )
 
-    // デバッグ用ログ
-    console.log('DEBUG: 学級一覧取得Server Componentが実行されました')
-
     if (!result.success || !result.data) {
-      console.error(
-        `学級一覧取得でエラーが発生しました: ${result.error || '不明なエラー'}`
+      const appError = createAppError(
+        new Error(result.error || '不明なエラー'),
+        ErrorCode.DATA_NOT_FOUND
       )
+      logger.error('Failed to fetch homerooms', appError)
       return []
     }
 
     return result.data
   } catch (error) {
-    console.error('学級一覧取得で不明なエラーが発生しました', error)
-
-    // フォールバック
+    const appError = createAppError(error, ErrorCode.DATA_NOT_FOUND)
+    logger.error('Error fetching homerooms', appError)
     return []
   }
 }
@@ -112,18 +113,19 @@ export async function getGrades(): Promise<Grade[]> {
       'grades'
     )
 
-    console.log('DEBUG: 学年一覧取得Server Componentが実行されました')
-
     if (!result.success || !result.data) {
-      console.error(
-        `学年一覧取得でエラーが発生しました: ${result.error || '不明なエラー'}`
+      const appError = createAppError(
+        new Error(result.error || '不明なエラー'),
+        ErrorCode.DATA_NOT_FOUND
       )
+      logger.error('Failed to fetch grades', appError)
       return []
     }
 
     return result.data
   } catch (error) {
-    console.error('学年一覧取得で不明なエラーが発生しました', error)
+    const appError = createAppError(error, ErrorCode.DATA_NOT_FOUND)
+    logger.error('Error fetching grades', appError)
     return []
   }
 }

@@ -112,7 +112,7 @@ export interface ConstraintViolation {
 export async function optimizeAnnualTimetable(
   input: OptimizeAnnualTimetableInput
 ): Promise<OptimizationResult> {
-  const endpoint = `${FASTAPI_BASE_URL}/optimise-annual-timetable`
+  const endpoint = `${FASTAPI_BASE_URL}/api/optimise-annual-timetable`
 
   try {
     // リクエストをログ出力

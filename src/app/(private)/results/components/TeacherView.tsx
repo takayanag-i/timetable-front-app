@@ -2,9 +2,21 @@
 
 import { useMemo } from 'react'
 import type { TimetableResult } from '@/types/graphql-types'
-import { DAYS_OF_WEEK } from '@/constants'
 import { calculateMaxPeriod } from '../utils/timetable-utils'
 import styles from './TimetableResultUi.module.css'
+
+// 英語形式の曜日配列（データ処理用）
+const ENGLISH_DAYS_OF_WEEK = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+// 英語→日本語の変換マップ（表示用）
+const DAY_OF_WEEK_MAP: Record<string, string> = {
+  mon: '月',
+  tue: '火',
+  wed: '水',
+  thu: '木',
+  fri: '金',
+  sat: '土',
+  sun: '日',
+}
 
 interface TeacherViewProps {
   timetableResult: TimetableResult
@@ -74,9 +86,9 @@ export default function TeacherView({ timetableResult }: TeacherViewProps) {
             <thead>
               <tr>
                 <th className={styles.headerCell}>時限</th>
-                {DAYS_OF_WEEK.map(day => (
+                {ENGLISH_DAYS_OF_WEEK.map(day => (
                   <th key={day} className={styles.headerCell}>
-                    {day}
+                    {DAY_OF_WEEK_MAP[day]}
                   </th>
                 ))}
               </tr>
@@ -86,7 +98,7 @@ export default function TeacherView({ timetableResult }: TeacherViewProps) {
                 period => (
                   <tr key={period}>
                     <td className={styles.periodCell}>{period}</td>
-                    {DAYS_OF_WEEK.map(day => {
+                    {ENGLISH_DAYS_OF_WEEK.map(day => {
                       const entry = group.entries.get(`${day}-${period}`)
                       return (
                         <td key={day} className={styles.cell}>

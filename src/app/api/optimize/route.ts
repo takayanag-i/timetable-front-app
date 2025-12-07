@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: result.data,
+      timetableResultId: result.timetableResultId,
     })
   } catch (error) {
     console.error('Optimization error:', error)

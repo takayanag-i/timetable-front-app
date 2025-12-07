@@ -1,16 +1,9 @@
 'use client'
 
-import {
-  useState,
-  useActionState,
-  useEffect,
-  useMemo,
-  useRef,
-  useCallback,
-} from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import styles from '../CourseModal.module.css'
 import type { CourseModalOptions, CourseFormValues } from '@/types/ui-types'
-import { createCourseAndAddToLane } from '../actions'
+import { useCourseAddOrChange } from '../hooks/useCourseAddOrChange'
 import { useCourseSuggestions } from '../hooks/useCourseSuggestions'
 import { useFilteredInstructors } from '../hooks/useFilteredInstructors'
 import { SubjectSelectField } from './SubjectSelectField'
@@ -19,7 +12,7 @@ import { InstructorSelectField } from './InstructorSelectField'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { useInstructorFields } from '../hooks/useInstructorFields'
 
-interface CourseRegisterProps {
+interface CourseAddOrChangeProps {
   isOpen: boolean
   onClose: () => void
   onSuccess?: () => void
@@ -31,11 +24,11 @@ interface CourseRegisterProps {
 }
 
 /**
- * 講座登録コンポーネント（新規作成・講座変更用）
+ * 講座追加・変更コンポーネント（新規作成・講座変更用）
  * - 科目は選択可
  * - 講座名はサジェストあり（フォーカス時に全講座表示、入力で絞り込み）
  */
-export function CourseRegister({
+export function CourseAddOrChange({
   isOpen,
   onClose,
   onSuccess,
@@ -44,9 +37,20 @@ export function CourseRegister({
   blockId,
   initialValues,
   gradeId,
-}: CourseRegisterProps) {
-  const [error, setError] = useState<string | null>(null)
+}: CourseAddOrChangeProps) {
   const [selectedCourseId, setSelectedCourseId] = useState('')
+
+  const {
+    error,
+    clearError,
+    setError: setErrorManually,
+    createAction,
+    createPending,
+    createResult,
+  } = useCourseAddOrChange({
+    laneId,
+    blockId,
+  })
 
   const { control, watch, setValue, reset } = useForm<CourseFormValues>({
     defaultValues: initialValues,
@@ -62,12 +66,7 @@ export function CourseRegister({
   const courseNameValue = watch('courseName')
   const courseDetailsValue = watch('courseDetails') || []
 
-  const [createResult, createAction, isCreating] = useActionState(
-    createCourseAndAddToLane,
-    null
-  )
-
-  const isPending = isCreating
+  const isPending = createPending
 
   const subjectOptions = courseModalOptions?.subjects || []
   const instructorOptions = courseModalOptions?.instructors || []
@@ -128,9 +127,9 @@ export function CourseRegister({
       courseDetails: [{ instructorId: '' }],
     })
     replace([{ instructorId: '' }])
-    setError(null)
+    clearError()
     setSelectedCourseId('')
-  }, [reset, replace])
+  }, [reset, replace, clearError])
 
   const handleCourseNameChange = useCallback(
     (nextValue: string) => {
@@ -199,43 +198,39 @@ export function CourseRegister({
 
     if (exactMatchCourse && !selectedCourseId) {
       e.preventDefault()
-      setError(
+      setErrorManually(
         `同名の講座「${trimmedCourseName}」が既に存在します。サジェストから選択してください。`
       )
     }
   }
 
-  const onSuccessRef = useRef(onSuccess)
-  useEffect(() => {
-    onSuccessRef.current = onSuccess
-  }, [onSuccess])
-
+  // モーダルが開いたときに初期値をリセット
   useEffect(() => {
     if (isOpen) {
       reset(initialValues)
       replace(initialValues.courseDetails)
+      clearError()
     }
-  }, [isOpen, reset, replace, initialValues])
+  }, [isOpen, reset, replace, initialValues, clearError])
 
+  // 成功時の処理
+  const prevCreateResultRef = useRef<typeof createResult>(null)
   useEffect(() => {
-    if (createResult && !createResult.success) {
-      setError(createResult.error)
-    }
-  }, [createResult])
-
-  const prevCreateSuccessRef = useRef(false)
-  useEffect(() => {
-    const createSuccess = Boolean(createResult?.success)
-    if (createSuccess && !prevCreateSuccessRef.current) {
+    if (createResult?.success && createResult !== prevCreateResultRef.current) {
       resetFormState()
-      onSuccessRef.current?.()
+      clearError()
+      onSuccess?.()
     }
-    prevCreateSuccessRef.current = createSuccess
-  }, [createResult?.success, resetFormState])
+    prevCreateResultRef.current = createResult
+  }, [createResult, resetFormState, clearError, onSuccess])
 
   return (
     <>
-      {error && <div className={styles.error}>{error}</div>}
+      {error && (
+        <div className={styles.errorMessage} role="alert">
+          エラー: {error}
+        </div>
+      )}
 
       <form
         action={createAction}

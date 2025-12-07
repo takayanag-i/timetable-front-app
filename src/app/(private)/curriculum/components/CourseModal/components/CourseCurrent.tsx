@@ -1,16 +1,16 @@
 'use client'
 
-import { useState, useActionState, useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import styles from '../CourseModal.module.css'
 import type { CourseModalOptions, CourseFormValues } from '@/types/ui-types'
-import { updateCourse, removeCourseFromLane } from '../actions'
+import { useCourseCurrent } from '../hooks/useCourseCurrent'
 import { useFilteredInstructors } from '../hooks/useFilteredInstructors'
 import { SubjectSelectField } from './SubjectSelectField'
 import { InstructorSelectField } from './InstructorSelectField'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { useInstructorFields } from '../hooks/useInstructorFields'
 
-interface CourseEditProps {
+interface CourseCurrentProps {
   isOpen: boolean
   onClose: () => void
   onSuccess?: () => void
@@ -25,7 +25,7 @@ interface CourseEditProps {
  * - 科目は変更不可（disabled）
  * - 講座名はサジェストなし（通常のinput）
  */
-export function CourseEdit({
+export function CourseCurrent({
   isOpen,
   onClose,
   onSuccess,
@@ -33,8 +33,20 @@ export function CourseEdit({
   laneId,
   courseId,
   initialValues,
-}: CourseEditProps) {
-  const [error, setError] = useState<string | null>(null)
+}: CourseCurrentProps) {
+  const {
+    error,
+    clearError,
+    updateAction,
+    updatePending,
+    updateResult,
+    removeAction,
+    removePending,
+    removeResult,
+  } = useCourseCurrent({
+    laneId,
+    courseId,
+  })
 
   const { control, watch, setValue, reset } = useForm<CourseFormValues>({
     defaultValues: initialValues,
@@ -50,16 +62,7 @@ export function CourseEdit({
   const courseNameValue = watch('courseName')
   const courseDetailsValue = watch('courseDetails') || []
 
-  const [updateResult, updateAction, isUpdating] = useActionState(
-    updateCourse,
-    null
-  )
-  const [removeResult, removeAction, isRemoving] = useActionState(
-    removeCourseFromLane,
-    null
-  )
-
-  const isPending = isUpdating || isRemoving
+  const isPending = updatePending || removePending
 
   const subjectOptions = courseModalOptions?.subjects || []
   const instructorOptions = courseModalOptions?.instructors || []
@@ -94,57 +97,51 @@ export function CourseEdit({
   const resetFormState = useCallback(() => {
     reset(initialValues)
     replace(initialValues.courseDetails)
-    setError(null)
-  }, [reset, replace, initialValues])
+    clearError()
+  }, [reset, replace, initialValues, clearError])
 
   const handleClose = useCallback(() => {
     resetFormState()
     onClose()
   }, [resetFormState, onClose])
 
-  const onSuccessRef = useRef(onSuccess)
-  useEffect(() => {
-    onSuccessRef.current = onSuccess
-  }, [onSuccess])
-
+  // モーダルが開いたときに初期値をリセット
   useEffect(() => {
     if (isOpen) {
       reset(initialValues)
       replace(initialValues.courseDetails)
+      clearError()
     }
-  }, [isOpen, reset, replace, initialValues])
+  }, [isOpen, reset, replace, initialValues, clearError])
 
+  // 成功時の処理
+  const prevUpdateResultRef = useRef<typeof updateResult>(null)
   useEffect(() => {
-    if (updateResult && !updateResult.success) {
-      setError(updateResult.error)
-    } else if (removeResult && !removeResult.success) {
-      setError(removeResult.error)
-    }
-  }, [updateResult, removeResult])
-
-  const prevUpdateSuccessRef = useRef(false)
-  useEffect(() => {
-    const updateSuccess = Boolean(updateResult?.success)
-    if (updateSuccess && !prevUpdateSuccessRef.current) {
+    if (updateResult?.success && updateResult !== prevUpdateResultRef.current) {
       resetFormState()
-      onSuccessRef.current?.()
+      clearError()
+      onSuccess?.()
     }
-    prevUpdateSuccessRef.current = updateSuccess
-  }, [updateResult?.success, resetFormState])
+    prevUpdateResultRef.current = updateResult
+  }, [updateResult, resetFormState, clearError, onSuccess])
 
-  const prevRemoveSuccessRef = useRef(false)
+  const prevRemoveResultRef = useRef<typeof removeResult>(null)
   useEffect(() => {
-    const removeSuccess = Boolean(removeResult?.success)
-    if (removeSuccess && !prevRemoveSuccessRef.current) {
+    if (removeResult?.success && removeResult !== prevRemoveResultRef.current) {
       resetFormState()
-      onSuccessRef.current?.()
+      clearError()
+      onSuccess?.()
     }
-    prevRemoveSuccessRef.current = removeSuccess
-  }, [removeResult?.success, resetFormState])
+    prevRemoveResultRef.current = removeResult
+  }, [removeResult, resetFormState, clearError, onSuccess])
 
   return (
     <>
-      {error && <div className={styles.error}>{error}</div>}
+      {error && (
+        <div className={styles.errorMessage} role="alert">
+          エラー: {error}
+        </div>
+      )}
 
       <form action={updateAction} className={styles.form}>
         <input type="hidden" name="courseId" value={courseId} />

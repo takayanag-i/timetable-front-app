@@ -97,7 +97,7 @@ export async function createConstraintDefinition(
     if (parametersStr && parametersStr.trim() !== '') {
       try {
         parameters = JSON.parse(parametersStr)
-      } catch (e) {
+      } catch {
         return errorResult('パラメータのJSON形式が正しくありません')
       }
     }
@@ -173,7 +173,7 @@ export async function updateConstraintDefinition(
     if (parametersStr && parametersStr.trim() !== '') {
       try {
         parameters = JSON.parse(parametersStr)
-      } catch (e) {
+      } catch {
         return errorResult('パラメータのJSON形式が正しくありません')
       }
     }

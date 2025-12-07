@@ -2,19 +2,13 @@
 
 import { useMemo } from 'react'
 import type { TimetableResultType } from '@/lib/graphql/types'
-import { calculateMaxPeriod } from '../utils/timetable-utils'
+import {
+  calculateMaxPeriod,
+  DAY_OF_WEEK_MAP,
+  getAvailableDays,
+  truncateJoinedText,
+} from '../utils/timetable-utils'
 import styles from './TimetableResultUi.module.css'
-
-// 英語形式の曜日配列（月曜日から金曜日まで）
-const WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri']
-// 英語→日本語の変換マップ（表示用）
-const DAY_OF_WEEK_MAP: Record<string, string> = {
-  mon: '月',
-  tue: '火',
-  wed: '水',
-  thu: '木',
-  fri: '金',
-}
 
 interface HomeroomListViewProps {
   timetableResult: TimetableResultType
@@ -61,6 +55,12 @@ export default function HomeroomListView({
     [timetableByHomeroom]
   )
 
+  // 使用されている曜日を抽出（availableな曜日だけ）
+  const availableDays = useMemo(
+    () => getAvailableDays(timetableResult.timetableEntries),
+    [timetableResult.timetableEntries]
+  )
+
   // 学級名でソート
   const sortedHomerooms = useMemo(() => {
     return Array.from(timetableByHomeroom.entries()).sort(([, a], [, b]) => {
@@ -74,10 +74,10 @@ export default function HomeroomListView({
     })
   }, [timetableByHomeroom])
 
-  // 列ヘッダーを生成（月1時限、月2時限、...、金の最後の時限）
+  // 列ヘッダーを生成（availableな曜日×時限）
   const columnHeaders = useMemo(() => {
     const headers: Array<{ day: string; period: number; label: string }> = []
-    for (const day of WEEKDAYS) {
+    for (const day of availableDays) {
       for (let period = 1; period <= maxPeriod; period++) {
         headers.push({
           day,
@@ -87,15 +87,16 @@ export default function HomeroomListView({
       }
     }
     return headers
-  }, [maxPeriod])
+  }, [availableDays, maxPeriod])
+
 
   return (
     <div className={styles.timetablesSection}>
-      <div className={styles.homeroomTimetable}>
+      <div className={`${styles.homeroomTimetable} ${styles.homeroomListView}`}>
         <table className={styles.timetableTable}>
           <thead>
             <tr>
-              <th className={styles.headerCell}>学級</th>
+              <th className={styles.headerCell}></th>
               {columnHeaders.map((header, index) => (
                 <th
                   key={`${header.day}-${header.period}`}
@@ -113,9 +114,6 @@ export default function HomeroomListView({
                   className={`${styles.periodCell} ${styles.homeroomNameCell}`}
                 >
                   <div>{group.homeroomName}</div>
-                  {group.gradeName && (
-                    <div className={styles.gradeName}>({group.gradeName})</div>
-                  )}
                 </td>
                 {columnHeaders.map(header => {
                   const entry = group.entries.get(
@@ -128,30 +126,35 @@ export default function HomeroomListView({
                     >
                       {entry ? (
                         <div className={styles.entry}>
-                          {entry.course.subject && (
-                            <div className={styles.subjectName}>
-                              {entry.course.subject.subjectName}
-                            </div>
-                          )}
                           <div className={styles.courseName}>
                             {entry.course.courseName}
                           </div>
                           {entry.course.courseDetails &&
                             entry.course.courseDetails.length > 0 && (
                               <div className={styles.details}>
-                                {entry.course.courseDetails[0].instructor && (
-                                  <span className={styles.instructor}>
-                                    {
-                                      entry.course.courseDetails[0].instructor
-                                        .instructorName
-                                    }
-                                  </span>
-                                )}
+                                <span className={styles.instructor}>
+                                  {truncateJoinedText(
+                                    entry.course.courseDetails
+                                      .map(detail =>
+                                        detail.instructor
+                                          ? detail.instructor.instructorName
+                                          : ''
+                                      )
+                                      .filter(Boolean),
+                                    '/',
+                                    6
+                                  )}
+                                </span>
                                 <span className={styles.room}>
-                                  {entry.course.courseDetails[0].room
-                                    ? entry.course.courseDetails[0].room
-                                        .roomName
-                                    : '*'}
+                                  {truncateJoinedText(
+                                    entry.course.courseDetails.map(detail =>
+                                      detail.room
+                                        ? detail.room.roomName
+                                        : '*'
+                                    ),
+                                    '/',
+                                    6
+                                  )}
                                 </span>
                               </div>
                             )}

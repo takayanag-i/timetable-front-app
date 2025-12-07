@@ -2,21 +2,13 @@
 
 import { useMemo } from 'react'
 import type { TimetableResultType } from '@/lib/graphql/types'
-import { calculateMaxPeriod } from '../utils/timetable-utils'
+import {
+  calculateMaxPeriodFromEntries,
+  DAY_OF_WEEK_MAP,
+  getAvailableDays,
+  truncateJoinedText,
+} from '../utils/timetable-utils'
 import styles from './TimetableResultUi.module.css'
-
-// 英語形式の曜日配列（データ処理用）
-const ENGLISH_DAYS_OF_WEEK = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
-// 英語→日本語の変換マップ（表示用）
-const DAY_OF_WEEK_MAP: Record<string, string> = {
-  mon: '月',
-  tue: '火',
-  wed: '水',
-  thu: '木',
-  fri: '金',
-  sat: '土',
-  sun: '日',
-}
 
 interface TeacherViewProps {
   timetableResult: TimetableResultType
@@ -32,7 +24,10 @@ export default function TeacherView({ timetableResult }: TeacherViewProps) {
       string,
       {
         instructorName: string
-        entries: Map<string, TimetableResultType['timetableEntries'][0]>
+        entries: Map<
+          string,
+          TimetableResultType['timetableEntries'][0][]
+        >
       }
     >()
 
@@ -43,22 +38,42 @@ export default function TeacherView({ timetableResult }: TeacherViewProps) {
         continue
       }
 
-      const instructor = courseDetails[0].instructor
-      if (!instructor) {
-        continue
-      }
+      // 複数のcourseDetailsから教員を取得
+      // 同じentryが同じ教員の同じ時限に複数回追加されないように、教員IDごとに処理
+      const processedInstructorIds = new Set<string>()
+      for (const detail of courseDetails) {
+        const instructor = detail.instructor
+        if (!instructor) {
+          continue
+        }
 
-      const instructorId = instructor.id
-      if (!grouped.has(instructorId)) {
-        grouped.set(instructorId, {
-          instructorName: instructor.instructorName,
-          entries: new Map(),
-        })
-      }
+        const instructorId = instructor.id
+        // 同じentryが同じ教員に複数回追加されないようにチェック
+        if (processedInstructorIds.has(instructorId)) {
+          continue
+        }
+        processedInstructorIds.add(instructorId)
 
-      const group = grouped.get(instructorId)!
-      const key = `${entry.dayOfWeek}-${entry.period}`
-      group.entries.set(key, entry)
+        if (!grouped.has(instructorId)) {
+          grouped.set(instructorId, {
+            instructorName: instructor.instructorName,
+            entries: new Map(),
+          })
+        }
+
+        const group = grouped.get(instructorId)!
+        const key = `${entry.dayOfWeek}-${entry.period}`
+        if (!group.entries.has(key)) {
+          group.entries.set(key, [])
+        }
+        // 同じentryが既に追加されていないかチェック（entry.idで判定）
+        const existingEntryIds = group.entries
+          .get(key)!
+          .map(e => e.id)
+        if (!existingEntryIds.includes(entry.id)) {
+          group.entries.get(key)!.push(entry)
+        }
+      }
     }
 
     return grouped
@@ -66,8 +81,14 @@ export default function TeacherView({ timetableResult }: TeacherViewProps) {
 
   // 最大時限数を計算
   const maxPeriod = useMemo(
-    () => calculateMaxPeriod(timetableByTeacher),
+    () => calculateMaxPeriodFromEntries(timetableByTeacher),
     [timetableByTeacher]
+  )
+
+  // 使用されている曜日を抽出（availableな曜日だけ）
+  const availableDays = useMemo(
+    () => getAvailableDays(timetableResult.timetableEntries),
+    [timetableResult.timetableEntries]
   )
 
   // 教員名でソート
@@ -76,6 +97,7 @@ export default function TeacherView({ timetableResult }: TeacherViewProps) {
       a.instructorName.localeCompare(b.instructorName, 'ja')
     )
   }, [timetableByTeacher])
+
 
   return (
     <div className={styles.timetablesSection}>
@@ -86,7 +108,7 @@ export default function TeacherView({ timetableResult }: TeacherViewProps) {
             <thead>
               <tr>
                 <th className={styles.headerCell}>時限</th>
-                {ENGLISH_DAYS_OF_WEEK.map(day => (
+                {availableDays.map(day => (
                   <th key={day} className={styles.headerCell}>
                     {DAY_OF_WEEK_MAP[day]}
                   </th>
@@ -98,33 +120,37 @@ export default function TeacherView({ timetableResult }: TeacherViewProps) {
                 period => (
                   <tr key={period}>
                     <td className={styles.periodCell}>{period}</td>
-                    {ENGLISH_DAYS_OF_WEEK.map(day => {
-                      const entry = group.entries.get(`${day}-${period}`)
+                    {availableDays.map(day => {
+                      const entriesAtSameTime =
+                        group.entries.get(`${day}-${period}`) || []
                       return (
                         <td key={day} className={styles.cell}>
-                          {entry ? (
+                          {entriesAtSameTime.length > 0 ? (
                             <div className={styles.entry}>
                               <div className={styles.courseName}>
-                                {entry.course.courseName}
+                                {entriesAtSameTime[0].course.courseName}
                               </div>
-                              {entry.course.subject && (
-                                <div className={styles.subjectName}>
-                                  {entry.course.subject.subjectName}
-                                </div>
-                              )}
                               <div className={styles.details}>
                                 <span className={styles.instructor}>
-                                  学級: {entry.homeroom.homeroomName}
+                                  {truncateJoinedText(
+                                    entriesAtSameTime.map(e =>
+                                      e.homeroom.homeroomName
+                                    ),
+                                    '/',
+                                    6
+                                  )}
                                 </span>
-                                {entry.course.courseDetails &&
-                                  entry.course.courseDetails.length > 0 &&
-                                  entry.course.courseDetails[0].room && (
+                                {entriesAtSameTime[0].course.courseDetails &&
+                                  entriesAtSameTime[0].course.courseDetails
+                                    .length > 0 && (
                                     <span className={styles.room}>
-                                      教室:{' '}
-                                      {
-                                        entry.course.courseDetails[0].room
-                                          .roomName
-                                      }
+                                      {entriesAtSameTime[0].course.courseDetails
+                                        .map(detail =>
+                                          detail.room
+                                            ? detail.room.roomName
+                                            : '*'
+                                        )
+                                        .join('/')}
                                     </span>
                                   )}
                               </div>

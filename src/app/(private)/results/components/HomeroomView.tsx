@@ -2,21 +2,13 @@
 
 import { useMemo } from 'react'
 import type { TimetableResultType } from '@/lib/graphql/types'
-import { calculateMaxPeriod } from '../utils/timetable-utils'
+import {
+  calculateMaxPeriod,
+  DAY_OF_WEEK_MAP,
+  getAvailableDays,
+  truncateJoinedText,
+} from '../utils/timetable-utils'
 import styles from './TimetableResultUi.module.css'
-
-// 英語形式の曜日配列（データ処理用）
-const ENGLISH_DAYS_OF_WEEK = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
-// 英語→日本語の変換マップ（表示用）
-const DAY_OF_WEEK_MAP: Record<string, string> = {
-  mon: '月',
-  tue: '火',
-  wed: '水',
-  thu: '木',
-  fri: '金',
-  sat: '土',
-  sun: '日',
-}
 
 interface HomeroomViewProps {
   timetableResult: TimetableResultType
@@ -61,6 +53,12 @@ export default function HomeroomView({ timetableResult }: HomeroomViewProps) {
     [timetableByHomeroom]
   )
 
+  // 使用されている曜日を抽出（availableな曜日だけ）
+  const availableDays = useMemo(
+    () => getAvailableDays(timetableResult.timetableEntries),
+    [timetableResult.timetableEntries]
+  )
+
   return (
     <div className={styles.timetablesSection}>
       {Array.from(timetableByHomeroom.entries()).map(([homeroomId, group]) => (
@@ -75,7 +73,7 @@ export default function HomeroomView({ timetableResult }: HomeroomViewProps) {
             <thead>
               <tr>
                 <th className={styles.headerCell}></th>
-                {ENGLISH_DAYS_OF_WEEK.map(day => (
+                {availableDays.map(day => (
                   <th key={day} className={styles.headerCell}>
                     {DAY_OF_WEEK_MAP[day]}
                   </th>
@@ -87,7 +85,7 @@ export default function HomeroomView({ timetableResult }: HomeroomViewProps) {
                 period => (
                   <tr key={period}>
                     <td className={styles.periodCell}>{period}</td>
-                    {ENGLISH_DAYS_OF_WEEK.map(day => {
+                    {availableDays.map(day => {
                       const entry = group.entries.get(`${day}-${period}`)
                       return (
                         <td key={day} className={styles.cell}>
@@ -98,26 +96,32 @@ export default function HomeroomView({ timetableResult }: HomeroomViewProps) {
                                   {entry.course.subject.subjectName}
                                 </div>
                               )}
-                              <div className={styles.courseName}>
-                                {entry.course.courseName}
-                              </div>
                               {entry.course.courseDetails &&
                                 entry.course.courseDetails.length > 0 && (
                                   <div className={styles.details}>
-                                    {entry.course.courseDetails[0]
-                                      .instructor && (
-                                      <span className={styles.instructor}>
-                                        {
-                                          entry.course.courseDetails[0]
-                                            .instructor.instructorName
-                                        }
-                                      </span>
-                                    )}
+                                    <span className={styles.instructor}>
+                                      {truncateJoinedText(
+                                        entry.course.courseDetails
+                                          .map(detail =>
+                                            detail.instructor
+                                              ? detail.instructor.instructorName
+                                              : ''
+                                          )
+                                          .filter(Boolean),
+                                        '/',
+                                        6
+                                      )}
+                                    </span>
                                     <span className={styles.room}>
-                                      {entry.course.courseDetails[0].room
-                                        ? entry.course.courseDetails[0].room
-                                            .roomName
-                                        : '*'}
+                                      {truncateJoinedText(
+                                        entry.course.courseDetails.map(detail =>
+                                          detail.room
+                                            ? detail.room.roomName
+                                            : '*'
+                                        ),
+                                        '/',
+                                        6
+                                      )}
                                     </span>
                                   </div>
                                 )}

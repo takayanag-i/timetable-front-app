@@ -8,6 +8,7 @@ import ViewTabs from './ViewTabs'
 import HomeroomView from './HomeroomView'
 import HomeroomListView from './HomeroomListView'
 import TeacherView from './TeacherView'
+import TeacherListView from './TeacherListView'
 
 /**
  * TimetableResultUi コンポーネントのProps
@@ -23,7 +24,7 @@ export default function TimetableResultUi({
   timetableResult,
 }: TimetableResultUiProps) {
   const [activeView, setActiveView] = useState<
-    'homeroom' | 'homeroom-list' | 'teacher'
+    'homeroom' | 'homeroom-list' | 'teacher' | 'teacher-list'
   >('homeroom')
 
   return (
@@ -108,8 +109,10 @@ export default function TimetableResultUi({
         <HomeroomView timetableResult={timetableResult} />
       ) : activeView === 'homeroom-list' ? (
         <HomeroomListView timetableResult={timetableResult} />
-      ) : (
+      ) : activeView === 'teacher' ? (
         <TeacherView timetableResult={timetableResult} />
+      ) : (
+        <TeacherListView timetableResult={timetableResult} />
       )}
     </div>
   )

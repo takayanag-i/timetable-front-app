@@ -97,7 +97,10 @@ export default function HomeroomListView({
             <tr>
               <th className={styles.headerCell}>学級</th>
               {columnHeaders.map((header, index) => (
-                <th key={`${header.day}-${header.period}`} className={styles.headerCell}>
+                <th
+                  key={`${header.day}-${header.period}`}
+                  className={styles.headerCell}
+                >
                   {header.label}
                 </th>
               ))}
@@ -106,7 +109,9 @@ export default function HomeroomListView({
           <tbody>
             {sortedHomerooms.map(([homeroomId, group]) => (
               <tr key={homeroomId}>
-                <td className={`${styles.periodCell} ${styles.homeroomNameCell}`}>
+                <td
+                  className={`${styles.periodCell} ${styles.homeroomNameCell}`}
+                >
                   <div>{group.homeroomName}</div>
                   {group.gradeName && (
                     <div className={styles.gradeName}>({group.gradeName})</div>
@@ -117,7 +122,10 @@ export default function HomeroomListView({
                     `${header.day}-${header.period}`
                   )
                   return (
-                    <td key={`${header.day}-${header.period}`} className={styles.cell}>
+                    <td
+                      key={`${header.day}-${header.period}`}
+                      className={styles.cell}
+                    >
                       {entry ? (
                         <div className={styles.entry}>
                           {entry.course.subject && (
@@ -134,14 +142,15 @@ export default function HomeroomListView({
                                 {entry.course.courseDetails[0].instructor && (
                                   <span className={styles.instructor}>
                                     {
-                                      entry.course.courseDetails[0]
-                                        .instructor.instructorName
+                                      entry.course.courseDetails[0].instructor
+                                        .instructorName
                                     }
                                   </span>
                                 )}
                                 <span className={styles.room}>
                                   {entry.course.courseDetails[0].room
-                                    ? entry.course.courseDetails[0].room.roomName
+                                    ? entry.course.courseDetails[0].room
+                                        .roomName
                                     : '*'}
                                 </span>
                               </div>
@@ -161,4 +170,3 @@ export default function HomeroomListView({
     </div>
   )
 }
-

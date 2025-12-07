@@ -89,7 +89,6 @@ export default function HomeroomListView({
     return headers
   }, [availableDays, maxPeriod])
 
-
   return (
     <div className={styles.timetablesSection}>
       <div className={`${styles.homeroomTimetable} ${styles.homeroomListView}`}>
@@ -148,9 +147,7 @@ export default function HomeroomListView({
                                 <span className={styles.room}>
                                   {truncateJoinedText(
                                     entry.course.courseDetails.map(detail =>
-                                      detail.room
-                                        ? detail.room.roomName
-                                        : '*'
+                                      detail.room ? detail.room.roomName : '*'
                                     ),
                                     '/',
                                     6

@@ -4,7 +4,9 @@ import styles from './ViewTabs.module.css'
 
 interface ViewTabsProps {
   activeView: 'homeroom' | 'homeroom-list' | 'teacher' | 'teacher-list'
-  onViewChange: (view: 'homeroom' | 'homeroom-list' | 'teacher' | 'teacher-list') => void
+  onViewChange: (
+    view: 'homeroom' | 'homeroom-list' | 'teacher' | 'teacher-list'
+  ) => void
 }
 
 /**

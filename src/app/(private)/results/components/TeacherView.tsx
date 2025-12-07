@@ -24,10 +24,7 @@ export default function TeacherView({ timetableResult }: TeacherViewProps) {
       string,
       {
         instructorName: string
-        entries: Map<
-          string,
-          TimetableResultType['timetableEntries'][0][]
-        >
+        entries: Map<string, TimetableResultType['timetableEntries'][0][]>
       }
     >()
 
@@ -67,9 +64,7 @@ export default function TeacherView({ timetableResult }: TeacherViewProps) {
           group.entries.set(key, [])
         }
         // 同じentryが既に追加されていないかチェック（entry.idで判定）
-        const existingEntryIds = group.entries
-          .get(key)!
-          .map(e => e.id)
+        const existingEntryIds = group.entries.get(key)!.map(e => e.id)
         if (!existingEntryIds.includes(entry.id)) {
           group.entries.get(key)!.push(entry)
         }
@@ -97,7 +92,6 @@ export default function TeacherView({ timetableResult }: TeacherViewProps) {
       a.instructorName.localeCompare(b.instructorName, 'ja')
     )
   }, [timetableByTeacher])
-
 
   return (
     <div className={styles.timetablesSection}>
@@ -133,8 +127,8 @@ export default function TeacherView({ timetableResult }: TeacherViewProps) {
                               <div className={styles.details}>
                                 <span className={styles.instructor}>
                                   {truncateJoinedText(
-                                    entriesAtSameTime.map(e =>
-                                      e.homeroom.homeroomName
+                                    entriesAtSameTime.map(
+                                      e => e.homeroom.homeroomName
                                     ),
                                     '/',
                                     6

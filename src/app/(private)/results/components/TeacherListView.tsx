@@ -26,10 +26,7 @@ export default function TeacherListView({
       string,
       {
         instructorName: string
-        entries: Map<
-          string,
-          TimetableResultType['timetableEntries'][0][]
-        >
+        entries: Map<string, TimetableResultType['timetableEntries'][0][]>
       }
     >()
 
@@ -69,9 +66,7 @@ export default function TeacherListView({
           group.entries.set(key, [])
         }
         // 同じentryが既に追加されていないかチェック（entry.idで判定）
-        const existingEntryIds = group.entries
-          .get(key)!
-          .map(e => e.id)
+        const existingEntryIds = group.entries.get(key)!.map(e => e.id)
         if (!existingEntryIds.includes(entry.id)) {
           group.entries.get(key)!.push(entry)
         }
@@ -115,7 +110,6 @@ export default function TeacherListView({
     return headers
   }, [availableDays, maxPeriod])
 
-
   return (
     <div className={styles.timetablesSection}>
       <div className={`${styles.homeroomTimetable} ${styles.teacherListView}`}>
@@ -157,24 +151,22 @@ export default function TeacherListView({
                           <div className={styles.details}>
                             <span className={styles.instructor}>
                               {truncateJoinedText(
-                                entriesAtSameTime.map(e =>
-                                  e.homeroom.homeroomName
+                                entriesAtSameTime.map(
+                                  e => e.homeroom.homeroomName
                                 ),
                                 '/',
                                 6
                               )}
                             </span>
                             {entriesAtSameTime[0].course.courseDetails &&
-                              entriesAtSameTime[0].course.courseDetails
-                                .length > 0 && (
+                              entriesAtSameTime[0].course.courseDetails.length >
+                                0 && (
                                 <span className={styles.room}>
                                   {truncateJoinedText(
-                                    entriesAtSameTime[0].course.courseDetails
-                                      .map(detail =>
-                                        detail.room
-                                          ? detail.room.roomName
-                                          : '*'
-                                      ),
+                                    entriesAtSameTime[0].course.courseDetails.map(
+                                      detail =>
+                                        detail.room ? detail.room.roomName : '*'
+                                    ),
                                     '/',
                                     6
                                   )}
@@ -196,4 +188,3 @@ export default function TeacherListView({
     </div>
   )
 }
-

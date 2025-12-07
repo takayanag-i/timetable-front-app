@@ -114,10 +114,11 @@ export default function HomeroomView({ timetableResult }: HomeroomViewProps) {
                                     </span>
                                     <span className={styles.room}>
                                       {truncateJoinedText(
-                                        entry.course.courseDetails.map(detail =>
-                                          detail.room
-                                            ? detail.room.roomName
-                                            : '*'
+                                        entry.course.courseDetails.map(
+                                          detail =>
+                                            detail.room
+                                              ? detail.room.roomName
+                                              : '*'
                                         ),
                                         '/',
                                         6

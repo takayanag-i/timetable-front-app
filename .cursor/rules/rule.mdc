@@ -93,6 +93,225 @@ export async function myServerAction(
 
 - 可能な限り明示的な型定義を使用すること
 
+### 型定義の分類と配置
+
+型定義は以下の6つのカテゴリに分類し、適切な場所に配置すること：
+
+**注意**: 以前は`@/types/bff-types`にAPI Route用の型を定義していましたが、現在は各API Route配下に配置します。
+
+#### 1. ドメインエンティティ (`@/core/domain/entity`)
+
+- **用途**: ビジネスロジックの核心となるドメインモデル
+- **配置**: `src/core/domain/entity/entity.ts`
+- **特徴**:
+  - アプリケーション全体で共通して使用される
+  - 外部API（GraphQL、FastAPI）に依存しない
+  - ビジネスルールを表現する
+- **例**: `Homeroom`, `Block`, `Course`, `Subject`, `Instructor`, `ConstraintDefinition` など
+
+```typescript
+// ✅ ドメインエンティティ
+export interface Homeroom {
+  id: string
+  homeroomName: string
+  homeroomDays: HomeroomDay[]
+  blocks: Block[]
+  grade?: Grade | null
+}
+```
+
+#### 2. GraphQL型 (`@/lib/graphql/types`)
+
+- **用途**: GraphQL API（Spring Boot）との通信で使用する型
+- **配置**: `src/lib/graphql/types.ts`
+- **特徴**:
+  - GraphQLスキーマと連動
+  - Query/MutationのInput/Response型
+  - query/mutation定義とコロケーション
+  - ドメインエンティティを参照しない（依存関係の明確化のため）
+- **命名規則**: `{EntityName}Response`, `{EntityName}Input`, `{EntityName}MasterResponse` など
+- **例**: `ConstraintDefinitionResponse`, `ConstraintDefinitionMasterResponse`, `UpsertHomeroomsInput` など
+
+**GraphQLスキーマからTypeScript型へのマッピング規則**:
+- GraphQLスキーマの定義に基づいて型を定義する
+- **nullableなフィールド**（`Type`、`Int`、`String`など、`!`がついていない）:
+  - TypeScriptでは`field?: Type | null`とする
+  - GraphQLクエリでフィールドを指定しない場合、レスポンスに含まれない（undefined）
+  - GraphQLクエリでフィールドを指定したが値がnullの場合、nullが返される
+- **non-nullableなフィールド**（`Type!`、`Int!`、`String!`など、`!`がついている）:
+  - TypeScriptでは`field: Type`とする（必須）
+  - ただし、GraphQLクエリでフィールドを指定しない場合はレスポンスに含まれないため、実際のクエリで使用するかどうかに応じてoptionalにする場合もある
+
+```typescript
+// ✅ GraphQL型（@/lib/graphql/types.ts）
+// GraphQLスキーマ: penaltyWeight: Float (nullable)
+export interface ConstraintDefinitionResponse {
+  id: string
+  constraintDefinitionCode: string
+  softFlag: boolean
+  penaltyWeight?: number | null  // nullableなので optional かつ null を許可
+}
+```
+
+#### 3. API Route型（各API Route配下）
+
+- **用途**: Next.js API Route（`app/api/`配下）で使用する型
+- **配置**: 各API Routeディレクトリ内（例: `src/app/api/optimize/types.ts`）
+- **特徴**:
+  - API Route専用の型定義
+  - GraphQLでカバーできない型のみ定義
+  - 各API Routeごとに独立して定義
+- **例**: `app/api/optimize/types.ts`内の`OptimizeRequest`, `OptimizeResult` など
+
+```typescript
+// ✅ API Route型（各API Route配下）
+// src/app/api/optimize/types.ts
+export interface OptimizeRequest {
+  ttid: string
+}
+
+export interface OptimizeResult {
+  success: boolean
+  data?: unknown
+  timetableResultId?: string
+  error?: string
+  details?: unknown
+}
+```
+
+#### 4. Server Actions型 (`@/types/server-action-types`)
+
+- **用途**: Server Actionsで使用する型
+- **配置**: `src/types/server-action-types.ts`
+- **特徴**:
+  - Server Actions専用の型定義
+  - GraphQLでカバーできない型のみ定義
+  - Server Actionsの戻り値型など
+- **例**: `ActionResult<T>`, `HomeroomData` など
+
+```typescript
+// ✅ Server Actions型
+export type ActionResult<T = unknown> =
+  | { success: true; data: T }
+  | { success: false; error: string }
+```
+
+#### 5. UI型 (`@/types/ui-types`)
+
+- **用途**: UIコンポーネント間のデータ受け渡し、フォーム値など
+- **配置**: `src/types/ui-types.ts`
+- **特徴**:
+  - ドメインエンティティ、GraphQL型、BFF型でカバーできないもののみ定義
+  - フォーム値、モーダル用データなど
+- **例**: `CourseFormValues`, `ConstraintDefinitionFormValues`, `HomeroomModalData` など
+
+```typescript
+// ✅ UI型（ドメインエンティティを参照）
+import type { HomeroomDay } from '@/core/domain/entity'
+
+export interface CourseFormValues {
+  subjectId: string
+  courseName: string
+  courseDetails: { instructorId: string }[]
+}
+```
+
+#### 6. 外部API型（特殊ケース）
+
+- **用途**: 外部API（FastAPIなど）専用の型定義
+- **配置**: APIクライアントファイル内（例: `src/lib/fastapi-client.ts`）
+- **特徴**:
+  - 外部APIの仕様に合わせた型定義
+  - ドメインエンティティとは異なる構造を持つ場合がある
+  - 変換が必要な場合は、fetcherやhelper関数内で行う
+- **例**: `fastapi-client.ts`内の`ConstraintDefinition`, `OptimizeAnnualTimetableRequest` など
+
+```typescript
+// ✅ 外部API型（fastapi-client.ts内）
+export interface ConstraintDefinition {
+  constraintDefinitionCode: string
+  softFlag: boolean
+  penaltyWeight?: number
+  parameters?: ConstraintParameter[]
+}
+```
+
+### 型定義の使い分けルール
+
+1. **ドメインエンティティを優先**: ビジネスロジックに関わる型は`@/core/domain/entity`に定義
+2. **レイヤー間の型定義**: 
+   - **同じレイヤー内では重複を避ける**: 同じファイルや同じカテゴリ内で同じ概念の型を複数回定義しない
+   - **異なるレイヤー間では意図的な分離を許容**: 依存関係を明確にするため、同じ概念の型を異なるレイヤーで定義することがある
+     - 例: `@/core/domain/entity`の`HomeroomDay`と`@/types/graphql-types`の`GraphQLHomeroomDayType`は、レイヤーが異なるため両方定義する
+     - 各レイヤーは独立して型を定義し、変換処理で相互に変換する
+3. **参照方向**: 
+   - GraphQL型、BFF型、UI型 → ドメインエンティティ（参照禁止）
+   - ドメインエンティティ → GraphQL型、BFF型、UI型（参照禁止）
+   - **重要**: API型（GraphQL型、BFF型、UI型）は`@/core/domain/entity`を参照しない。必要な型は各API型ファイル内で独自に定義する
+4. **変換が必要な場合**: APIレスポンスからドメインエンティティへの変換、またはその逆の変換は、fetcherやaction内で行う
+
+### 型定義の命名規則
+
+- **REST APIリクエスト**: `{EntityName}Request` の形式で命名する
+  ```typescript
+  export interface OptimizeAnnualTimetableRequest {
+    ttid: string
+    annualData: AnnualData
+  }
+  ```
+
+- **REST APIレスポンス**: `{EntityName}Response` の形式で命名する
+  ```typescript
+  export interface OptimizationResponse {
+    entries: TimetableEntry[]
+    violations: ConstraintViolation[]
+  }
+  ```
+
+- **GraphQL Input**: `{EntityName}Input` の形式で命名する
+  ```typescript
+  export interface UpsertHomeroomsInput {
+    ttid: string
+    homerooms: Homeroom[]
+  }
+  ```
+
+- **GraphQL Type**: `{EntityName}Type` の形式で命名する
+  ```typescript
+  export interface GraphQLAnnualDataType {
+    schoolDays: GraphQLSchoolDayType[]
+    homerooms: GraphQLHomeroomType[]
+  }
+  ```
+
+- **GraphQL Response**: `{EntityName}Response` の形式で命名する（既存のQuery/Mutationレスポンス型）
+  ```typescript
+  export interface ConstraintDefinitionResponse {
+    id: string
+    constraintDefinitionCode: string
+  }
+  ```
+
+### インターフェース命名規則
+
+- **コンポーネントのProps**: `{ComponentName}Props` を使用すること
+  ```typescript
+  interface BlockModalProps {
+    isOpen: boolean
+    onClose: () => void
+  }
+  ```
+
+- **フックの引数**: `Use{HookName}Args` を使用すること
+  ```typescript
+  interface UseBlockModalArgs {
+    homeroomId: string | null
+    mode: 'create' | 'edit'
+  }
+  ```
+
+- **理由**: コンポーネントとフックを区別し、型の意図を明確にするため
+
 ## インポート順序
 
 1. React関連

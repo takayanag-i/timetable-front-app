@@ -12,14 +12,25 @@ import { InstructorSelectField } from './InstructorSelectField'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { useInstructorFields } from '../hooks/useInstructorFields'
 
+/**
+ * CourseAddOrChange コンポーネントのProps
+ */
 interface CourseAddOrChangeProps {
+  /** モーダルの表示状態 */
   isOpen: boolean
+  /** モーダルを閉じる際のコールバック */
   onClose: () => void
+  /** 成功時コールバック */
   onSuccess?: () => void
+  /** 科目/教員/既存講座オプション */
   courseModalOptions: CourseModalOptions | null
+  /** レーンID */
   laneId?: string
+  /** ブロックID */
   blockId?: string
+  /** フォームの初期値 */
   initialValues: CourseFormValues
+  /** 絞り込み対象の学年ID */
   gradeId?: string
 }
 

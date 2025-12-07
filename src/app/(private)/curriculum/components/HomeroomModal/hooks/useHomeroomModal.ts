@@ -6,12 +6,12 @@ import {
   useCallback,
   useMemo,
 } from 'react'
-import type { HomeroomDay } from '@/core/domain/entity'
+import type { UIHomeroomDayType } from '@/types/ui-types'
 import type { HomeroomModalData } from '@/types/ui-types'
 import { createHomeroom, deleteHomeroom } from '../actions'
-import type { ActionResult } from '@/types/bff-types'
+import type { ActionResult } from '@/types/server-action-types'
 
-export const defaultHomeroomDays: HomeroomDay[] = [
+export const defaultHomeroomDays: UIHomeroomDayType[] = [
   { id: 'mon', dayOfWeek: 'mon', periods: 0 },
   { id: 'tue', dayOfWeek: 'tue', periods: 0 },
   { id: 'wed', dayOfWeek: 'wed', periods: 0 },
@@ -22,7 +22,7 @@ export const defaultHomeroomDays: HomeroomDay[] = [
 export interface HomeroomFormValues {
   id: string
   homeroomName: string
-  homeroomDays: HomeroomDay[]
+  homeroomDays: UIHomeroomDayType[]
   gradeId: string
 }
 

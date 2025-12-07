@@ -10,13 +10,23 @@ import { InstructorSelectField } from './InstructorSelectField'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { useInstructorFields } from '../hooks/useInstructorFields'
 
+/**
+ * CourseCurrent コンポーネントのProps
+ */
 interface CourseCurrentProps {
+  /** モーダルの表示状態 */
   isOpen: boolean
+  /** モーダルを閉じる際のコールバック */
   onClose: () => void
+  /** 成功時コールバック */
   onSuccess?: () => void
+  /** 科目/教員/既存講座オプション */
   courseModalOptions: CourseModalOptions | null
+  /** レーンID */
   laneId: string
+  /** 講座ID */
   courseId: string
+  /** フォームの初期値 */
   initialValues: CourseFormValues
 }
 

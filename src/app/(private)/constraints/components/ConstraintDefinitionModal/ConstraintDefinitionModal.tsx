@@ -9,19 +9,31 @@ import { SoftConstraintCheckbox } from './components/SoftConstraintCheckbox'
 import { PenaltyWeightSlider } from './components/PenaltyWeightSlider'
 import { ParametersField } from './components/ParametersField'
 import { useConstraintDefinitionModal } from './hooks/useConstraintDefinitionModal'
-import type { ConstraintDefinitionMasterResponse } from '@/types/graphql-types'
+import type { ConstraintDefinitionMasterResponse } from '@/lib/graphql/types'
 import type { ConstraintDefinitionFormValues } from '@/types/ui-types'
 import type { ConstraintDefinition } from '@/core/domain/entity'
 
+/**
+ * ConstraintDefinitionModal コンポーネントのProps
+ */
 interface ConstraintDefinitionModalProps {
+  /** モーダルの表示状態 */
   isOpen: boolean
+  /** モーダルのモード */
   mode: 'create' | 'edit'
+  /** モーダルのタイトル */
   title: string
+  /** 制約定義ID（編集時のみ） */
   constraintDefinitionId?: string
+  /** 制約定義マスタ */
   constraintDefinitionMasters: ConstraintDefinitionMasterResponse[]
+  /** 既存の制約定義 */
   existingConstraintDefinitions?: ConstraintDefinition[]
+  /** フォームの初期値 */
   initialValues: ConstraintDefinitionFormValues
+  /** 処理成功時のコールバック */
   onSuccess: () => void
+  /** モーダルを閉じる際のコールバック */
   onClose: () => void
 }
 

@@ -2,23 +2,30 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import type { TimetableResult } from '@/types/graphql-types'
+import type { TimetableResultType } from '@/lib/graphql/types'
 import styles from './TimetableResultUi.module.css'
 import ViewTabs from './ViewTabs'
 import HomeroomView from './HomeroomView'
+import HomeroomListView from './HomeroomListView'
 import TeacherView from './TeacherView'
+import TeacherListView from './TeacherListView'
 
-interface Props {
-  timetableResult: TimetableResult
+/**
+ * TimetableResultUi コンポーネントのProps
+ */
+interface TimetableResultUiProps {
+  timetableResult: TimetableResultType
 }
 
 /**
  * 時間割結果表示画面
  */
-export default function TimetableResultUi({ timetableResult }: Props) {
-  const [activeView, setActiveView] = useState<'homeroom' | 'teacher'>(
-    'homeroom'
-  )
+export default function TimetableResultUi({
+  timetableResult,
+}: TimetableResultUiProps) {
+  const [activeView, setActiveView] = useState<
+    'homeroom' | 'homeroom-list' | 'teacher' | 'teacher-list'
+  >('homeroom')
 
   return (
     <div className={styles.container}>
@@ -100,8 +107,12 @@ export default function TimetableResultUi({ timetableResult }: Props) {
       {/* 時間割表の表示 */}
       {activeView === 'homeroom' ? (
         <HomeroomView timetableResult={timetableResult} />
-      ) : (
+      ) : activeView === 'homeroom-list' ? (
+        <HomeroomListView timetableResult={timetableResult} />
+      ) : activeView === 'teacher' ? (
         <TeacherView timetableResult={timetableResult} />
+      ) : (
+        <TeacherListView timetableResult={timetableResult} />
       )}
     </div>
   )

@@ -7,18 +7,30 @@ import type { CourseModalOptions, CourseFormValues } from '@/types/ui-types'
 import { CourseCurrent } from './components/CourseCurrent'
 import { CourseAddOrChange } from './components/CourseAddOrChange'
 
+/**
+ * CourseModal コンポーネントのProps
+ */
 interface CourseModalProps {
-  isOpen: boolean // モーダル表示フラグ
+  /** モーダル表示フラグ */
+  isOpen: boolean
+  /** モーダルを閉じる際のコールバック */
   onClose: () => void
-  onSuccess?: () => void // 成功時コールバック
-  courseModalOptions: CourseModalOptions | null // 科目/教員/既存講座オプション
-  laneId?: string // 操作対象レーンID
-  blockId?: string // 操作対象ブロックID
-  // 編集モード用
-  editMode?: boolean // true なら既存講座編集
-  courseId?: string // 編集対象の講座ID
-  initialValues: CourseFormValues // フォーム初期値
-  gradeId?: string // 絞り込み対象の学年ID
+  /** 成功時コールバック */
+  onSuccess?: () => void
+  /** 科目/教員/既存講座オプション */
+  courseModalOptions: CourseModalOptions | null
+  /** 操作対象レーンID */
+  laneId?: string
+  /** 操作対象ブロックID */
+  blockId?: string
+  /** 編集モード（true なら既存講座編集） */
+  editMode?: boolean
+  /** 編集対象の講座ID */
+  courseId?: string
+  /** フォーム初期値 */
+  initialValues: CourseFormValues
+  /** 絞り込み対象の学年ID */
+  gradeId?: string
 }
 
 /**

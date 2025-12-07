@@ -7,12 +7,16 @@ import { ConstraintDefinition } from '@/core/domain/entity'
 import ConstraintDefinitionModal from '@/app/(private)/constraints/components/ConstraintDefinitionModal/ConstraintDefinitionModal'
 import ConstraintDefinitionEntry from '@/app/(private)/constraints/components/ConstraintDefinitionEntry/ConstraintDefinitionEntry'
 import { fetchConstraintDefinition } from '@/app/(private)/constraints/components/ConstraintDefinitionModal/actions'
-import { ActionResult } from '@/types/bff-types'
-import type { ConstraintDefinitionMasterResponse } from '@/types/graphql-types'
+import { ActionResult } from '@/types/server-action-types'
+import type { ConstraintDefinitionMasterResponse } from '@/lib/graphql/types'
 import type { ConstraintDefinitionFormValues } from '@/types/ui-types'
+import type { OptimizeRequest, OptimizeResult } from '@/app/api/optimize/types'
 import styles from './ConstraintDefinitionsUi.module.css'
 
-interface Props {
+/**
+ * ConstraintDefinitionsUi コンポーネントのProps
+ */
+interface ConstraintDefinitionsUiProps {
   constraintDefinitions: ConstraintDefinition[]
   constraintDefinitionMasters: ConstraintDefinitionMasterResponse[]
 }
@@ -23,7 +27,7 @@ interface Props {
 export default function ConstraintDefinitionsUi({
   constraintDefinitions: initialConstraintDefinitions,
   constraintDefinitionMasters,
-}: Props) {
+}: ConstraintDefinitionsUiProps) {
   const router = useRouter()
   const [constraintDefinitions, setConstraintDefinitions] = useState(
     initialConstraintDefinitions
@@ -114,15 +118,16 @@ export default function ConstraintDefinitionsUi({
     setIsOptimizing(true)
     try {
       const ttid = getDefaultTtid()
+      const requestBody: OptimizeRequest = { ttid }
       const response = await fetch('/api/optimize', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ttid }),
+        body: JSON.stringify(requestBody),
       })
 
-      const result = await response.json()
+      const result = (await response.json()) as OptimizeResult
 
       if (!result.success) {
         alert(`最適化に失敗しました: ${result.error}`)

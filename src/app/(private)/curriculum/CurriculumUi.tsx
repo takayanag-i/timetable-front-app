@@ -17,14 +17,17 @@ import {
   SchoolDay,
 } from '@/core/domain/entity'
 import { CourseModalOptions } from '@/types/ui-types'
-import { ActionResult } from '@/types/bff-types'
+import { ActionResult } from '@/types/server-action-types'
 import type { CourseFormValues } from '@/types/ui-types'
 import type { BlockFormValues } from '@/app/(private)/curriculum/components/BlockModal/BlockModal'
 import type { HomeroomFormValues } from '@/app/(private)/curriculum/components/HomeroomModal/hooks/useHomeroomModal'
 import { defaultHomeroomDays } from '@/app/(private)/curriculum/components/HomeroomModal/hooks/useHomeroomModal'
 import styles from './CurriculumUi.module.css'
 
-interface Props {
+/**
+ * CurriculumUi コンポーネントのProps
+ */
+interface CurriculumUiProps {
   homerooms: HomeroomEntity[]
   grades: Grade[]
 }
@@ -32,7 +35,7 @@ interface Props {
 /**
  * カリキュラム設定画面
  */
-export default function CurriculumUi({ homerooms, grades }: Props) {
+export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
   const router = useRouter()
   // モーダルの状態と操作関数を取得
   const {
@@ -393,7 +396,12 @@ export default function CurriculumUi({ homerooms, grades }: Props) {
                 })
                 setIsBlockModalOpen(true)
               }}
-              onEditBlock={block => {
+              onEditBlock={(block: {
+                blockId: string
+                blockName: string
+                homeroomId: string
+                laneCount: number
+              }) => {
                 setBlockModalContext({
                   mode: 'edit',
                   homeroomId: block.homeroomId,

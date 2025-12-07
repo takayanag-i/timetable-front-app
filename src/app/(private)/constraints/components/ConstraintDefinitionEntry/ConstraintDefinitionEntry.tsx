@@ -1,9 +1,13 @@
 import { ConstraintDefinition } from '@/core/domain/entity'
 import styles from './ConstraintDefinitionEntry.module.css'
 
-interface Props {
+/**
+ * ConstraintDefinitionEntry コンポーネントのProps
+ */
+interface ConstraintDefinitionEntryProps {
   constraintDefinition: ConstraintDefinition
-  onEdit?: (formData: FormData) => void // Server Actionを受け取る
+  /** Server Actionを受け取る */
+  onEdit?: (formData: FormData) => void
 }
 
 /**
@@ -12,7 +16,7 @@ interface Props {
 export default function ConstraintDefinitionEntry({
   constraintDefinition,
   onEdit,
-}: Props) {
+}: ConstraintDefinitionEntryProps) {
   return (
     <div className={styles.entry}>
       <div className={styles.content}>

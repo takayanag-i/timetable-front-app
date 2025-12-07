@@ -1,7 +1,7 @@
 /**
  * Server Actions用のヘルパー関数
  */
-import type { ActionResult } from '@/types/bff-types'
+import type { ActionResult } from '@/types/server-action-types'
 import { logger } from './logger'
 import { createAppError, ErrorCode } from './errors'
 

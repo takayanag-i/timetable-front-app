@@ -2,20 +2,20 @@
  * Spring GraphQL形式からFastAPI形式への変換ヘルパー
  */
 
-import type { OptimizeAnnualTimetableInput } from './fastapi-client'
 import type {
-  GraphQLAnnualData,
+  OptimizeAnnualTimetableRequest,
   ConstraintDefinition,
-} from '@/types/graphql-types'
+} from './fastapi-client'
+import type { GraphQLAnnualDataType } from '@/lib/graphql/types'
 
 /**
  * Spring GraphQLから取得したデータをFastAPI形式に変換
  */
 export function convertGraphQLToFastAPI(
-  graphqlData: GraphQLAnnualData,
+  graphqlData: GraphQLAnnualDataType,
   ttid: string,
   constraintDefinitions: ConstraintDefinition[]
-): OptimizeAnnualTimetableInput {
+): OptimizeAnnualTimetableRequest {
   return {
     ttid,
     annualData: {

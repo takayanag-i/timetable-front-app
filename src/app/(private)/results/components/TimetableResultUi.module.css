@@ -66,6 +66,7 @@
   border-radius: 8px;
   padding: 1.5rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow-x: auto;
 }
 
 .homeroomTitle {
@@ -85,7 +86,24 @@
 .timetableTable {
   width: 100%;
   border-collapse: collapse;
+  table-layout: auto;
+  min-width: 100%;
+}
+
+/* 学級ビュー用：曜日ごとの列幅をそろえる */
+.homeroomTimetable .timetableTable {
   table-layout: fixed;
+}
+
+/* 1列目（時限列）を固定幅にする */
+.homeroomTimetable .headerCell:first-child,
+.homeroomTimetable .periodCell {
+  width: 60px;
+}
+
+/* 2列目以降（曜日列）の幅を均等にする */
+.homeroomTimetable .cell {
+  width: 1%;
 }
 
 .headerCell {
@@ -108,7 +126,7 @@
 }
 
 .cell {
-  padding: 0.5rem;
+  padding: 0;
   border: 1px solid #dee2e6;
   vertical-align: top;
   min-height: 80px;
@@ -121,17 +139,33 @@
   min-height: 60px;
 }
 
-.courseName {
+/* 学級一覧ビュー用：entryの青い背景を削除 */
+.homeroomListView .entry {
+  background-color: transparent;
+  border-radius: 0;
+  padding: 0.5rem;
+}
+
+.subjectName {
   font-weight: bold;
   font-size: 0.9rem;
   color: #0066cc;
   margin-bottom: 0.25rem;
 }
 
-.subjectName {
+.courseName {
+  font-weight: normal;
   font-size: 0.8rem;
-  color: #666;
+  color: #333;
   margin-bottom: 0.5rem;
+}
+
+/* 教員ビュー用：講座名を青太字おおきめにする（学級ビューのsubjectNameと同じスタイル） */
+.homeroomTimetable .entry .courseName {
+  font-weight: bold;
+  font-size: 0.9rem;
+  color: #0066cc;
+  margin-bottom: 0.25rem;
 }
 
 .details {
@@ -150,5 +184,56 @@
 .emptyCell {
   color: #ccc;
   text-align: center;
+  padding: 0.5rem;
+}
+
+.homeroomNameCell {
+  text-align: left !important;
+  width: auto !important;
+  min-width: 120px;
+  white-space: nowrap;
+}
+
+/* 学級一覧ビュー用：2列目以降を固定幅にする */
+.homeroomListView .timetableTable {
+  table-layout: fixed;
+}
+
+.homeroomListView .headerCell:not(:first-child),
+.homeroomListView .cell {
+  width: 60px;
+  min-width: 60px;
+  max-width: 60px;
+}
+
+/* 学級一覧ビュー用：セルとentryの余白を削除 */
+.homeroomListView .cell {
+  padding: 0;
+}
+
+.homeroomListView .entry {
+  padding: 0.5rem;
+}
+
+/* 教員一覧ビュー用：2列目以降を固定幅にする */
+.teacherListView .timetableTable {
+  table-layout: fixed;
+}
+
+.teacherListView .headerCell:not(:first-child),
+.teacherListView .cell {
+  width: 60px;
+  min-width: 60px;
+  max-width: 60px;
+}
+
+/* 教員一覧ビュー用：セルとentryの余白を削除 */
+.teacherListView .cell {
+  padding: 0;
+}
+
+.teacherListView .entry {
+  background-color: transparent;
+  border-radius: 0;
   padding: 0.5rem;
 }

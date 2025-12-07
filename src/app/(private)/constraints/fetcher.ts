@@ -9,7 +9,7 @@ import {
   GET_CONSTRAINT_DEFINITIONS,
   GET_CONSTRAINT_DEFINITION_MASTERS,
 } from '@/lib/graphql/queries'
-import type { ConstraintDefinitionMasterResponse } from '@/types/graphql-types'
+import type { ConstraintDefinitionMasterResponse } from '@/lib/graphql/types'
 import { logger } from '@/lib/logger'
 import { createAppError, ErrorCode } from '@/lib/errors'
 

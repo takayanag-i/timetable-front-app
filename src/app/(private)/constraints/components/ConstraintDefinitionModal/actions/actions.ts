@@ -11,7 +11,7 @@ import {
   DELETE_CONSTRAINT_DEFINITION,
 } from '@/lib/graphql/mutations'
 import { ConstraintDefinition } from '@/core/domain/entity'
-import { ActionResult } from '@/types/bff-types'
+import { ActionResult } from '@/types/server-action-types'
 import { errorResult, successResult } from '@/lib/action-helpers'
 
 /**

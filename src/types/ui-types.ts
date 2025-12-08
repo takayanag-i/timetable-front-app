@@ -72,3 +72,19 @@ export interface ConstraintDefinitionFormValues {
   penaltyWeight: string
   parameters: string
 }
+
+// BlockModal で扱うフォーム値
+export interface BlockFormValues {
+  blockName: string
+  laneCount: number
+  homeroomId: string
+  blockId: string
+}
+
+// HomeroomModal で扱うフォーム値
+export interface HomeroomFormValues {
+  id: string
+  homeroomName: string
+  homeroomDays: UIHomeroomDayType[]
+  gradeId: string
+}

@@ -6,16 +6,7 @@ import Input from '@/components/shared/Input'
 import { useBlockModal } from './hooks/useBlockModal'
 import styles from './BlockModal.module.css'
 import { useForm } from 'react-hook-form'
-
-/**
- * BlockFormValues 型定義
- */
-export interface BlockFormValues {
-  blockName: string
-  laneCount: number
-  homeroomId: string
-  blockId: string
-}
+import type { BlockFormValues } from '@/types/ui-types'
 
 /**
  * BlockModal コンポーネントのProps

@@ -6,8 +6,11 @@ import {
   useCallback,
   useMemo,
 } from 'react'
-import type { UIHomeroomDayType } from '@/types/ui-types'
-import type { HomeroomModalData } from '@/types/ui-types'
+import type {
+  UIHomeroomDayType,
+  HomeroomModalData,
+  HomeroomFormValues,
+} from '@/types/ui-types'
 import { createHomeroom, deleteHomeroom } from '../actions'
 import type { ActionResult } from '@/types/server-action-types'
 
@@ -18,13 +21,6 @@ export const defaultHomeroomDays: UIHomeroomDayType[] = [
   { id: 'thu', dayOfWeek: 'thu', periods: 0 },
   { id: 'fri', dayOfWeek: 'fri', periods: 0 },
 ]
-
-export interface HomeroomFormValues {
-  id: string
-  homeroomName: string
-  homeroomDays: UIHomeroomDayType[]
-  gradeId: string
-}
 
 interface UseHomeroomModalArgs {
   initialValues: HomeroomFormValues

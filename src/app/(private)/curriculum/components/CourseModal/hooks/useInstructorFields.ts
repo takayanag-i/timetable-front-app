@@ -5,7 +5,7 @@ import type {
   UseFieldArrayReplace,
   UseFormSetValue,
 } from 'react-hook-form'
-import type { CourseFormValues } from '@/types/ui-types'
+import type { CourseFormValues } from '../types'
 
 type CourseDetailRow = { instructorId: string }
 

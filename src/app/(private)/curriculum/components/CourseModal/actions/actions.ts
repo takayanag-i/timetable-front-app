@@ -6,7 +6,7 @@ import {
   CourseModalOptions,
   UISubjectType,
   UIInstructorType,
-} from '@/types/ui-types'
+} from '../types'
 import type {
   GraphQLSubjectType,
   GraphQLInstructorType,
@@ -98,11 +98,6 @@ export async function fetchCourseModalOptions(
       id: instructor.id,
       instructorName: instructor.instructorName,
       disciplineCode: instructor.disciplineCode,
-      attendanceDays: instructor.attendanceDays.map(ad => ({
-        id: ad.id,
-        dayOfWeek: ad.dayOfWeek,
-        unavailablePeriods: ad.unavailablePeriods,
-      })),
     }))
 
     // 講座データの正規化

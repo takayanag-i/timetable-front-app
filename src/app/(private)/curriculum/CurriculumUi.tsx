@@ -19,9 +19,8 @@ import {
 import {
   CourseModalOptions,
   CourseFormValues,
-  BlockFormValues,
-  HomeroomFormValues,
-} from '@/types/ui-types'
+} from '@/app/(private)/curriculum/components/CourseModal/types'
+import { BlockFormValues, HomeroomFormValues } from '@/types/ui-types'
 import { ActionResult } from '@/types/server-action-types'
 import { defaultHomeroomDays } from '@/app/(private)/curriculum/components/HomeroomModal/hooks/useHomeroomModal'
 import styles from './CurriculumUi.module.css'
@@ -68,16 +67,16 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false)
   type BlockModalContext =
     | {
-        mode: 'create'
-        homeroomId: string | null
-      }
+      mode: 'create'
+      homeroomId: string | null
+    }
     | {
-        mode: 'edit'
-        homeroomId: string
-        blockId: string
-        blockName: string
-        laneCount: number
-      }
+      mode: 'edit'
+      homeroomId: string
+      blockId: string
+      blockName: string
+      laneCount: number
+    }
 
   const [blockModalContext, setBlockModalContext] =
     useState<BlockModalContext | null>(null)
@@ -143,7 +142,7 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
         homeroomName: homeroomModalData.homeroomName ?? '',
         homeroomDays:
           homeroomModalData.homeroomDays &&
-          homeroomModalData.homeroomDays.length
+            homeroomModalData.homeroomDays.length
             ? homeroomModalData.homeroomDays
             : defaultHomeroomDays,
         gradeId: homeroomModalData.gradeId ?? '',
@@ -334,9 +333,8 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
           <>
             <button
               type="button"
-              className={`${styles.gradeButton} ${
-                selectedGradeId === null ? styles.gradeButtonActive : ''
-              }`}
+              className={`${styles.gradeButton} ${selectedGradeId === null ? styles.gradeButtonActive : ''
+                }`}
               onClick={() => setSelectedGradeId(null)}
               aria-pressed={selectedGradeId === null}
             >
@@ -346,9 +344,8 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
               <button
                 key={grade.id}
                 type="button"
-                className={`${styles.gradeButton} ${
-                  selectedGradeId === grade.id ? styles.gradeButtonActive : ''
-                }`}
+                className={`${styles.gradeButton} ${selectedGradeId === grade.id ? styles.gradeButtonActive : ''
+                  }`}
                 onClick={() => setSelectedGradeId(grade.id)}
                 aria-pressed={selectedGradeId === grade.id}
               >

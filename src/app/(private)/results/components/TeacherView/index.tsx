@@ -170,4 +170,3 @@ export default function TeacherView({ timetableResult }: TeacherViewProps) {
 
   return <TeacherViewClient data={viewData} />
 }
-

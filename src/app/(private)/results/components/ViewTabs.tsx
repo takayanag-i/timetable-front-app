@@ -1,44 +1,35 @@
-'use client'
-
+import Link from 'next/link'
 import styles from './ViewTabs.module.css'
 
+type ViewType = 'homeroom' | 'homeroom-list' | 'teacher' | 'teacher-list'
+
 interface ViewTabsProps {
-  activeView: 'homeroom' | 'homeroom-list' | 'teacher' | 'teacher-list'
-  onViewChange: (
-    view: 'homeroom' | 'homeroom-list' | 'teacher' | 'teacher-list'
-  ) => void
+  activeView: ViewType
+  resultId: string
 }
 
+const VIEW_TABS: Array<{ view: ViewType; label: string }> = [
+  { view: 'homeroom', label: '学級ビュー' },
+  { view: 'homeroom-list', label: '学級一覧ビュー' },
+  { view: 'teacher', label: '教員ビュー' },
+  { view: 'teacher-list', label: '教員一覧ビュー' },
+]
+
 /**
- * ビュー切り替えタブコンポーネント
+ * ビュー切り替えタブコンポーネント（Server Component）
  */
-export default function ViewTabs({ activeView, onViewChange }: ViewTabsProps) {
+export default function ViewTabs({ activeView, resultId }: ViewTabsProps) {
   return (
     <div className={styles.tabContainer}>
-      <button
-        className={`${styles.tab} ${activeView === 'homeroom' ? styles.active : ''}`}
-        onClick={() => onViewChange('homeroom')}
-      >
-        学級ビュー
-      </button>
-      <button
-        className={`${styles.tab} ${activeView === 'homeroom-list' ? styles.active : ''}`}
-        onClick={() => onViewChange('homeroom-list')}
-      >
-        学級一覧ビュー
-      </button>
-      <button
-        className={`${styles.tab} ${activeView === 'teacher' ? styles.active : ''}`}
-        onClick={() => onViewChange('teacher')}
-      >
-        教員ビュー
-      </button>
-      <button
-        className={`${styles.tab} ${activeView === 'teacher-list' ? styles.active : ''}`}
-        onClick={() => onViewChange('teacher-list')}
-      >
-        教員一覧ビュー
-      </button>
+      {VIEW_TABS.map(({ view, label }) => (
+        <Link
+          key={view}
+          href={`/results/${resultId}?view=${view}`}
+          className={`${styles.tab} ${activeView === view ? styles.active : ''}`}
+        >
+          {label}
+        </Link>
+      ))}
     </div>
   )
 }

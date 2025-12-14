@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { ConstraintDefinition } from '@/core/domain/entity'
+import { ConstraintDefinition, SchoolDay } from '@/core/domain/entity'
 import {
   executeGraphQLForServerAction,
   getDefaultTtid,
@@ -9,6 +9,7 @@ import {
   GET_CONSTRAINT_DEFINITIONS,
   GET_CONSTRAINT_DEFINITION_MASTERS,
 } from '@/app/(private)/constraints/graphql/queries'
+import { GET_SCHOOL_DAYS } from '@/app/(private)/curriculum/graphql/queries'
 import type { ConstraintDefinitionMasterResponse } from '@/app/(private)/constraints/graphql/types'
 import { logger } from '@/lib/logger'
 import { createAppError, ErrorCode } from '@/lib/errors'
@@ -77,5 +78,43 @@ export async function getConstraintDefinitionMasters(): Promise<
     const appError = createAppError(error, ErrorCode.DATA_NOT_FOUND)
     logger.error('Error fetching constraint definition masters', appError)
     return []
+  }
+}
+
+/**
+ * 1日あたりの最大時限数を取得
+ * schoolDaysから利用可能な曜日の最大時限数（午前+午後）を算出
+ */
+export async function getMaxPeriodsPerDay(): Promise<number> {
+  try {
+    const ttid = getDefaultTtid()
+
+    const result = await executeGraphQLForServerAction<SchoolDay[]>(
+      {
+        query: GET_SCHOOL_DAYS,
+        variables: {
+          ttid,
+        },
+      },
+      'schoolDays'
+    )
+
+    if (!result.success || !result.data || result.data.length === 0) {
+      // デフォルト値（午前4 + 午後3 = 7時限）
+      return 7
+    }
+
+    // 利用可能な曜日の最大時限数を算出
+    const maxPeriods = Math.max(
+      ...result.data
+        .filter(day => day.isAvailable)
+        .map(day => day.amPeriods + day.pmPeriods)
+    )
+
+    return maxPeriods > 0 ? maxPeriods : 7
+  } catch (error) {
+    const appError = createAppError(error, ErrorCode.DATA_NOT_FOUND)
+    logger.error('Error fetching max periods per day', appError)
+    return 7
   }
 }

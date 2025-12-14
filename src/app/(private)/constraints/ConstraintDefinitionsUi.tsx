@@ -19,6 +19,7 @@ import styles from './ConstraintDefinitionsUi.module.css'
 interface ConstraintDefinitionsUiProps {
   constraintDefinitions: ConstraintDefinition[]
   constraintDefinitionMasters: ConstraintDefinitionMasterResponse[]
+  maxPeriodsPerDay: number
 }
 
 /**
@@ -27,6 +28,7 @@ interface ConstraintDefinitionsUiProps {
 export default function ConstraintDefinitionsUi({
   constraintDefinitions: initialConstraintDefinitions,
   constraintDefinitionMasters,
+  maxPeriodsPerDay,
 }: ConstraintDefinitionsUiProps) {
   const router = useRouter()
   const [constraintDefinitions, setConstraintDefinitions] = useState(
@@ -220,6 +222,7 @@ export default function ConstraintDefinitionsUi({
         constraintDefinitionMasters={constraintDefinitionMasters}
         existingConstraintDefinitions={constraintDefinitions}
         initialValues={constraintDefinitionModalInitialValues}
+        maxPeriodsPerDay={maxPeriodsPerDay}
         onSuccess={handleModalSuccess}
         onClose={handleModalClose}
       />

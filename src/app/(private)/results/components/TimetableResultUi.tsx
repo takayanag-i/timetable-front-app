@@ -1,6 +1,3 @@
-'use client'
-
-import { useState } from 'react'
 import Link from 'next/link'
 import type { TimetableResultType } from '@/app/(private)/results/graphql/types'
 import styles from './TimetableResultUi.module.css'
@@ -10,73 +7,52 @@ import HomeroomListView from './HomeroomListView'
 import TeacherView from './TeacherView'
 import TeacherListView from './TeacherListView'
 
-/**
- * TimetableResultUi コンポーネントのProps
- */
+type ViewType = 'homeroom' | 'homeroom-list' | 'teacher' | 'teacher-list'
+
 interface TimetableResultUiProps {
   timetableResult: TimetableResultType
+  activeView: ViewType
 }
 
 /**
- * 時間割結果表示画面
+ * アクティブビューに応じたコンポーネントをレンダリングする
+ *
+ * @param activeView - アクティブなビュータイプ
+ * @param timetableResult - 時間割結果
+ * @returns ビューコンポーネント
+ */
+function renderView(
+  activeView: ViewType,
+  timetableResult: TimetableResultType
+) {
+  switch (activeView) {
+    case 'homeroom':
+      return <HomeroomView timetableResult={timetableResult} />
+    case 'homeroom-list':
+      return <HomeroomListView timetableResult={timetableResult} />
+    case 'teacher':
+      return <TeacherView timetableResult={timetableResult} />
+    case 'teacher-list':
+      return <TeacherListView timetableResult={timetableResult} />
+  }
+}
+
+/**
+ * 時間割結果表示画面（Server Component）
  */
 export default function TimetableResultUi({
   timetableResult,
+  activeView,
 }: TimetableResultUiProps) {
-  const [activeView, setActiveView] = useState<
-    'homeroom' | 'homeroom-list' | 'teacher' | 'teacher-list'
-  >('homeroom')
-
   return (
     <div className={styles.container}>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '2rem',
-        }}
-      >
+      <div className={styles.header}>
         <h1 className={styles.title}>時間割編成結果</h1>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <Link
-            href="/curriculum"
-            style={{
-              padding: '0.75rem 1.5rem',
-              backgroundColor: '#6c757d',
-              color: 'white',
-              textDecoration: 'none',
-              borderRadius: '4px',
-              fontSize: '1rem',
-              transition: 'background-color 0.2s',
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.backgroundColor = '#5a6268'
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.backgroundColor = '#6c757d'
-            }}
-          >
+        <div className={styles.headerLinks}>
+          <Link href="/curriculum" className={styles.headerLink}>
             カリキュラム設定へ
           </Link>
-          <Link
-            href="/constraints"
-            style={{
-              padding: '0.75rem 1.5rem',
-              backgroundColor: '#6c757d',
-              color: 'white',
-              textDecoration: 'none',
-              borderRadius: '4px',
-              fontSize: '1rem',
-              transition: 'background-color 0.2s',
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.backgroundColor = '#5a6268'
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.backgroundColor = '#6c757d'
-            }}
-          >
+          <Link href="/constraints" className={styles.headerLink}>
             制約設定へ
           </Link>
         </div>
@@ -102,18 +78,10 @@ export default function TimetableResultUi({
       )}
 
       {/* ビュー切り替えタブ */}
-      <ViewTabs activeView={activeView} onViewChange={setActiveView} />
+      <ViewTabs activeView={activeView} resultId={timetableResult.id} />
 
       {/* 時間割表の表示 */}
-      {activeView === 'homeroom' ? (
-        <HomeroomView timetableResult={timetableResult} />
-      ) : activeView === 'homeroom-list' ? (
-        <HomeroomListView timetableResult={timetableResult} />
-      ) : activeView === 'teacher' ? (
-        <TeacherView timetableResult={timetableResult} />
-      ) : (
-        <TeacherListView timetableResult={timetableResult} />
-      )}
+      {renderView(activeView, timetableResult)}
     </div>
   )
 }

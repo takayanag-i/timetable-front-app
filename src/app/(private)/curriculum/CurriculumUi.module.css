@@ -1,3 +1,54 @@
+/* ページヘッダー */
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-xl);
+  margin-bottom: var(--space-xl);
+}
+
+.pageTitle {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--color-text-strong);
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+
+.nextButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-xl);
+  background: var(--color-accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition:
+    background var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.nextButton:hover {
+  background: var(--color-accent-hover);
+  transform: translateX(2px);
+}
+
+.nextButton:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring-strong);
+}
+
+.nextButtonArrow {
+  font-size: 1.1em;
+}
+
+/* 学級コンテナ */
 .homeroomContainer {
   display: flex;
   flex-direction: row;

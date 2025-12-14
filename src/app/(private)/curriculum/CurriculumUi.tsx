@@ -339,38 +339,17 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
 
   return (
     <>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '1rem',
-        }}
-      >
-        <h1>カリキュラム設定</h1>
+      <header className={styles.pageHeader}>
+        <h1 className={styles.pageTitle}>カリキュラム設定</h1>
         <button
           type="button"
           onClick={handleNavigateToConstraints}
-          style={{
-            padding: '0.75rem 1.5rem',
-            backgroundColor: '#0070f3',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            fontSize: '1rem',
-            cursor: 'pointer',
-            transition: 'background-color 0.2s',
-          }}
-          onMouseEnter={e => {
-            e.currentTarget.style.backgroundColor = '#0051cc'
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.backgroundColor = '#0070f3'
-          }}
+          className={styles.nextButton}
         >
-          制約設定画面へ
+          保存して次へ
+          <span className={styles.nextButtonArrow}>→</span>
         </button>
-      </div>
+      </header>
 
       {/* バリデーションエラー表示 */}
       <ValidationErrorAlert

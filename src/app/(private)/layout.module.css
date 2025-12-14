@@ -1,0 +1,12 @@
+.layoutContainer {
+  display: flex;
+  min-height: 100vh;
+}
+
+.mainContent {
+  flex: 1;
+  margin-left: 240px;
+  min-height: 100vh;
+  padding: var(--space-xl) var(--space-2xl);
+  background: var(--color-surface-0);
+}

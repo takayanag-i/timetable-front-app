@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { getDefaultTtid } from '@/lib/graphql-client'
-import { ConstraintDefinition } from '@/core/domain/entity'
+import { ConstraintDefinition, Course } from '@/core/domain/entity'
 import ConstraintDefinitionModal from '@/app/(private)/constraints/components/ConstraintDefinitionModal/ConstraintDefinitionModal'
 import ConstraintDefinitionEntry from '@/app/(private)/constraints/components/ConstraintDefinitionEntry/ConstraintDefinitionEntry'
 import { fetchConstraintDefinition } from '@/app/(private)/constraints/components/ConstraintDefinitionModal/actions'
@@ -20,6 +20,7 @@ interface ConstraintDefinitionsUiProps {
   constraintDefinitions: ConstraintDefinition[]
   constraintDefinitionMasters: ConstraintDefinitionMasterResponse[]
   maxPeriodsPerDay: number
+  courses: Course[]
 }
 
 /**
@@ -29,6 +30,7 @@ export default function ConstraintDefinitionsUi({
   constraintDefinitions: initialConstraintDefinitions,
   constraintDefinitionMasters,
   maxPeriodsPerDay,
+  courses,
 }: ConstraintDefinitionsUiProps) {
   const router = useRouter()
   const [constraintDefinitions, setConstraintDefinitions] = useState(
@@ -154,63 +156,82 @@ export default function ConstraintDefinitionsUi({
 
   return (
     <>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '1rem',
-        }}
-      >
-        <h1>制約設定</h1>
+      <header className={styles.pageHeader}>
+        <h1 className={styles.pageTitle}>制約設定</h1>
         <button
           type="button"
           onClick={handleOptimize}
           disabled={isOptimizing}
-          style={{
-            padding: '0.75rem 1.5rem',
-            backgroundColor: isOptimizing ? '#ccc' : '#28a745',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: isOptimizing ? 'not-allowed' : 'pointer',
-            fontSize: '1rem',
-            transition: 'background-color 0.2s',
-          }}
-          onMouseEnter={e => {
-            if (!isOptimizing) {
-              e.currentTarget.style.backgroundColor = '#218838'
-            }
-          }}
-          onMouseLeave={e => {
-            if (!isOptimizing) {
-              e.currentTarget.style.backgroundColor = '#28a745'
-            }
-          }}
+          className={styles.executeButton}
         >
           {isOptimizing ? '最適化中...' : '最適化を実行'}
+          <span className={styles.executeButtonIcon}>▶</span>
         </button>
-      </div>
+      </header>
 
       <div className={styles.constraintDefinitionsContainer}>
         {constraintDefinitions.length === 0 ? (
-          <p>制約がまだ登録されていません。</p>
+          <div className={styles.emptyState}>
+            <div className={styles.emptyIcon}>⚙️</div>
+            <h2 className={styles.emptyTitle}>制約がまだ登録されていません</h2>
+            <p className={styles.emptyDescription}>
+              制約を追加して、時間割の編成ルールを設定しましょう
+            </p>
+          </div>
         ) : (
-          constraintDefinitions.map(constraintDefinition => (
-            <ConstraintDefinitionEntry
-              key={constraintDefinition.id}
-              constraintDefinition={constraintDefinition}
-              onEdit={fetchConstraintDefinitionAction}
-            />
-          ))
+          // 制約コードでグループ化して表示
+          Object.entries(
+            constraintDefinitions.reduce(
+              (groups, cd) => {
+                const code = cd.constraintDefinitionCode
+                if (!groups[code]) {
+                  groups[code] = []
+                }
+                groups[code].push(cd)
+                return groups
+              },
+              {} as Record<string, ConstraintDefinition[]>
+            )
+          ).map(([code, definitions]) => {
+            const master = constraintDefinitionMasters.find(
+              m => m.constraintDefinitionCode === code
+            )
+            return (
+              <div key={code} className={styles.constraintSection}>
+                <div className={styles.sectionHeader}>
+                  <h2 className={styles.sectionTitle}>
+                    {master?.constraintDefinitionName || code}
+                  </h2>
+                  {master?.description && (
+                    <p className={styles.sectionDescription}>
+                      {master.description}
+                    </p>
+                  )}
+                </div>
+                <div className={styles.sectionContent}>
+                  {definitions.map(constraintDefinition => (
+                    <ConstraintDefinitionEntry
+                      key={constraintDefinition.id}
+                      constraintDefinition={constraintDefinition}
+                      master={master}
+                      courses={courses}
+                      onEdit={fetchConstraintDefinitionAction}
+                    />
+                  ))}
+                </div>
+              </div>
+            )
+          })
         )}
-        <button
-          type="button"
-          onClick={handleCreate}
-          className={styles.addButton}
-        >
-          制約を追加する
-        </button>
+        <div className={styles.addButtonWrapper}>
+          <button
+            type="button"
+            onClick={handleCreate}
+            className={styles.addButton}
+          >
+            + 制約を追加
+          </button>
+        </div>
       </div>
 
       <ConstraintDefinitionModal

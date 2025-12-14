@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { ConstraintDefinition, SchoolDay } from '@/core/domain/entity'
+import { ConstraintDefinition, Course, SchoolDay } from '@/core/domain/entity'
 import {
   executeGraphQLForServerAction,
   getDefaultTtid,
@@ -9,10 +9,49 @@ import {
   GET_CONSTRAINT_DEFINITIONS,
   GET_CONSTRAINT_DEFINITION_MASTERS,
 } from '@/app/(private)/constraints/graphql/queries'
-import { GET_SCHOOL_DAYS } from '@/app/(private)/curriculum/graphql/queries'
+import {
+  GET_SCHOOL_DAYS,
+  GET_COURSES,
+} from '@/app/(private)/curriculum/graphql/queries'
 import type { ConstraintDefinitionMasterResponse } from '@/app/(private)/constraints/graphql/types'
 import { logger } from '@/lib/logger'
 import { createAppError, ErrorCode } from '@/lib/errors'
+
+/**
+ * 講座一覧を取得する（講座名解決用）
+ *
+ * @returns 講座一覧
+ */
+export async function getCourses(): Promise<Course[]> {
+  try {
+    const ttid = getDefaultTtid()
+
+    const result = await executeGraphQLForServerAction<Course[]>(
+      {
+        query: GET_COURSES,
+        variables: {
+          ttid,
+        },
+      },
+      'courses'
+    )
+
+    if (!result.success || !result.data) {
+      const appError = createAppError(
+        new Error(result.error || '不明なエラー'),
+        ErrorCode.DATA_NOT_FOUND
+      )
+      logger.error('Failed to fetch courses', appError)
+      return []
+    }
+
+    return result.data
+  } catch (error) {
+    const appError = createAppError(error, ErrorCode.DATA_NOT_FOUND)
+    logger.error('Error fetching courses', appError)
+    return []
+  }
+}
 
 export async function getConstraintDefinitions(): Promise<
   ConstraintDefinition[]

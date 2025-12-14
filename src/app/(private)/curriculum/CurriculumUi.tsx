@@ -16,11 +16,13 @@ import {
   Homeroom as HomeroomEntity,
   SchoolDay,
 } from '@/core/domain/entity'
-import { CourseModalOptions } from '@/types/ui-types'
+import {
+  CourseModalOptions,
+  CourseFormValues,
+  BlockFormValues,
+  HomeroomFormValues,
+} from '@/types/ui-types'
 import { ActionResult } from '@/types/server-action-types'
-import type { CourseFormValues } from '@/types/ui-types'
-import type { BlockFormValues } from '@/app/(private)/curriculum/components/BlockModal/BlockModal'
-import type { HomeroomFormValues } from '@/app/(private)/curriculum/components/HomeroomModal/hooks/useHomeroomModal'
 import { defaultHomeroomDays } from '@/app/(private)/curriculum/components/HomeroomModal/hooks/useHomeroomModal'
 import styles from './CurriculumUi.module.css'
 

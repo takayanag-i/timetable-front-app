@@ -8,9 +8,9 @@ import {
   type OptimizationResponse,
 } from '@/lib/fastapi-client'
 import { convertGraphQLToFastAPI } from '@/lib/optimization-helpers'
-import { GET_ANNUAL_DATA_WITH_CONSTRAINTS } from '@/lib/graphql/queries'
-import { UPSERT_TIMETABLE_RESULTS } from '@/lib/graphql/mutations'
-import type { GraphQLAnnualDataType } from '@/lib/graphql/types'
+import { GET_ANNUAL_DATA_WITH_CONSTRAINTS } from '@/app/api/optimize/graphql/queries'
+import { UPSERT_TIMETABLE_RESULTS } from '@/app/(private)/results/graphql/mutations'
+import type { GraphQLAnnualDataType } from '@/app/api/optimize/graphql/types'
 import type { ConstraintDefinition } from '@/lib/fastapi-client'
 import type { OptimiseAnnualTimetableGraphQLResponse } from '@/lib/optimize-types'
 import type { OptimizeResult } from './types'

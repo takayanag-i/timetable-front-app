@@ -1,10 +1,11 @@
-import type { TimetableResultType } from '@/lib/graphql/types'
+import type { TimetableResultType } from '@/app/(private)/results/graphql/types'
+import { DAY_OF_WEEK_MAP } from '@/constants'
 
 type TimetableGroup = {
   entries: Map<string, TimetableResultType['timetableEntries'][0]>
 }
 
-// 英語形式の曜日配列（データ処理用）
+// 英語形式の曜日配列（データ処理用）- 日曜日を含む
 export const ENGLISH_DAYS_OF_WEEK: readonly string[] = [
   'mon',
   'tue',
@@ -15,16 +16,8 @@ export const ENGLISH_DAYS_OF_WEEK: readonly string[] = [
   'sun',
 ]
 
-// 英語→日本語の変換マップ（表示用）
-export const DAY_OF_WEEK_MAP: Record<string, string> = {
-  mon: '月',
-  tue: '火',
-  wed: '水',
-  thu: '木',
-  fri: '金',
-  sat: '土',
-  sun: '日',
-}
+// 再エクスポート（後方互換性のため）
+export { DAY_OF_WEEK_MAP }
 
 /**
  * 時間割エントリから最大時限数を計算

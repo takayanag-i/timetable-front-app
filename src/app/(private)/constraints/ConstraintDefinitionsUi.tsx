@@ -8,7 +8,7 @@ import ConstraintDefinitionModal from '@/app/(private)/constraints/components/Co
 import ConstraintDefinitionEntry from '@/app/(private)/constraints/components/ConstraintDefinitionEntry/ConstraintDefinitionEntry'
 import { fetchConstraintDefinition } from '@/app/(private)/constraints/components/ConstraintDefinitionModal/actions'
 import { ActionResult } from '@/types/server-action-types'
-import type { ConstraintDefinitionMasterResponse } from '@/lib/graphql/types'
+import type { ConstraintDefinitionMasterResponse } from '@/app/(private)/constraints/graphql/types'
 import type { ConstraintDefinitionFormValues } from '@/types/ui-types'
 import type { OptimizeRequest, OptimizeResult } from '@/app/api/optimize/types'
 import styles from './ConstraintDefinitionsUi.module.css'
@@ -19,6 +19,7 @@ import styles from './ConstraintDefinitionsUi.module.css'
 interface ConstraintDefinitionsUiProps {
   constraintDefinitions: ConstraintDefinition[]
   constraintDefinitionMasters: ConstraintDefinitionMasterResponse[]
+  maxPeriodsPerDay: number
 }
 
 /**
@@ -27,6 +28,7 @@ interface ConstraintDefinitionsUiProps {
 export default function ConstraintDefinitionsUi({
   constraintDefinitions: initialConstraintDefinitions,
   constraintDefinitionMasters,
+  maxPeriodsPerDay,
 }: ConstraintDefinitionsUiProps) {
   const router = useRouter()
   const [constraintDefinitions, setConstraintDefinitions] = useState(
@@ -220,6 +222,7 @@ export default function ConstraintDefinitionsUi({
         constraintDefinitionMasters={constraintDefinitionMasters}
         existingConstraintDefinitions={constraintDefinitions}
         initialValues={constraintDefinitionModalInitialValues}
+        maxPeriodsPerDay={maxPeriodsPerDay}
         onSuccess={handleModalSuccess}
         onClose={handleModalClose}
       />

@@ -7,7 +7,7 @@ import {
   executeGraphQLForServerAction,
   getDefaultTtid,
 } from '@/lib/graphql-client'
-import { GET_SCHOOL_DAYS } from '@/lib/graphql/queries'
+import { GET_SCHOOL_DAYS } from '@/app/(private)/curriculum/graphql/queries'
 import { logger } from '@/lib/logger'
 import { createAppError, ErrorCode } from '@/lib/errors'
 

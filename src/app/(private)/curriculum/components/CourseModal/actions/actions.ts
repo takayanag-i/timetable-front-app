@@ -10,7 +10,7 @@ import {
 import type {
   GraphQLSubjectType,
   GraphQLInstructorType,
-} from '@/lib/graphql/types'
+} from '@/app/(private)/curriculum/graphql/types'
 import { errorResult, successResult } from '@/lib/action-helpers'
 import {
   executeGraphQLForServerAction,
@@ -21,8 +21,11 @@ import {
   GET_LANES,
   GET_COURSE_WITH_SUBJECT,
   GET_COURSE_MODAL_OPTIONS,
-} from '@/lib/graphql/queries'
-import { UPSERT_COURSES, UPSERT_LANES } from '@/lib/graphql/mutations'
+} from '@/app/(private)/curriculum/graphql/queries'
+import {
+  UPSERT_COURSES,
+  UPSERT_LANES,
+} from '@/app/(private)/curriculum/graphql/mutations'
 import { revalidatePath } from 'next/cache'
 import { logger } from '@/lib/logger'
 import { createAppError, ErrorCode } from '@/lib/errors'

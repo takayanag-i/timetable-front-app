@@ -9,7 +9,7 @@ import { SoftConstraintCheckbox } from './components/SoftConstraintCheckbox'
 import { PenaltyWeightSlider } from './components/PenaltyWeightSlider'
 import { ParametersField } from './components/ParametersField'
 import { useConstraintDefinitionModal } from './hooks/useConstraintDefinitionModal'
-import type { ConstraintDefinitionMasterResponse } from '@/lib/graphql/types'
+import type { ConstraintDefinitionMasterResponse } from '@/app/(private)/constraints/graphql/types'
 import type { ConstraintDefinitionFormValues } from '@/types/ui-types'
 import type { ConstraintDefinition } from '@/core/domain/entity'
 
@@ -31,6 +31,8 @@ interface ConstraintDefinitionModalProps {
   existingConstraintDefinitions?: ConstraintDefinition[]
   /** フォームの初期値 */
   initialValues: ConstraintDefinitionFormValues
+  /** 1日あたりの最大時限数 */
+  maxPeriodsPerDay: number
   /** 処理成功時のコールバック */
   onSuccess: () => void
   /** モーダルを閉じる際のコールバック */
@@ -48,6 +50,7 @@ export default function ConstraintDefinitionModal({
   constraintDefinitionMasters,
   existingConstraintDefinitions = [],
   initialValues,
+  maxPeriodsPerDay,
   onSuccess,
   onClose,
 }: ConstraintDefinitionModalProps) {
@@ -66,14 +69,23 @@ export default function ConstraintDefinitionModal({
   const penaltyWeightValue = watch('penaltyWeight')
   const parametersValue = watch('parameters')
 
-  // 選択された制約定義コードに対応するパラメータマスタを取得
-  const selectedParameterMasters = useMemo(
+  // 選択された制約定義マスタを取得
+  const selectedMaster = useMemo(
     () =>
       constraintDefinitionMasters.find(
         m => m.constraintDefinitionCode === constraintDefinitionCodeValue
-      )?.parameterMasters || [],
+      ),
     [constraintDefinitionMasters, constraintDefinitionCodeValue]
   )
+
+  // 選択された制約定義コードに対応するパラメータマスタを取得
+  const selectedParameterMasters = useMemo(
+    () => selectedMaster?.parameterMasters || [],
+    [selectedMaster]
+  )
+
+  // ソフト制約として設定可能かどうか
+  const canBeSoftConstraint = selectedMaster?.softFlag ?? false
 
   // 既存のソフト制約を取得（同じ制約定義コードで、ソフト制約のもの）
   const existingSoftConstraints = useMemo(
@@ -208,12 +220,14 @@ export default function ConstraintDefinitionModal({
           isEditMode={isEditMode}
         />
 
-        {/* ソフト制約フィールド */}
-        <SoftConstraintCheckbox
-          checked={softFlagValue}
-          onChange={checked => setValue('softFlag', checked)}
-          disabled={isPending}
-        />
+        {/* ソフト制約フィールド（ソフト制約として設定可能な場合のみ表示） */}
+        {canBeSoftConstraint && (
+          <SoftConstraintCheckbox
+            checked={softFlagValue}
+            onChange={checked => setValue('softFlag', checked)}
+            disabled={isPending}
+          />
+        )}
 
         {/* 重みフィールド */}
         {softFlagValue && (
@@ -227,10 +241,12 @@ export default function ConstraintDefinitionModal({
 
         {/* パラメータフィールド */}
         <ParametersField
+          constraintDefinitionCode={constraintDefinitionCodeValue}
           selectedParameterMasters={selectedParameterMasters}
           parametersValue={parametersValue}
           onChange={value => setValue('parameters', value)}
           disabled={isPending}
+          maxPeriodsPerDay={maxPeriodsPerDay}
         />
 
         <div className={styles.actions}>

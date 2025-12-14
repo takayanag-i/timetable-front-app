@@ -3,21 +3,14 @@ import { useEffect, useRef } from 'react'
 import Modal from '@/components/shared/Modal'
 import Input from '@/components/shared/Input'
 import type { Grade } from '@/core/domain/entity'
-import type { HomeroomFormValues } from './hooks/useHomeroomModal'
+import type { HomeroomFormValues } from '@/types/ui-types'
 import { useHomeroomModal } from './hooks/useHomeroomModal'
 import styles from './HomeroomModal.module.css'
 import { useForm, useFieldArray } from 'react-hook-form'
+import { DAY_OF_WEEK_MAP } from '@/constants'
 
-// 曜日の変換マップ
-const dayOfWeekMap: Record<string, string> = {
-  mon: '月',
-  tue: '火',
-  wed: '水',
-  thu: '木',
-  fri: '金',
-  sat: '土',
-  sun: '日',
-}
+// 後方互換性のためのエイリアス
+const dayOfWeekMap = DAY_OF_WEEK_MAP
 
 /**
  * HomeroomModal コンポーネントのProps

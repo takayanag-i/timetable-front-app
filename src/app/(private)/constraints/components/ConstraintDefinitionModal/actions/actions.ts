@@ -5,12 +5,18 @@ import {
   executeGraphQLMutation,
   getDefaultTtid,
 } from '@/lib/graphql-client'
-import { GET_CONSTRAINT_DEFINITIONS } from '@/lib/graphql/queries'
+import { GET_CONSTRAINT_DEFINITIONS } from '@/app/(private)/constraints/graphql/queries'
+import { GET_COURSE_MODAL_OPTIONS } from '@/app/(private)/curriculum/graphql/queries'
 import {
   UPSERT_CONSTRAINT_DEFINITIONS,
   DELETE_CONSTRAINT_DEFINITION,
-} from '@/lib/graphql/mutations'
-import { ConstraintDefinition } from '@/core/domain/entity'
+} from '@/app/(private)/constraints/graphql/mutations'
+import {
+  ConstraintDefinition,
+  Subject,
+  Instructor,
+  Course,
+} from '@/core/domain/entity'
 import { ActionResult } from '@/types/server-action-types'
 import { errorResult, successResult } from '@/lib/action-helpers'
 
@@ -246,6 +252,51 @@ export async function deleteConstraintDefinition(
     console.error('Error deleting constraint definition:', error)
     return errorResult(
       error instanceof Error ? error.message : '制約定義の削除に失敗しました'
+    )
+  }
+}
+
+/**
+ * 講座選択用のデータを取得
+ */
+export async function fetchCourseOptions(): Promise<
+  ActionResult<{
+    subjects: Subject[]
+    instructors: Instructor[]
+    courses: Course[]
+  }>
+> {
+  try {
+    const ttid = getDefaultTtid()
+
+    const result = await executeGraphQLForServerAction<{
+      subjects: Subject[]
+      instructors: Instructor[]
+      courses: Course[]
+    }>(
+      {
+        query: GET_COURSE_MODAL_OPTIONS,
+        variables: {
+          ttid,
+          coursesInput: { ttid },
+        },
+      },
+      undefined
+    )
+
+    if (!result.success || !result.data) {
+      return errorResult(result.error || 'データの取得に失敗しました')
+    }
+
+    return successResult({
+      subjects: result.data.subjects || [],
+      instructors: result.data.instructors || [],
+      courses: result.data.courses || [],
+    })
+  } catch (error) {
+    console.error('Error fetching course options:', error)
+    return errorResult(
+      error instanceof Error ? error.message : 'データの取得に失敗しました'
     )
   }
 }

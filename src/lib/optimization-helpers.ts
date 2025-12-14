@@ -6,7 +6,7 @@ import type {
   OptimizeAnnualTimetableRequest,
   ConstraintDefinition,
 } from './fastapi-client'
-import type { GraphQLAnnualDataType } from '@/lib/graphql/types'
+import type { GraphQLAnnualDataType } from '@/app/api/optimize/graphql/types'
 
 /**
  * Spring GraphQLから取得したデータをFastAPI形式に変換

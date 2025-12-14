@@ -8,6 +8,22 @@
   min-width: fit-content;
 }
 
+.creditsRow {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.creditsText {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.creditsTextInsufficient {
+  color: #dc2626;
+  font-weight: 500;
+}
+
 .homeroomTitle {
   width: 100%;
   min-width: fit-content;

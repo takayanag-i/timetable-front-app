@@ -1,8 +1,13 @@
 'use client'
 
-import { useActionState, useEffect, useMemo, useState } from 'react'
+import {
+  useActionState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import HomeroomEntry from '@/app/(private)/curriculum/components/HomeroomEntry/HomeroomEntry'
 import HomeroomModal from '@/app/(private)/curriculum/components/HomeroomModal/HomeroomModal'
 import { CourseModal } from '@/app/(private)/curriculum/components/CourseModal/CourseModal'
@@ -23,6 +28,12 @@ import {
 import { BlockFormValues, HomeroomFormValues } from '@/types/ui-types'
 import { ActionResult } from '@/types/server-action-types'
 import { defaultHomeroomDays } from '@/app/(private)/curriculum/components/HomeroomModal/hooks/useHomeroomModal'
+import ValidationErrorAlert from '@/app/(private)/curriculum/components/ValidationErrorAlert'
+import {
+  validateHomeroomCredits,
+  createHomeroomCreditsMap,
+  type HomeroomValidationResult,
+} from './utils/validation'
 import styles from './CurriculumUi.module.css'
 
 /**
@@ -177,6 +188,12 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
     )
   }, [homerooms, selectedGradeId])
 
+  // 各ホームルームのcredits/periodsをMapとして計算
+  const homeroomCreditsMap = useMemo(
+    () => createHomeroomCreditsMap(homerooms),
+    [homerooms]
+  )
+
   // 学級データ取得が成功したらモーダルを開く
   useEffect(() => {
     if (fetchedHomeroomResult?.success) {
@@ -291,6 +308,35 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
     setBlockModalContext(null)
   }
 
+  // バリデーションエラーの状態管理
+  const [validationErrors, setValidationErrors] = useState<
+    HomeroomValidationResult[]
+  >([])
+
+  /**
+   * 制約設定画面へ遷移する前にバリデーションを実行
+   */
+  const handleNavigateToConstraints = useCallback(() => {
+    const results = validateHomeroomCredits(homerooms)
+    const invalidHomerooms = results.filter(r => !r.isValid)
+
+    if (invalidHomerooms.length > 0) {
+      setValidationErrors(invalidHomerooms)
+      return
+    }
+
+    // バリデーション成功時は遷移
+    setValidationErrors([])
+    router.push('/constraints')
+  }, [homerooms, router])
+
+  /**
+   * バリデーションエラーをクリア
+   */
+  const clearValidationErrors = useCallback(() => {
+    setValidationErrors([])
+  }, [])
+
   return (
     <>
       <div
@@ -302,15 +348,17 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
         }}
       >
         <h1>カリキュラム設定</h1>
-        <Link
-          href="/constraints"
+        <button
+          type="button"
+          onClick={handleNavigateToConstraints}
           style={{
             padding: '0.75rem 1.5rem',
             backgroundColor: '#0070f3',
             color: 'white',
-            textDecoration: 'none',
+            border: 'none',
             borderRadius: '4px',
             fontSize: '1rem',
+            cursor: 'pointer',
             transition: 'background-color 0.2s',
           }}
           onMouseEnter={e => {
@@ -321,8 +369,14 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
           }}
         >
           制約設定画面へ
-        </Link>
+        </button>
       </div>
+
+      {/* バリデーションエラー表示 */}
+      <ValidationErrorAlert
+        errors={validationErrors}
+        onClose={clearValidationErrors}
+      />
 
       <div className={styles.gradeSwitcher}>
         {grades.length === 0 ? (
@@ -366,54 +420,62 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
               : '学級を追加しましょう！'}
           </p>
         ) : (
-          filteredHomerooms.map(homeroom => (
-            <HomeroomEntry
-              key={homeroom.id}
-              blocks={homeroom.blocks}
-              homeroomId={homeroom.id}
-              homeroomName={homeroom.homeroomName}
-              gradeId={homeroom.grade?.id ?? null}
-              onEdit={fetchHomeroomAction}
-              onAddCourse={(formData: FormData) => {
-                const laneId = formData.get('laneId') as string
-                const blockId = formData.get('blockId') as string
-                const gradeId = formData.get('gradeId') as string | null
-                console.log('DEBUG CurriculumUi - onAddCourse called with:', {
-                  laneId,
-                  blockId,
-                })
-                setIsEditMode(false)
-                setCurrentLaneId(laneId)
-                setCurrentBlockId(blockId)
-                setCurrentGradeId(gradeId || null)
-                fetchCourseModalOptionsAction()
-              }}
-              onEditCourse={handleEditCourse}
-              onAddBlock={(formData: FormData) => {
-                const homeroomId = formData.get('homeroomId') as string
-                setBlockModalContext({
-                  mode: 'create',
-                  homeroomId,
-                })
-                setIsBlockModalOpen(true)
-              }}
-              onEditBlock={(block: {
-                blockId: string
-                blockName: string
-                homeroomId: string
-                laneCount: number
-              }) => {
-                setBlockModalContext({
-                  mode: 'edit',
-                  homeroomId: block.homeroomId,
-                  blockId: block.blockId,
-                  blockName: block.blockName,
-                  laneCount: block.laneCount,
-                })
-                setIsBlockModalOpen(true)
-              }}
-            />
-          ))
+          filteredHomerooms.map(homeroom => {
+            const creditsData = homeroomCreditsMap.get(homeroom.id) ?? {
+              totalCredits: 0,
+              totalPeriods: 0,
+            }
+            return (
+              <HomeroomEntry
+                key={homeroom.id}
+                blocks={homeroom.blocks}
+                homeroomId={homeroom.id}
+                homeroomName={homeroom.homeroomName}
+                gradeId={homeroom.grade?.id ?? null}
+                totalCredits={creditsData.totalCredits}
+                totalPeriods={creditsData.totalPeriods}
+                onEdit={fetchHomeroomAction}
+                onAddCourse={(formData: FormData) => {
+                  const laneId = formData.get('laneId') as string
+                  const blockId = formData.get('blockId') as string
+                  const gradeId = formData.get('gradeId') as string | null
+                  console.log('DEBUG CurriculumUi - onAddCourse called with:', {
+                    laneId,
+                    blockId,
+                  })
+                  setIsEditMode(false)
+                  setCurrentLaneId(laneId)
+                  setCurrentBlockId(blockId)
+                  setCurrentGradeId(gradeId || null)
+                  fetchCourseModalOptionsAction()
+                }}
+                onEditCourse={handleEditCourse}
+                onAddBlock={(formData: FormData) => {
+                  const homeroomId = formData.get('homeroomId') as string
+                  setBlockModalContext({
+                    mode: 'create',
+                    homeroomId,
+                  })
+                  setIsBlockModalOpen(true)
+                }}
+                onEditBlock={(block: {
+                  blockId: string
+                  blockName: string
+                  homeroomId: string
+                  laneCount: number
+                }) => {
+                  setBlockModalContext({
+                    mode: 'edit',
+                    homeroomId: block.homeroomId,
+                    blockId: block.blockId,
+                    blockName: block.blockName,
+                    laneCount: block.laneCount,
+                  })
+                  setIsBlockModalOpen(true)
+                }}
+              />
+            )
+          })
         )}
         <div className={styles.addHomeroomWrapper}>
           <form action={fetchSchoolDaysAction}>

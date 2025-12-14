@@ -1,0 +1,55 @@
+.alert {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.title {
+  color: #dc2626;
+  margin: 0;
+  font-size: 1rem;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 0;
+  line-height: 1;
+}
+
+.closeButton:hover {
+  color: #374151;
+}
+
+.message {
+  color: #7f1d1d;
+  margin: 0 0 0.5rem 0;
+  font-size: 0.875rem;
+}
+
+.errorList {
+  margin: 0;
+  padding-left: 1.5rem;
+  color: #7f1d1d;
+  font-size: 0.875rem;
+}
+
+.errorList li {
+  margin-bottom: 0.25rem;
+}
+
+.errorList li:last-child {
+  margin-bottom: 0;
+}

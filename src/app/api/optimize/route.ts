@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { executeOptimization } from './service'
 import type { OptimizeRequest } from './types'
 
@@ -36,6 +37,9 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       )
     }
+
+    // キャッシュを再検証
+    revalidatePath('/results')
 
     return NextResponse.json({
       success: true,

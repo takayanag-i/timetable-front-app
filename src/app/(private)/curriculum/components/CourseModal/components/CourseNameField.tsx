@@ -1,5 +1,5 @@
 import Input from '@/components/shared/Input'
-import type { CourseModalOptions } from '@/types/ui-types'
+import type { CourseModalOptions } from '../types'
 import styles from '../CourseModal.module.css'
 
 interface CourseNameFieldProps {

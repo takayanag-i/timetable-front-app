@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import type { TimetableResultType } from '@/app/(private)/results/graphql/types'
 import styles from './TimetableResultUi.module.css'
 import ViewTabs from './ViewTabs'
@@ -46,17 +45,9 @@ export default function TimetableResultUi({
 }: TimetableResultUiProps) {
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
+      <header className={styles.header}>
         <h1 className={styles.title}>時間割編成結果</h1>
-        <div className={styles.headerLinks}>
-          <Link href="/curriculum" className={styles.headerLink}>
-            カリキュラム設定へ
-          </Link>
-          <Link href="/constraints" className={styles.headerLink}>
-            制約設定へ
-          </Link>
-        </div>
-      </div>
+      </header>
 
       {/* 制約違反の表示 */}
       {timetableResult.constraintViolations.length > 0 && (

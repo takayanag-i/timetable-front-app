@@ -1,4 +1,5 @@
-import { ConstraintDefinition } from '@/core/domain/entity'
+import { ConstraintDefinition, Course } from '@/core/domain/entity'
+import type { ConstraintDefinitionMasterResponse } from '@/app/(private)/constraints/graphql/types'
 import styles from './ConstraintDefinitionEntry.module.css'
 
 /**
@@ -6,6 +7,10 @@ import styles from './ConstraintDefinitionEntry.module.css'
  */
 interface ConstraintDefinitionEntryProps {
   constraintDefinition: ConstraintDefinition
+  /** 制約定義マスター（名前・説明を取得するため） */
+  master?: ConstraintDefinitionMasterResponse | null
+  /** 講座一覧（講座名を解決するため） */
+  courses?: Course[]
   /** Server Actionを受け取る */
   onEdit?: (formData: FormData) => void
 }
@@ -15,15 +20,50 @@ interface ConstraintDefinitionEntryProps {
  */
 export default function ConstraintDefinitionEntry({
   constraintDefinition,
+  master,
+  courses = [],
   onEdit,
 }: ConstraintDefinitionEntryProps) {
+  /**
+   * 講座IDから講座名を取得
+   */
+  const getCourseName = (courseId: string): string => {
+    const course = courses.find(c => c.id === courseId)
+    return course?.courseName || courseId
+  }
+
+  /**
+   * パラメータから表示用テキストを生成
+   */
+  const getParameterDisplay = (): string | null => {
+    if (!constraintDefinition.parameters) return null
+    try {
+      const params =
+        typeof constraintDefinition.parameters === 'string'
+          ? JSON.parse(constraintDefinition.parameters)
+          : constraintDefinition.parameters
+      // courseIdがある場合は講座名を表示
+      if (params.courseId) {
+        const courseName = getCourseName(params.courseId)
+        return courseName
+      }
+      // その他のパラメータがある場合
+      const keys = Object.keys(params)
+      if (keys.length > 0) {
+        return keys.map(key => `${key}: ${params[key]}`).join(', ')
+      }
+      return null
+    } catch {
+      return null
+    }
+  }
+
+  const parameterDisplay = getParameterDisplay()
+
   return (
     <div className={styles.entry}>
       <div className={styles.content}>
         <div className={styles.header}>
-          <h3 className={styles.code}>
-            {constraintDefinition.constraintDefinitionCode}
-          </h3>
           <span
             className={`${styles.flag} ${
               constraintDefinition.softFlag ? styles.soft : styles.hard
@@ -31,31 +71,16 @@ export default function ConstraintDefinitionEntry({
           >
             {constraintDefinition.softFlag ? 'ソフト' : 'ハード'}
           </span>
+          {constraintDefinition.softFlag &&
+            constraintDefinition.penaltyWeight !== null &&
+            constraintDefinition.penaltyWeight !== undefined && (
+              <span className={styles.penaltyWeight}>
+                重み: {constraintDefinition.penaltyWeight}
+              </span>
+            )}
         </div>
-        {constraintDefinition.penaltyWeight !== null &&
-          constraintDefinition.penaltyWeight !== undefined && (
-            <div className={styles.penaltyWeight}>
-              重み: {constraintDefinition.penaltyWeight}
-            </div>
-          )}
-        {constraintDefinition.parameters != null && (
-          <div className={styles.parameters}>
-            パラメータ:{' '}
-            {(() => {
-              const params = constraintDefinition.parameters
-              let paramStr: string
-              if (typeof params === 'string') {
-                paramStr = params
-              } else {
-                try {
-                  paramStr = JSON.stringify(params, null, 2)
-                } catch {
-                  paramStr = String(params)
-                }
-              }
-              return paramStr
-            })()}
-          </div>
+        {parameterDisplay && (
+          <p className={styles.parameterInfo}>{parameterDisplay}</p>
         )}
       </div>
       <div className={styles.actions}>

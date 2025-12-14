@@ -1,5 +1,11 @@
 // GraphQL型定義 - Results関連
 
+// 時間割結果一覧用の型
+export interface TimetableResultListItemType {
+  id: string
+  ttid: string
+}
+
 // 時間割結果エントリ（1コマ分の授業情報）
 export interface TimetableResultEntryType {
   id: string

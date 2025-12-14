@@ -78,16 +78,16 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false)
   type BlockModalContext =
     | {
-        mode: 'create'
-        homeroomId: string | null
-      }
+      mode: 'create'
+      homeroomId: string | null
+    }
     | {
-        mode: 'edit'
-        homeroomId: string
-        blockId: string
-        blockName: string
-        laneCount: number
-      }
+      mode: 'edit'
+      homeroomId: string
+      blockId: string
+      blockName: string
+      laneCount: number
+    }
 
   const [blockModalContext, setBlockModalContext] =
     useState<BlockModalContext | null>(null)
@@ -153,7 +153,7 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
         homeroomName: homeroomModalData.homeroomName ?? '',
         homeroomDays:
           homeroomModalData.homeroomDays &&
-          homeroomModalData.homeroomDays.length
+            homeroomModalData.homeroomDays.length
             ? homeroomModalData.homeroomDays
             : defaultHomeroomDays,
         gradeId: homeroomModalData.gradeId ?? '',
@@ -339,38 +339,17 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
 
   return (
     <>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '1rem',
-        }}
-      >
-        <h1>カリキュラム設定</h1>
+      <header className={styles.pageHeader}>
+        <h1 className={styles.pageTitle}>カリキュラム設定</h1>
         <button
           type="button"
           onClick={handleNavigateToConstraints}
-          style={{
-            padding: '0.75rem 1.5rem',
-            backgroundColor: '#0070f3',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            fontSize: '1rem',
-            cursor: 'pointer',
-            transition: 'background-color 0.2s',
-          }}
-          onMouseEnter={e => {
-            e.currentTarget.style.backgroundColor = '#0051cc'
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.backgroundColor = '#0070f3'
-          }}
+          className={styles.nextButton}
         >
-          制約設定画面へ
+          保存して次へ
+          <span className={styles.nextButtonArrow}>→</span>
         </button>
-      </div>
+      </header>
 
       {/* バリデーションエラー表示 */}
       <ValidationErrorAlert
@@ -387,9 +366,8 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
           <>
             <button
               type="button"
-              className={`${styles.gradeButton} ${
-                selectedGradeId === null ? styles.gradeButtonActive : ''
-              }`}
+              className={`${styles.gradeButton} ${selectedGradeId === null ? styles.gradeButtonActive : ''
+                }`}
               onClick={() => setSelectedGradeId(null)}
               aria-pressed={selectedGradeId === null}
             >
@@ -399,9 +377,8 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
               <button
                 key={grade.id}
                 type="button"
-                className={`${styles.gradeButton} ${
-                  selectedGradeId === grade.id ? styles.gradeButtonActive : ''
-                }`}
+                className={`${styles.gradeButton} ${selectedGradeId === grade.id ? styles.gradeButtonActive : ''
+                  }`}
                 onClick={() => setSelectedGradeId(grade.id)}
                 aria-pressed={selectedGradeId === grade.id}
               >

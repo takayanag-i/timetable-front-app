@@ -9,10 +9,10 @@ interface ViewTabsProps {
 }
 
 const VIEW_TABS: Array<{ view: ViewType; label: string }> = [
-  { view: 'homeroom', label: '学級ビュー' },
-  { view: 'homeroom-list', label: '学級一覧ビュー' },
-  { view: 'teacher', label: '教員ビュー' },
-  { view: 'teacher-list', label: '教員一覧ビュー' },
+  { view: 'homeroom', label: '学級' },
+  { view: 'homeroom-list', label: '学級一覧' },
+  { view: 'teacher', label: '教員' },
+  { view: 'teacher-list', label: '教員一覧' },
 ]
 
 /**

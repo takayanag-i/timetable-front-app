@@ -1,112 +1,92 @@
 .container {
-  padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
 }
 
 .header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: var(--space-xl);
 }
 
 .title {
-  font-size: 2rem;
-  font-weight: bold;
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--color-text-strong);
+  letter-spacing: -0.02em;
   margin: 0;
-  color: #333;
-}
-
-.headerLinks {
-  display: flex;
-  gap: 1rem;
-}
-
-.headerLink {
-  padding: 0.75rem 1.5rem;
-  background-color: #6c757d;
-  color: white;
-  text-decoration: none;
-  border-radius: 4px;
-  font-size: 1rem;
-  transition: background-color 0.2s;
-}
-
-.headerLink:hover {
-  background-color: #5a6268;
 }
 
 .violationsSection {
-  margin-bottom: 3rem;
-  padding: 1.5rem;
-  background-color: #fff3cd;
-  border: 1px solid #ffc107;
-  border-radius: 8px;
+  margin-bottom: var(--space-2xl);
+  padding: var(--space-lg);
+  background-color: var(--color-warning-subtle);
+  border: 1px solid var(--color-warning);
+  border-radius: var(--radius-lg);
 }
 
 .sectionTitle {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-bottom: 1rem;
-  color: #856404;
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  margin: 0 0 var(--space-md) 0;
+  color: var(--color-warning);
 }
 
 .violationsList {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
 }
 
 .violationItem {
-  padding: 0.75rem;
-  margin-bottom: 0.5rem;
-  background-color: #fff;
-  border-radius: 4px;
+  padding: var(--space-md);
+  background-color: var(--color-surface-1);
+  border-radius: var(--radius-sm);
   display: flex;
-  gap: 1rem;
+  gap: var(--space-md);
   align-items: center;
 }
 
 .violationCode {
-  font-weight: bold;
-  color: #856404;
-  min-width: 200px;
+  font-weight: 600;
+  color: var(--color-warning);
+  min-width: 180px;
 }
 
 .violationKeys {
-  color: #666;
-  font-family: monospace;
-  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-sm);
 }
 
 .timetablesSection {
   display: flex;
   flex-direction: column;
-  gap: 3rem;
+  gap: var(--space-2xl);
 }
 
 .homeroomTimetable {
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: var(--color-surface-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-sm);
   overflow-x: auto;
 }
 
 .homeroomTitle {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-bottom: 1.5rem;
-  color: #333;
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  margin: 0 0 var(--space-lg) 0;
+  color: var(--color-text-strong);
 }
 
 .gradeName {
-  font-size: 1rem;
+  font-size: var(--font-size-base);
   font-weight: normal;
-  color: #666;
-  margin-left: 0.5rem;
+  color: var(--color-text-muted);
+  margin-left: var(--space-sm);
 }
 
 .timetableTable {
@@ -133,35 +113,35 @@
 }
 
 .headerCell {
-  background-color: #f8f9fa;
-  padding: 0.75rem;
+  background-color: var(--color-surface-2);
+  padding: var(--space-md);
   text-align: center;
-  font-weight: bold;
-  border: 1px solid #dee2e6;
-  color: #495057;
+  font-weight: 600;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
 }
 
 .periodCell {
-  background-color: #f8f9fa;
-  padding: 0.75rem;
+  background-color: var(--color-surface-2);
+  padding: var(--space-md);
   text-align: center;
-  font-weight: bold;
-  border: 1px solid #dee2e6;
-  color: #495057;
+  font-weight: 600;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
   width: 60px;
 }
 
 .cell {
   padding: 0;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--color-border);
   vertical-align: top;
   min-height: 80px;
 }
 
 .entry {
-  padding: 0.5rem;
-  background-color: #e7f3ff;
-  border-radius: 4px;
+  padding: var(--space-sm);
+  background-color: var(--color-accent-subtle);
+  border-radius: var(--radius-xs);
   min-height: 60px;
 }
 
@@ -169,37 +149,37 @@
 .homeroomListView .entry {
   background-color: transparent;
   border-radius: 0;
-  padding: 0.5rem;
+  padding: var(--space-sm);
 }
 
 .subjectName {
-  font-weight: bold;
-  font-size: 0.9rem;
-  color: #0066cc;
-  margin-bottom: 0.25rem;
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  color: var(--color-accent);
+  margin-bottom: var(--space-2xs);
 }
 
 .courseName {
   font-weight: normal;
-  font-size: 0.8rem;
-  color: #333;
-  margin-bottom: 0.5rem;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-sm);
 }
 
 /* 教員ビュー用：講座名を青太字おおきめにする（学級ビューのsubjectNameと同じスタイル） */
 .homeroomTimetable .entry .courseName {
-  font-weight: bold;
-  font-size: 0.9rem;
-  color: #0066cc;
-  margin-bottom: 0.25rem;
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  color: var(--color-accent);
+  margin-bottom: var(--space-2xs);
 }
 
 .details {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  font-size: 0.75rem;
-  color: #555;
+  gap: var(--space-2xs);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
 }
 
 .instructor,
@@ -208,9 +188,9 @@
 }
 
 .emptyCell {
-  color: #ccc;
+  color: var(--color-text-muted);
   text-align: center;
-  padding: 0.5rem;
+  padding: var(--space-sm);
 }
 
 .homeroomNameCell {
@@ -238,7 +218,7 @@
 }
 
 .homeroomListView .entry {
-  padding: 0.5rem;
+  padding: var(--space-sm);
 }
 
 /* 教員一覧ビュー用：2列目以降を固定幅にする */
@@ -261,5 +241,5 @@
 .teacherListView .entry {
   background-color: transparent;
   border-radius: 0;
-  padding: 0.5rem;
+  padding: var(--space-sm);
 }

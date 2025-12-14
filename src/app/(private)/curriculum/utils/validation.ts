@@ -4,11 +4,11 @@ import type { Homeroom } from '@/core/domain/entity'
  * ホームルームのコマ数とcredits合計のバリデーション結果
  */
 export interface HomeroomValidationResult {
-    homeroomId: string
-    homeroomName: string
-    totalPeriods: number
-    totalCredits: number
-    isValid: boolean
+  homeroomId: string
+  homeroomName: string
+  totalPeriods: number
+  totalCredits: number
+  isValid: boolean
 }
 
 /**
@@ -18,30 +18,30 @@ export interface HomeroomValidationResult {
  * @returns totalCreditsとtotalPeriods
  */
 export function calculateHomeroomCredits(homeroom: Homeroom): {
-    totalCredits: number
-    totalPeriods: number
+  totalCredits: number
+  totalPeriods: number
 } {
-    // ホームルームのコマ数総和を計算
-    const totalPeriods = homeroom.homeroomDays.reduce(
-        (sum, day) => sum + day.periods,
-        0
-    )
+  // ホームルームのコマ数総和を計算
+  const totalPeriods = homeroom.homeroomDays.reduce(
+    (sum, day) => sum + day.periods,
+    0
+  )
 
-    // ブロック内のすべてのコースのcredits合計を計算
-    // 各ブロックの最初のレーンのcreditsを計算（ブロック内のレーンは同時開講なので1レーン分のみ）
-    const totalCredits = homeroom.blocks.reduce((blockSum, block) => {
-        const firstLane = block.lanes[0]
-        if (!firstLane) return blockSum
+  // ブロック内のすべてのコースのcredits合計を計算
+  // 各ブロックの最初のレーンのcreditsを計算（ブロック内のレーンは同時開講なので1レーン分のみ）
+  const totalCredits = homeroom.blocks.reduce((blockSum, block) => {
+    const firstLane = block.lanes[0]
+    if (!firstLane) return blockSum
 
-        const laneCredits = firstLane.courses.reduce((courseSum, course) => {
-            const credits = course.subject?.credits ?? 0
-            return courseSum + credits
-        }, 0)
-
-        return blockSum + laneCredits
+    const laneCredits = firstLane.courses.reduce((courseSum, course) => {
+      const credits = course.subject?.credits ?? 0
+      return courseSum + credits
     }, 0)
 
-    return { totalCredits, totalPeriods }
+    return blockSum + laneCredits
+  }, 0)
+
+  return { totalCredits, totalPeriods }
 }
 
 /**
@@ -51,19 +51,19 @@ export function calculateHomeroomCredits(homeroom: Homeroom): {
  * @returns バリデーション結果の配列
  */
 export function validateHomeroomCredits(
-    homerooms: Homeroom[]
+  homerooms: Homeroom[]
 ): HomeroomValidationResult[] {
-    return homerooms.map(homeroom => {
-        const { totalCredits, totalPeriods } = calculateHomeroomCredits(homeroom)
+  return homerooms.map(homeroom => {
+    const { totalCredits, totalPeriods } = calculateHomeroomCredits(homeroom)
 
-        return {
-            homeroomId: homeroom.id,
-            homeroomName: homeroom.homeroomName,
-            totalPeriods,
-            totalCredits,
-            isValid: totalCredits >= totalPeriods,
-        }
-    })
+    return {
+      homeroomId: homeroom.id,
+      homeroomName: homeroom.homeroomName,
+      totalPeriods,
+      totalCredits,
+      isValid: totalCredits >= totalPeriods,
+    }
+  })
 }
 
 /**
@@ -73,14 +73,13 @@ export function validateHomeroomCredits(
  * @returns ホームルームIDをキーとしたMap
  */
 export function createHomeroomCreditsMap(
-    homerooms: Homeroom[]
+  homerooms: Homeroom[]
 ): Map<string, { totalCredits: number; totalPeriods: number }> {
-    const results = validateHomeroomCredits(homerooms)
-    return new Map(
-        results.map(r => [
-            r.homeroomId,
-            { totalCredits: r.totalCredits, totalPeriods: r.totalPeriods },
-        ])
-    )
+  const results = validateHomeroomCredits(homerooms)
+  return new Map(
+    results.map(r => [
+      r.homeroomId,
+      { totalCredits: r.totalCredits, totalPeriods: r.totalPeriods },
+    ])
+  )
 }
-

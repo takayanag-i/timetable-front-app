@@ -25,6 +25,7 @@ export const GET_HOMEROOMS = `
             subject {
               id
               subjectName
+              credits
             }
             courseDetails {
               instructor {
@@ -185,6 +186,7 @@ export const GET_HOMEROOMS_AND_GRADES = `
             subject {
               id
               subjectName
+              credits
             }
             courseDetails {
               instructor {

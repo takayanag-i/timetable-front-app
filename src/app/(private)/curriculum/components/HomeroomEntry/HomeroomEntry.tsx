@@ -10,6 +10,10 @@ interface HomeroomEntryProps {
   homeroomId: string
   homeroomName: string
   gradeId?: string | null
+  /** 登録されたコースの単位数合計 */
+  totalCredits: number
+  /** ホームルームのコマ数総和 */
+  totalPeriods: number
   /** Server Actionを受け取る */
   onEdit: (formData: FormData) => void
   /** 講座追加Server Actionを受け取る */
@@ -31,12 +35,16 @@ export default function HomeroomEntry({
   homeroomId,
   homeroomName,
   gradeId,
+  totalCredits,
+  totalPeriods,
   onEdit,
   onAddCourse,
   onEditCourse,
   onAddBlock,
   onEditBlock,
 }: HomeroomEntryProps) {
+  const isCreditsInsufficient = totalCredits < totalPeriods
+
   return (
     <div className={styles.homeroomEntry}>
       <form action={onEdit}>
@@ -58,6 +66,18 @@ export default function HomeroomEntry({
           onEditBlock={onEditBlock}
         />
       ))}
+      <div className={styles.creditsRow}>
+        <span
+          className={`${styles.creditsText} ${isCreditsInsufficient ? styles.creditsTextInsufficient : ''}`}
+          title={
+            isCreditsInsufficient
+              ? `単位数が${totalPeriods - totalCredits}コマ不足しています`
+              : '単位数が足りています'
+          }
+        >
+          {totalCredits}/{totalPeriods}
+        </span>
+      </div>
       {onAddBlock && (
         <form action={onAddBlock}>
           <input type="hidden" name="homeroomId" value={homeroomId} />

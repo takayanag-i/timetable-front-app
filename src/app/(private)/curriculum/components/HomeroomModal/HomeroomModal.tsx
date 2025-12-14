@@ -249,6 +249,18 @@ export default function HomeroomModal({
         <form action={saveAction}>
           <input
             type="hidden"
+            name="homeroomName"
+            value={homeroomNameValue}
+            readOnly
+          />
+          <input
+            type="hidden"
+            name="gradeId"
+            value={gradeIdValue}
+            readOnly
+          />
+          <input
+            type="hidden"
             name="homeroomDays"
             value={JSON.stringify(homeroomDaysValue)}
             readOnly

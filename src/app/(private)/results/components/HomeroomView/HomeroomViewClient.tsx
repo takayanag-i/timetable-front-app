@@ -75,4 +75,3 @@ export default function HomeroomViewClient({ data }: HomeroomViewClientProps) {
     </div>
   )
 }
-

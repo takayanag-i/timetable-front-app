@@ -50,4 +50,3 @@ export interface CourseFormValues {
   courseName: string
   courseDetails: { instructorId: string }[]
 }
-

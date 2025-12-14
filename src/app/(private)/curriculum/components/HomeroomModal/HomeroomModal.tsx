@@ -253,12 +253,7 @@ export default function HomeroomModal({
             value={homeroomNameValue}
             readOnly
           />
-          <input
-            type="hidden"
-            name="gradeId"
-            value={gradeIdValue}
-            readOnly
-          />
+          <input type="hidden" name="gradeId" value={gradeIdValue} readOnly />
           <input
             type="hidden"
             name="homeroomDays"

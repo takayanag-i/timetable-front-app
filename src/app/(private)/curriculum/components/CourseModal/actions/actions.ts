@@ -2,11 +2,7 @@
 
 import { Course } from '@/core/domain/entity'
 import { ActionResult } from '@/types/server-action-types'
-import {
-  CourseModalOptions,
-  UISubjectType,
-  UIInstructorType,
-} from '../types'
+import { CourseModalOptions, UISubjectType, UIInstructorType } from '../types'
 import type {
   GraphQLSubjectType,
   GraphQLInstructorType,

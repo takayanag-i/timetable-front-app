@@ -51,7 +51,9 @@ export default function HomeroomListViewClient({
                               <span className={styles.instructor}>
                                 {cell.instructorText}
                               </span>
-                              <span className={styles.room}>{cell.roomText}</span>
+                              <span className={styles.room}>
+                                {cell.roomText}
+                              </span>
                             </div>
                           )}
                         </div>
@@ -69,4 +71,3 @@ export default function HomeroomListViewClient({
     </div>
   )
 }
-

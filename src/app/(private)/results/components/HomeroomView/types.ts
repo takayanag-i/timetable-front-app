@@ -20,4 +20,3 @@ export interface HomeroomViewData {
   availableDays: Array<{ key: string; label: string }>
   periods: number[]
 }
-

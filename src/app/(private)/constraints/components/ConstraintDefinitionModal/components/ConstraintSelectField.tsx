@@ -1,4 +1,4 @@
-import type { ConstraintDefinitionMasterResponse } from '@/lib/graphql/types'
+import type { ConstraintDefinitionMasterResponse } from '@/app/(private)/constraints/graphql/types'
 import styles from '../ConstraintDefinitionModal.module.css'
 
 interface ConstraintSelectFieldProps {

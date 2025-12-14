@@ -4,8 +4,8 @@ import {
   executeGraphQLForServerAction,
   getDefaultTtid,
 } from '@/lib/graphql-client'
-import { GET_TIMETABLE_RESULTS } from '@/lib/graphql/queries'
-import type { TimetableResultType } from '@/lib/graphql/types'
+import { GET_TIMETABLE_RESULTS } from '@/app/(private)/results/graphql/queries'
+import type { TimetableResultType } from '@/app/(private)/results/graphql/types'
 
 export async function getTimetableResult(
   resultId: string

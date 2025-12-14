@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import type { TimetableResultType } from '@/lib/graphql/types'
+import type { TimetableResultType } from '@/app/(private)/results/graphql/types'
 import {
   calculateMaxPeriodFromEntries,
   DAY_OF_WEEK_MAP,

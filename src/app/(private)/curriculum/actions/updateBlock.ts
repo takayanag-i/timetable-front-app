@@ -3,7 +3,7 @@
 import { ActionResult } from '@/types/server-action-types'
 import { errorResult, successResult } from '@/lib/action-helpers'
 import { executeGraphQLMutation } from '@/lib/graphql-client'
-import { UPSERT_BLOCKS } from '@/lib/graphql/mutations'
+import { UPSERT_BLOCKS } from '@/app/(private)/curriculum/graphql/mutations'
 import { revalidatePath } from 'next/cache'
 
 /**

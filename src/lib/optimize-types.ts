@@ -2,10 +2,8 @@
  * 最適化API用の型定義
  */
 
-import type {
-  GraphQLAnnualDataType,
-  ConstraintDefinitionResponse,
-} from '@/lib/graphql/types'
+import type { GraphQLAnnualDataType } from '@/app/api/optimize/graphql/types'
+import type { ConstraintDefinitionResponse } from '@/app/(private)/constraints/graphql/types'
 
 /**
  * GraphQL APIから取得した年次時間割最適化用データの型

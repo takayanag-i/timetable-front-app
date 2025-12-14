@@ -5,11 +5,11 @@ import {
   executeGraphQLMutation,
   getDefaultTtid,
 } from '@/lib/graphql-client'
-import { GET_CONSTRAINT_DEFINITIONS } from '@/lib/graphql/queries'
+import { GET_CONSTRAINT_DEFINITIONS } from '@/app/(private)/constraints/graphql/queries'
 import {
   UPSERT_CONSTRAINT_DEFINITIONS,
   DELETE_CONSTRAINT_DEFINITION,
-} from '@/lib/graphql/mutations'
+} from '@/app/(private)/constraints/graphql/mutations'
 import { ConstraintDefinition } from '@/core/domain/entity'
 import { ActionResult } from '@/types/server-action-types'
 import { errorResult, successResult } from '@/lib/action-helpers'

@@ -13,8 +13,11 @@ import {
   executeGraphQLMutation,
   getDefaultTtid,
 } from '@/lib/graphql-client'
-import { GET_HOMEROOMS } from '@/lib/graphql/queries'
-import { UPSERT_HOMEROOMS, DELETE_HOMEROOM } from '@/lib/graphql/mutations'
+import { GET_HOMEROOMS } from '@/app/(private)/curriculum/graphql/queries'
+import {
+  UPSERT_HOMEROOMS,
+  DELETE_HOMEROOM,
+} from '@/app/(private)/curriculum/graphql/mutations'
 
 export async function fetchHomeroom(
   _prevState: ActionResult<Homeroom> | null,

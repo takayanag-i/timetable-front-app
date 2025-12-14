@@ -8,8 +8,8 @@ import {
 import {
   GET_CONSTRAINT_DEFINITIONS,
   GET_CONSTRAINT_DEFINITION_MASTERS,
-} from '@/lib/graphql/queries'
-import type { ConstraintDefinitionMasterResponse } from '@/lib/graphql/types'
+} from '@/app/(private)/constraints/graphql/queries'
+import type { ConstraintDefinitionMasterResponse } from '@/app/(private)/constraints/graphql/types'
 import { logger } from '@/lib/logger'
 import { createAppError, ErrorCode } from '@/lib/errors'
 

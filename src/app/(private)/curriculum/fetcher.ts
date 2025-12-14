@@ -9,7 +9,7 @@ import {
   GET_GRADES,
   GET_HOMEROOMS,
   GET_HOMEROOMS_AND_GRADES,
-} from '@/lib/graphql/queries'
+} from '@/app/(private)/curriculum/graphql/queries'
 import { logger } from '@/lib/logger'
 import { createAppError, ErrorCode } from '@/lib/errors'
 

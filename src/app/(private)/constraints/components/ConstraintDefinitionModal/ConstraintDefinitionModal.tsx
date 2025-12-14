@@ -9,7 +9,7 @@ import { SoftConstraintCheckbox } from './components/SoftConstraintCheckbox'
 import { PenaltyWeightSlider } from './components/PenaltyWeightSlider'
 import { ParametersField } from './components/ParametersField'
 import { useConstraintDefinitionModal } from './hooks/useConstraintDefinitionModal'
-import type { ConstraintDefinitionMasterResponse } from '@/lib/graphql/types'
+import type { ConstraintDefinitionMasterResponse } from '@/app/(private)/constraints/graphql/types'
 import type { ConstraintDefinitionFormValues } from '@/types/ui-types'
 import type { ConstraintDefinition } from '@/core/domain/entity'
 

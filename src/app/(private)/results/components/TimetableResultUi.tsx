@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import type { TimetableResultType } from '@/lib/graphql/types'
+import type { TimetableResultType } from '@/app/(private)/results/graphql/types'
 import styles from './TimetableResultUi.module.css'
 import ViewTabs from './ViewTabs'
 import HomeroomView from './HomeroomView'

@@ -3,7 +3,7 @@
 import { ActionResult } from '@/types/server-action-types'
 import { errorResult, successResult } from '@/lib/action-helpers'
 import { executeGraphQLMutation } from '@/lib/graphql-client'
-import { DELETE_BLOCK } from '@/lib/graphql/mutations'
+import { DELETE_BLOCK } from '@/app/(private)/curriculum/graphql/mutations'
 import { revalidatePath } from 'next/cache'
 
 /**

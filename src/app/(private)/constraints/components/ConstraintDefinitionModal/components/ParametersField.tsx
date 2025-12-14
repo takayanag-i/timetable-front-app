@@ -1,4 +1,4 @@
-import type { ConstraintParameterMasterResponse } from '@/lib/graphql/types'
+import type { ConstraintParameterMasterResponse } from '@/app/(private)/constraints/graphql/types'
 import styles from '../ConstraintDefinitionModal.module.css'
 
 interface ParametersFieldProps {

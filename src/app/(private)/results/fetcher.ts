@@ -47,7 +47,9 @@ export async function getTimetableResultsList(): Promise<
 
     return result.data
   } catch (error) {
-    logger.error('時間割結果一覧取得で不明なエラーが発生しました', error)
+    logger.error('時間割結果一覧取得で不明なエラーが発生しました', {
+      error: error instanceof Error ? error.message : String(error),
+    })
     return []
   }
 }

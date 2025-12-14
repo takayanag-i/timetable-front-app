@@ -44,7 +44,9 @@ export default async function ResultsListPage() {
                 <h3 className={styles.resultTitle}>
                   編成結果 #{results.length - index}
                 </h3>
-                <p className={styles.resultId}>ID: {result.id.slice(0, 8)}...</p>
+                <p className={styles.resultId}>
+                  ID: {result.id.slice(0, 8)}...
+                </p>
               </div>
               <div className={styles.resultArrow}>→</div>
             </Link>
@@ -54,4 +56,3 @@ export default async function ResultsListPage() {
     </div>
   )
 }
-

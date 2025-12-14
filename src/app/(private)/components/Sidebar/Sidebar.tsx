@@ -88,7 +88,7 @@ export function Sidebar() {
       </div>
 
       <nav className={styles.nav}>
-        {navItems.map((item) => {
+        {navItems.map(item => {
           const isActive =
             pathname === item.href || pathname.startsWith(`${item.href}/`)
 
@@ -111,4 +111,3 @@ export function Sidebar() {
     </aside>
   )
 }
-

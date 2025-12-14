@@ -19,9 +19,8 @@ import {
 import {
   CourseModalOptions,
   CourseFormValues,
-  BlockFormValues,
-  HomeroomFormValues,
-} from '@/types/ui-types'
+} from '@/app/(private)/curriculum/components/CourseModal/types'
+import { BlockFormValues, HomeroomFormValues } from '@/types/ui-types'
 import { ActionResult } from '@/types/server-action-types'
 import { defaultHomeroomDays } from '@/app/(private)/curriculum/components/HomeroomModal/hooks/useHomeroomModal'
 import styles from './CurriculumUi.module.css'

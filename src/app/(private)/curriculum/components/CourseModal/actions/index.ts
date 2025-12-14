@@ -6,4 +6,4 @@ export {
   removeCourseFromLane,
 } from './actions'
 
-export type { CourseModalOptions } from '@/types/ui-types'
+export type { CourseModalOptions } from '../types'

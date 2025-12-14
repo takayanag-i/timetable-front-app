@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { CourseModalOptions } from '@/types/ui-types'
+import type { CourseModalOptions } from '../types'
 import { CourseNameField } from './CourseNameField'
 
 interface CourseNameFieldContainerProps {

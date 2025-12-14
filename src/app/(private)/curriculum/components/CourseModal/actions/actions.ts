@@ -2,11 +2,7 @@
 
 import { Course } from '@/core/domain/entity'
 import { ActionResult } from '@/types/server-action-types'
-import {
-  CourseModalOptions,
-  UISubjectType,
-  UIInstructorType,
-} from '@/types/ui-types'
+import { CourseModalOptions, UISubjectType, UIInstructorType } from '../types'
 import type {
   GraphQLSubjectType,
   GraphQLInstructorType,
@@ -98,11 +94,6 @@ export async function fetchCourseModalOptions(
       id: instructor.id,
       instructorName: instructor.instructorName,
       disciplineCode: instructor.disciplineCode,
-      attendanceDays: instructor.attendanceDays.map(ad => ({
-        id: ad.id,
-        dayOfWeek: ad.dayOfWeek,
-        unavailablePeriods: ad.unavailablePeriods,
-      })),
     }))
 
     // 講座データの正規化

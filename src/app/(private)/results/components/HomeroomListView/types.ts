@@ -25,4 +25,3 @@ export interface HomeroomListViewData {
   homerooms: HomeroomRowData[]
   columnHeaders: ColumnHeader[]
 }
-

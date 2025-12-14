@@ -165,4 +165,3 @@ export default function HomeroomListView({
 
   return <HomeroomListViewClient data={viewData} />
 }
-

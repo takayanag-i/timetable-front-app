@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import type { CourseModalOptions } from '@/types/ui-types'
+import type { CourseModalOptions } from '../types'
 
 interface UseCourseSuggestionsParams {
   subjectId: string

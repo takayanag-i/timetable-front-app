@@ -24,4 +24,3 @@ export interface TeacherListViewData {
   teachers: TeacherRowData[]
   columnHeaders: ColumnHeader[]
 }
-

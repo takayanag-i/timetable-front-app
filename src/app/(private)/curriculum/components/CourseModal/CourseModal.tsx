@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Modal from '@/components/shared/Modal'
 import styles from './CourseModal.module.css'
-import type { CourseModalOptions, CourseFormValues } from '@/types/ui-types'
+import type { CourseModalOptions, CourseFormValues } from './types'
 import { CourseCurrent } from './components/CourseCurrent'
 import { CourseAddOrChange } from './components/CourseAddOrChange'
 

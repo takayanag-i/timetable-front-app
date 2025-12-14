@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import styles from '../CourseModal.module.css'
-import type { CourseModalOptions, CourseFormValues } from '@/types/ui-types'
+import type { CourseModalOptions, CourseFormValues } from '../types'
 import { useCourseAddOrChange } from '../hooks/useCourseAddOrChange'
 import { useCourseSuggestions } from '../hooks/useCourseSuggestions'
 import { useFilteredInstructors } from '../hooks/useFilteredInstructors'

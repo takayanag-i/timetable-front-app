@@ -199,4 +199,3 @@ export default function TeacherListView({
 
   return <TeacherListViewClient data={viewData} />
 }
-

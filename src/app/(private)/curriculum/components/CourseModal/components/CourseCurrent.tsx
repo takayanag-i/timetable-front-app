@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useCallback } from 'react'
 import styles from '../CourseModal.module.css'
-import type { CourseModalOptions, CourseFormValues } from '@/types/ui-types'
+import type { CourseModalOptions, CourseFormValues } from '../types'
 import { useCourseCurrent } from '../hooks/useCourseCurrent'
 import { useFilteredInstructors } from '../hooks/useFilteredInstructors'
 import { SubjectSelectField } from './SubjectSelectField'

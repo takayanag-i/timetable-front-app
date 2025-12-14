@@ -68,4 +68,3 @@ export default function TeacherViewClient({ data }: TeacherViewClientProps) {
     </div>
   )
 }
-

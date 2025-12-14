@@ -1,5 +1,5 @@
 import styles from '../CourseModal.module.css'
-import type { CourseModalOptions } from '@/types/ui-types'
+import type { CourseModalOptions } from '../types'
 
 interface SubjectSelectFieldProps {
   subjects: CourseModalOptions['subjects']

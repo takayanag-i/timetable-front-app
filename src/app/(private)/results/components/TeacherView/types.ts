@@ -19,4 +19,3 @@ export interface TeacherViewData {
   availableDays: Array<{ key: string; label: string }>
   periods: number[]
 }
-

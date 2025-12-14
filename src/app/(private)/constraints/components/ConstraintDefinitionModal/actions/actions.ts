@@ -1,5 +1,6 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import {
   executeGraphQLForServerAction,
   executeGraphQLMutation,
@@ -134,6 +135,7 @@ export async function createConstraintDefinition(
       return errorResult(result.error || '制約定義の作成に失敗しました')
     }
 
+    revalidatePath('/constraints')
     return successResult({ message: '制約定義を作成しました' })
   } catch (error) {
     console.error('Error creating constraint definition:', error)
@@ -210,6 +212,7 @@ export async function updateConstraintDefinition(
       return errorResult(result.error || '制約定義の更新に失敗しました')
     }
 
+    revalidatePath('/constraints')
     return successResult({ message: '制約定義を更新しました' })
   } catch (error) {
     console.error('Error updating constraint definition:', error)
@@ -247,6 +250,7 @@ export async function deleteConstraintDefinition(
       return errorResult(result.error || '制約定義の削除に失敗しました')
     }
 
+    revalidatePath('/constraints')
     return successResult({ message: '制約定義を削除しました' })
   } catch (error) {
     console.error('Error deleting constraint definition:', error)

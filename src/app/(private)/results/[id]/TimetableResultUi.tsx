@@ -1,20 +1,39 @@
 import type {
   TimetableResultQueryResponse,
   SchoolDayQueryResponse,
-} from '@/app/(private)/results/graphql/types'
+} from '@/app/(private)/results/[id]/graphql/types'
 import styles from './TimetableResultUi.module.css'
-import ViewTabs from './ViewTabs'
-import HomeroomView from './HomeroomView'
-import HomeroomListView from './HomeroomListView'
-import InstructorView from './InstructorView'
-import InstructorListView from './InstructorListView'
+import ViewTabs from './components/ViewTabs'
+import HomeroomView from './components/HomeroomView'
+import HomeroomListView from './components/HomeroomListView'
+import InstructorView from './components/InstructorView'
+import InstructorListView from './components/InstructorListView'
 
 type ViewType = 'homeroom' | 'homeroom-list' | 'instructor' | 'instructor-list'
 
 interface TimetableResultUiProps {
   timetableResult: TimetableResultQueryResponse
   schoolDays: SchoolDayQueryResponse[]
-  activeView: ViewType
+  activeView?: string
+}
+
+/**
+ * ビュータイプを検証・正規化する
+ *
+ * @param view - クエリパラメータのビュー値
+ * @returns 有効なビュータイプ
+ */
+function parseViewType(view: string | undefined): ViewType {
+  const validViews: ViewType[] = [
+    'homeroom',
+    'homeroom-list',
+    'instructor',
+    'instructor-list',
+  ]
+  if (view && validViews.includes(view as ViewType)) {
+    return view as ViewType
+  }
+  return 'homeroom'
 }
 
 /**
@@ -68,8 +87,10 @@ function renderView(
 export default function TimetableResultUi({
   timetableResult,
   schoolDays,
-  activeView,
+  activeView: rawActiveView,
 }: TimetableResultUiProps) {
+  const activeView = parseViewType(rawActiveView)
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>

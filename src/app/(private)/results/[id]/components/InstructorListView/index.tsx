@@ -2,35 +2,33 @@ import type {
   TimetableResultQueryResponse,
   TimetableEntryQueryResponse,
   SchoolDayQueryResponse,
-} from '@/app/(private)/results/graphql/types'
+} from '@/app/(private)/results/[id]/graphql/types'
 import {
   DAY_OF_WEEK_MAP,
   truncateJoinedText,
   calculateMaxPeriodFromSchoolDays,
   getAvailableDaysFromSchoolDays,
 } from '../../utils/timetable-utils'
-import InstructorViewClient from './InstructorViewClient'
+import InstructorListViewClient from './InstructorListViewClient'
 import type {
   CellData,
   ColumnHeader,
-  InstructorTimetableData,
-  InstructorViewData,
+  InstructorListViewData,
+  InstructorRowData,
 } from './types'
 
-interface InstructorViewProps {
+interface InstructorListViewProps {
   timetableResult: TimetableResultQueryResponse
   schoolDays: SchoolDayQueryResponse[]
 }
 
 /**
- * エントリからセルデータを計算する
+ * セルデータを計算する
  *
  * @param entries - 同じ時限の時間割エントリ配列
- * @returns 計算済みのセルデータ
+ * @returns セルデータ
  */
-function buildCellData(
-  entries: TimetableResultQueryResponse['timetableEntries']
-): CellData {
+function buildCellData(entries: TimetableEntryQueryResponse[]): CellData {
   const firstEntry = entries[0]
   const courseDetails = firstEntry.course.courseDetails ?? []
 
@@ -59,7 +57,7 @@ function buildCellData(
  */
 function groupEntriesByInstructor(
   entries: TimetableEntryQueryResponse[]
-): InstructorTimetableData[] {
+): InstructorRowData[] {
   // 教員ごと、時限ごとにエントリを収集する
   const instructorMap = entries.reduce<
     Map<
@@ -103,12 +101,12 @@ function groupEntriesByInstructor(
   }, new Map())
 
   // セルデータに変換
-  const result: InstructorTimetableData[] = Array.from(instructorMap.entries())
+  const result: InstructorRowData[] = Array.from(instructorMap.entries())
     // 教員をループ
     .map(([instructorId, instructorValue]) => {
-      const cells = Array.from(instructorValue.slotMap.entries()).map(
-        ([slotKey, slotValue]) => [slotKey, buildCellData(slotValue)]
-      )
+      const cells = Array.from(instructorValue.slotMap.entries())
+        // 曜日時限をループ
+        .map(([slotKey, slotValue]) => [slotKey, buildCellData(slotValue)])
 
       return {
         instructorId,
@@ -132,37 +130,32 @@ function groupEntriesByInstructor(
 function buildColumnHeaders(
   schoolDays: SchoolDayQueryResponse[]
 ): ColumnHeader[] {
-  return getAvailableDaysFromSchoolDays(schoolDays).map(day => ({
-    key: day,
-    label: DAY_OF_WEEK_MAP[day],
-  }))
-}
-
-/**
- * 行ヘッダを生成する
- *
- * @param schoolDays - 学校曜日の配列
- * @returns 行ヘッダの配列
- */
-function buildRowHeaders(schoolDays: SchoolDayQueryResponse[]): number[] {
+  const dayKeys = getAvailableDaysFromSchoolDays(schoolDays)
   const maxPeriod = calculateMaxPeriodFromSchoolDays(schoolDays)
-  return Array.from({ length: maxPeriod }, (_, i) => i + 1)
+  return dayKeys.flatMap(day =>
+    Array.from({ length: maxPeriod }, (_, i) => ({
+      key: `${day}-${i + 1}`,
+      label: `${DAY_OF_WEEK_MAP[day]}${i + 1}`,
+    }))
+  )
 }
 
 /**
- * 教員ビューのデータを返却するServer Component
+ * 教員一覧ビューのデータを返却するServer Component
  */
-export default function InstructorView({
+export default function InstructorListView({
   timetableResult,
   schoolDays,
-}: InstructorViewProps) {
+}: InstructorListViewProps) {
   const { timetableEntries } = timetableResult
 
-  const data: InstructorViewData = {
-    instructors: groupEntriesByInstructor(timetableEntries),
+  const instructors = groupEntriesByInstructor(timetableEntries)
+
+  const data: InstructorListViewData = {
+    instructors,
     columnHeaders: buildColumnHeaders(schoolDays),
-    rowHeaders: buildRowHeaders(schoolDays),
+    rowHeaders: instructors.map(instructor => instructor.instructorName),
   }
 
-  return <InstructorViewClient data={data} />
+  return <InstructorListViewClient data={data} />
 }

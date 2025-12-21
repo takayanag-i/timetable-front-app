@@ -1,6 +1,6 @@
 'use client'
 
-import styles from '../TimetableResultUi.module.css'
+import styles from '../../TimetableResultUi.module.css'
 import type { InstructorViewData } from './types'
 
 interface InstructorViewClientProps {

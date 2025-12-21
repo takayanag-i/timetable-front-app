@@ -2,7 +2,7 @@ import type {
   TimetableEntryQueryResponse,
   TimetableResultQueryResponse,
   SchoolDayQueryResponse,
-} from '@/app/(private)/results/graphql/types'
+} from '@/app/(private)/results/[id]/graphql/types'
 import {
   DAY_OF_WEEK_MAP,
   truncateJoinedText,

@@ -1,25 +1,23 @@
 'use client'
 
-import styles from '../TimetableResultUi.module.css'
-import type { InstructorListViewData } from './types'
+import styles from '../../TimetableResultUi.module.css'
+import type { HomeroomListViewData } from './types'
 
-interface InstructorListViewClientProps {
-  data: InstructorListViewData
+interface HomeroomListViewClientProps {
+  data: HomeroomListViewData
 }
 
 /**
- * 教員一覧ビュー - 表示専用Client Component
+ * 学級一覧ビュー - 表示専用Client Component
  */
-export default function InstructorListViewClient({
+export default function HomeroomListViewClient({
   data,
-}: InstructorListViewClientProps) {
-  const { instructors, columnHeaders, rowHeaders } = data
+}: HomeroomListViewClientProps) {
+  const { homerooms, columnHeaders, rowHeaders } = data
 
   return (
     <div className={styles.timetablesSection}>
-      <div
-        className={`${styles.homeroomTimetable} ${styles.instructorListView}`}
-      >
+      <div className={`${styles.homeroomTimetable} ${styles.homeroomListView}`}>
         <table className={styles.timetableTable}>
           <thead>
             <tr>
@@ -33,16 +31,16 @@ export default function InstructorListViewClient({
           </thead>
           <tbody>
             {rowHeaders.map((rowHeader, index) => {
-              const instructor = instructors[index]
+              const homeroom = homerooms[index]
               return (
-                <tr key={instructor.instructorId}>
+                <tr key={homeroom.homeroomId}>
                   <td
                     className={`${styles.periodCell} ${styles.homeroomNameCell}`}
                   >
                     <div>{rowHeader}</div>
                   </td>
                   {columnHeaders.map(header => {
-                    const cell = instructor.cells[header.key]
+                    const cell = homeroom.cells[header.key]
                     return (
                       <td key={header.key} className={styles.cell}>
                         {cell ? (
@@ -50,16 +48,16 @@ export default function InstructorListViewClient({
                             <div className={styles.courseName}>
                               {cell.courseName}
                             </div>
-                            <div className={styles.details}>
-                              <span className={styles.instructor}>
-                                {cell.homeroomText}
-                              </span>
-                              {cell.roomText && (
+                            {(cell.instructorText || cell.roomText) && (
+                              <div className={styles.details}>
+                                <span className={styles.instructor}>
+                                  {cell.instructorText}
+                                </span>
                                 <span className={styles.room}>
                                   {cell.roomText}
                                 </span>
-                              )}
-                            </div>
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <div className={styles.emptyCell}>-</div>

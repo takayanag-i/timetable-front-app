@@ -1,23 +1,25 @@
 'use client'
 
 import styles from '../TimetableResultUi.module.css'
-import type { HomeroomListViewData } from './types'
+import type { InstructorListViewData } from './types'
 
-interface HomeroomListViewClientProps {
-  data: HomeroomListViewData
+interface InstructorListViewClientProps {
+  data: InstructorListViewData
 }
 
 /**
- * 学級一覧ビュー - 表示専用Client Component
+ * 教員一覧ビュー - 表示専用Client Component
  */
-export default function HomeroomListViewClient({
+export default function InstructorListViewClient({
   data,
-}: HomeroomListViewClientProps) {
-  const { homerooms, columnHeaders, rowHeaders } = data
+}: InstructorListViewClientProps) {
+  const { instructors, columnHeaders, rowHeaders } = data
 
   return (
     <div className={styles.timetablesSection}>
-      <div className={`${styles.homeroomTimetable} ${styles.homeroomListView}`}>
+      <div
+        className={`${styles.homeroomTimetable} ${styles.instructorListView}`}
+      >
         <table className={styles.timetableTable}>
           <thead>
             <tr>
@@ -31,16 +33,16 @@ export default function HomeroomListViewClient({
           </thead>
           <tbody>
             {rowHeaders.map((rowHeader, index) => {
-              const homeroom = homerooms[index]
+              const instructor = instructors[index]
               return (
-                <tr key={homeroom.homeroomId}>
+                <tr key={instructor.instructorId}>
                   <td
                     className={`${styles.periodCell} ${styles.homeroomNameCell}`}
                   >
                     <div>{rowHeader}</div>
                   </td>
                   {columnHeaders.map(header => {
-                    const cell = homeroom.cells[header.key]
+                    const cell = instructor.cells[header.key]
                     return (
                       <td key={header.key} className={styles.cell}>
                         {cell ? (
@@ -48,16 +50,16 @@ export default function HomeroomListViewClient({
                             <div className={styles.courseName}>
                               {cell.courseName}
                             </div>
-                            {(cell.instructorText || cell.roomText) && (
-                              <div className={styles.details}>
-                                <span className={styles.instructor}>
-                                  {cell.instructorText}
-                                </span>
+                            <div className={styles.details}>
+                              <span className={styles.instructor}>
+                                {cell.homeroomText}
+                              </span>
+                              {cell.roomText && (
                                 <span className={styles.room}>
                                   {cell.roomText}
                                 </span>
-                              </div>
-                            )}
+                              )}
+                            </div>
                           </div>
                         ) : (
                           <div className={styles.emptyCell}>-</div>

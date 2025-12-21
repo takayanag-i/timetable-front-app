@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import styles from './ViewTabs.module.css'
 
-type ViewType = 'homeroom' | 'homeroom-list' | 'teacher' | 'teacher-list'
+type ViewType = 'homeroom' | 'homeroom-list' | 'instructor' | 'instructor-list'
 
 interface ViewTabsProps {
   activeView: ViewType
@@ -11,8 +11,8 @@ interface ViewTabsProps {
 const VIEW_TABS: Array<{ view: ViewType; label: string }> = [
   { view: 'homeroom', label: '学級' },
   { view: 'homeroom-list', label: '学級一覧' },
-  { view: 'teacher', label: '教員' },
-  { view: 'teacher-list', label: '教員一覧' },
+  { view: 'instructor', label: '教員' },
+  { view: 'instructor-list', label: '教員一覧' },
 ]
 
 /**

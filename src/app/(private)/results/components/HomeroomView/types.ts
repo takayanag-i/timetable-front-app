@@ -1,11 +1,17 @@
-/** セルのデータ（事前計算済み） */
-export interface CellData {
-  subjectName?: string
-  instructorText: string
-  roomText: string
+/** 列ヘッダ */
+export interface ColumnHeader {
+  key: string
+  label: string
 }
 
-/** 学級ごとの時間割データ（事前計算済み） */
+/** ビュー全体 */
+export interface HomeroomViewData {
+  homerooms: HomeroomTimetableData[]
+  columnHeaders: ColumnHeader[]
+  rowHeaders: number[]
+}
+
+/** 学級 */
 export interface HomeroomTimetableData {
   homeroomId: string
   homeroomName: string
@@ -14,9 +20,9 @@ export interface HomeroomTimetableData {
   cells: Record<string, CellData>
 }
 
-/** ビュー全体の表示用データ */
-export interface HomeroomViewData {
-  homerooms: HomeroomTimetableData[]
-  availableDays: Array<{ key: string; label: string }>
-  periods: number[]
+/** セル */
+export interface CellData {
+  subjectName?: string
+  instructorText: string
+  roomText: string
 }

@@ -1,20 +1,9 @@
-import {
-  useState,
-  useEffect,
-  useActionState,
-  useRef,
-  useCallback,
-  useMemo,
-} from 'react'
-import type {
-  UIHomeroomDayType,
-  HomeroomModalData,
-  HomeroomFormValues,
-} from '@/types/ui-types'
+import { useState, useEffect, useActionState, useRef, useCallback } from 'react'
+import type { HomeroomDayType, HomeroomFormValues } from '../types'
 import { createHomeroom, deleteHomeroom } from '../actions'
 import type { ActionResult } from '@/types/server-action-types'
 
-export const defaultHomeroomDays: UIHomeroomDayType[] = [
+export const defaultHomeroomDays: HomeroomDayType[] = [
   { id: 'mon', dayOfWeek: 'mon', periods: 0 },
   { id: 'tue', dayOfWeek: 'tue', periods: 0 },
   { id: 'wed', dayOfWeek: 'wed', periods: 0 },

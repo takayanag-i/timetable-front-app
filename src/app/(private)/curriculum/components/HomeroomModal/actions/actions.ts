@@ -2,11 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { Homeroom } from '@/core/domain/entity'
-import {
-  ActionResult,
-  HomeroomData,
-  ServerActionHomeroomDayType,
-} from '@/types/server-action-types'
+import type { ActionResult } from '@/types/server-action-types'
+import type { HomeroomDayType } from '../types'
 import { errorResult, successResult } from '@/lib/action-helpers'
 import {
   executeGraphQLForServerAction,
@@ -81,7 +78,7 @@ export async function createHomeroom(
       return errorResult('学年を選択してください')
     }
 
-    let homeroomDays: ServerActionHomeroomDayType[] = []
+    let homeroomDays: HomeroomDayType[] = []
     if (homeroomDaysData) {
       try {
         homeroomDays = JSON.parse(homeroomDaysData)
@@ -174,7 +171,7 @@ export async function updateHomeroom(
       return errorResult('学年を選択してください')
     }
 
-    let homeroomDays: ServerActionHomeroomDayType[] = []
+    let homeroomDays: HomeroomDayType[] = []
     if (homeroomDaysData) {
       try {
         homeroomDays = JSON.parse(homeroomDaysData)

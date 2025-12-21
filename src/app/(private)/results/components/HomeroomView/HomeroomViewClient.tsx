@@ -8,10 +8,10 @@ interface HomeroomViewClientProps {
 }
 
 /**
- * 学級ビュー - 学級ごとに時間割を表示（表示専用Client Component）
+ * 学級ビューを返却するClient Component
  */
 export default function HomeroomViewClient({ data }: HomeroomViewClientProps) {
-  const { homerooms, availableDays, periods } = data
+  const { homerooms, columnHeaders, rowHeaders } = data
 
   return (
     <div className={styles.timetablesSection}>
@@ -27,21 +27,21 @@ export default function HomeroomViewClient({ data }: HomeroomViewClientProps) {
             <thead>
               <tr>
                 <th className={styles.headerCell}></th>
-                {availableDays.map(day => (
-                  <th key={day.key} className={styles.headerCell}>
-                    {day.label}
+                {columnHeaders.map(header => (
+                  <th key={header.key} className={styles.headerCell}>
+                    {header.label}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {periods.map(period => (
+              {rowHeaders.map(period => (
                 <tr key={period}>
                   <td className={styles.periodCell}>{period}</td>
-                  {availableDays.map(day => {
-                    const cell = homeroom.cells[`${day.key}-${period}`]
+                  {columnHeaders.map(header => {
+                    const cell = homeroom.cells[`${header.key}-${period}`]
                     return (
-                      <td key={day.key} className={styles.cell}>
+                      <td key={header.key} className={styles.cell}>
                         {cell ? (
                           <div className={styles.entry}>
                             {cell.subjectName && (

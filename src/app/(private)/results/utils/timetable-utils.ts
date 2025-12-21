@@ -1,8 +1,11 @@
-import type { TimetableResultType } from '@/app/(private)/results/graphql/types'
+import type {
+  TimetableResultQueryResponse,
+  SchoolDayQueryResponse,
+} from '@/app/(private)/results/graphql/types'
 import { DAY_OF_WEEK_MAP } from '@/constants'
 
 type TimetableGroup = {
-  entries: Map<string, TimetableResultType['timetableEntries'][0]>
+  entries: Map<string, TimetableResultQueryResponse['timetableEntries'][0]>
 }
 
 // 英語形式の曜日配列（データ処理用）- 日曜日を含む
@@ -40,7 +43,10 @@ export function calculateMaxPeriodFromEntries(
   entries: Map<
     string,
     {
-      entries: Map<string, TimetableResultType['timetableEntries'][0][]>
+      entries: Map<
+        string,
+        TimetableResultQueryResponse['timetableEntries'][0][]
+      >
     }
   >
 ): number {
@@ -61,7 +67,7 @@ export function calculateMaxPeriodFromEntries(
  * 使用されている曜日を抽出（availableな曜日だけ）
  */
 export function getAvailableDays(
-  timetableEntries: TimetableResultType['timetableEntries']
+  timetableEntries: TimetableResultQueryResponse['timetableEntries']
 ): string[] {
   const daysSet = new Set<string>()
   for (const entry of timetableEntries) {
@@ -69,6 +75,32 @@ export function getAvailableDays(
   }
   // 曜日の順序を保持
   return ENGLISH_DAYS_OF_WEEK.filter(day => daysSet.has(day))
+}
+
+/**
+ * 学校曜日から最大時限数を計算する
+ *
+ * @param schoolDays - 学校曜日の配列
+ * @returns 最大時限数
+ */
+export function calculateMaxPeriodFromSchoolDays(
+  schoolDays: SchoolDayQueryResponse[]
+): number {
+  return Math.max(
+    ...schoolDays.map(day => (day.amPeriods ?? 0) + (day.pmPeriods ?? 0))
+  )
+}
+
+/**
+ * 学校曜日から使用可能な曜日の配列を抽出する
+ *
+ * @param schoolDays - 学校曜日の配列
+ * @returns 使用可能な曜日の配列（文字列）
+ */
+export function getAvailableDaysFromSchoolDays(
+  schoolDays: SchoolDayQueryResponse[]
+): string[] {
+  return schoolDays.filter(day => day.isAvailable).map(day => day.dayOfWeek)
 }
 
 /**

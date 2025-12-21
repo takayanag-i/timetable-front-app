@@ -1,15 +1,19 @@
-import type { TimetableResultType } from '@/app/(private)/results/graphql/types'
+import type {
+  TimetableResultQueryResponse,
+  SchoolDayQueryResponse,
+} from '@/app/(private)/results/graphql/types'
 import styles from './TimetableResultUi.module.css'
 import ViewTabs from './ViewTabs'
 import HomeroomView from './HomeroomView'
 import HomeroomListView from './HomeroomListView'
-import TeacherView from './TeacherView'
-import TeacherListView from './TeacherListView'
+import InstructorView from './InstructorView'
+import InstructorListView from './InstructorListView'
 
-type ViewType = 'homeroom' | 'homeroom-list' | 'teacher' | 'teacher-list'
+type ViewType = 'homeroom' | 'homeroom-list' | 'instructor' | 'instructor-list'
 
 interface TimetableResultUiProps {
-  timetableResult: TimetableResultType
+  timetableResult: TimetableResultQueryResponse
+  schoolDays: SchoolDayQueryResponse[]
   activeView: ViewType
 }
 
@@ -18,21 +22,43 @@ interface TimetableResultUiProps {
  *
  * @param activeView - アクティブなビュータイプ
  * @param timetableResult - 時間割結果
+ * @param schoolDays - 学校曜日の配列
  * @returns ビューコンポーネント
  */
 function renderView(
   activeView: ViewType,
-  timetableResult: TimetableResultType
+  timetableResult: TimetableResultQueryResponse,
+  schoolDays: SchoolDayQueryResponse[]
 ) {
   switch (activeView) {
     case 'homeroom':
-      return <HomeroomView timetableResult={timetableResult} />
+      return (
+        <HomeroomView
+          timetableResult={timetableResult}
+          schoolDays={schoolDays}
+        />
+      )
     case 'homeroom-list':
-      return <HomeroomListView timetableResult={timetableResult} />
-    case 'teacher':
-      return <TeacherView timetableResult={timetableResult} />
-    case 'teacher-list':
-      return <TeacherListView timetableResult={timetableResult} />
+      return (
+        <HomeroomListView
+          timetableResult={timetableResult}
+          schoolDays={schoolDays}
+        />
+      )
+    case 'instructor':
+      return (
+        <InstructorView
+          timetableResult={timetableResult}
+          schoolDays={schoolDays}
+        />
+      )
+    case 'instructor-list':
+      return (
+        <InstructorListView
+          timetableResult={timetableResult}
+          schoolDays={schoolDays}
+        />
+      )
   }
 }
 
@@ -41,6 +67,7 @@ function renderView(
  */
 export default function TimetableResultUi({
   timetableResult,
+  schoolDays,
   activeView,
 }: TimetableResultUiProps) {
   return (
@@ -72,7 +99,7 @@ export default function TimetableResultUi({
       <ViewTabs activeView={activeView} resultId={timetableResult.id} />
 
       {/* 時間割表の表示 */}
-      {renderView(activeView, timetableResult)}
+      {renderView(activeView, timetableResult, schoolDays)}
     </div>
   )
 }

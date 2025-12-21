@@ -9,7 +9,7 @@ import ConstraintDefinitionEntry from '@/app/(private)/constraints/components/Co
 import { fetchConstraintDefinition } from '@/app/(private)/constraints/components/ConstraintDefinitionModal/actions'
 import { ActionResult } from '@/types/server-action-types'
 import type { ConstraintDefinitionMasterResponse } from '@/app/(private)/constraints/graphql/types'
-import type { ConstraintDefinitionFormValues } from '@/types/ui-types'
+import type { ConstraintDefinitionFormValues } from '@/app/(private)/constraints/components/ConstraintDefinitionModal/types'
 import type { OptimizeRequest, OptimizeResult } from '@/app/api/optimize/types'
 import styles from './ConstraintDefinitionsUi.module.css'
 

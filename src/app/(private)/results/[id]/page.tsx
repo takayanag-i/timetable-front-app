@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import { getTimetableResult } from '../fetcher'
 import TimetableResultUi from '../components/TimetableResultUi'
 
-type ViewType = 'homeroom' | 'homeroom-list' | 'teacher' | 'teacher-list'
+type ViewType = 'homeroom' | 'homeroom-list' | 'instructor' | 'instructor-list'
 
 interface PageProps {
   params: Promise<{
@@ -23,8 +23,8 @@ function parseViewType(view: string | undefined): ViewType {
   const validViews: ViewType[] = [
     'homeroom',
     'homeroom-list',
-    'teacher',
-    'teacher-list',
+    'instructor',
+    'instructor-list',
   ]
   if (view && validViews.includes(view as ViewType)) {
     return view as ViewType
@@ -38,9 +38,9 @@ export default async function TimetableResultPage({
 }: PageProps) {
   const { id } = await params
   const { view } = await searchParams
-  const timetableResult = await getTimetableResult(id)
+  const result = await getTimetableResult(id)
 
-  if (!timetableResult) {
+  if (!result) {
     notFound()
   }
 
@@ -48,7 +48,8 @@ export default async function TimetableResultPage({
 
   return (
     <TimetableResultUi
-      timetableResult={timetableResult}
+      timetableResult={result.timetableResult}
+      schoolDays={result.schoolDays}
       activeView={activeView}
     />
   )

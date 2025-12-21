@@ -222,23 +222,23 @@
 }
 
 /* 教員一覧ビュー用：2列目以降を固定幅にする */
-.teacherListView .timetableTable {
+.instructorListView .timetableTable {
   table-layout: fixed;
 }
 
-.teacherListView .headerCell:not(:first-child),
-.teacherListView .cell {
+.instructorListView .headerCell:not(:first-child),
+.instructorListView .cell {
   width: 60px;
   min-width: 60px;
   max-width: 60px;
 }
 
 /* 教員一覧ビュー用：セルとentryの余白を削除 */
-.teacherListView .cell {
+.instructorListView .cell {
   padding: 0;
 }
 
-.teacherListView .entry {
+.instructorListView .entry {
   background-color: transparent;
   border-radius: 0;
   padding: var(--space-sm);

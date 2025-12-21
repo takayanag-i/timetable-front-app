@@ -25,7 +25,8 @@ import {
   CourseModalOptions,
   CourseFormValues,
 } from '@/app/(private)/curriculum/components/CourseModal/types'
-import { BlockFormValues, HomeroomFormValues } from '@/types/ui-types'
+import type { BlockFormValues } from '@/app/(private)/curriculum/components/BlockModal/types'
+import type { HomeroomFormValues } from '@/app/(private)/curriculum/components/HomeroomModal/types'
 import { ActionResult } from '@/types/server-action-types'
 import { defaultHomeroomDays } from '@/app/(private)/curriculum/components/HomeroomModal/hooks/useHomeroomModal'
 import ValidationErrorAlert from '@/app/(private)/curriculum/components/ValidationErrorAlert'

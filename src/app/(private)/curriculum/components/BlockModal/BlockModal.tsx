@@ -6,7 +6,7 @@ import Input from '@/components/shared/Input'
 import { useBlockModal } from './hooks/useBlockModal'
 import styles from './BlockModal.module.css'
 import { useForm } from 'react-hook-form'
-import type { BlockFormValues } from '@/types/ui-types'
+import type { BlockFormValues } from './types'
 
 /**
  * BlockModal コンポーネントのProps

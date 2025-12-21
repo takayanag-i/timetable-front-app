@@ -1,4 +1,4 @@
-import { Sidebar } from '@/app/(private)/components/Sidebar'
+import { Sidebar } from '@/components/shared/Sidebar'
 
 import styles from './layout.module.css'
 

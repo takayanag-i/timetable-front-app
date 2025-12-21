@@ -5,22 +5,23 @@ export interface CellData {
   roomText: string
 }
 
+/** 列ヘッダ */
+export interface ColumnHeader {
+  key: string
+  label: string
+}
+
 /** 教員ごとの時間割データ（事前計算済み） */
-export interface TeacherRowData {
+export interface InstructorTimetableData {
   instructorId: string
   instructorName: string
   /** cells[`${day}-${period}`] でアクセス */
   cells: Record<string, CellData>
 }
 
-/** 列ヘッダーのデータ */
-export interface ColumnHeader {
-  key: string
-  label: string
-}
-
 /** ビュー全体の表示用データ */
-export interface TeacherListViewData {
-  teachers: TeacherRowData[]
+export interface InstructorViewData {
+  instructors: InstructorTimetableData[]
   columnHeaders: ColumnHeader[]
+  rowHeaders: number[]
 }

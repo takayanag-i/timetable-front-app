@@ -1,6 +1,4 @@
-// GraphQLクエリ定義
-
-// 時間割結果一覧取得クエリ（一覧表示用、エントリなし）
+// 時間割結果一覧取得
 export const GET_TIMETABLE_RESULTS_LIST = `
   query GetTimetableResultsList($input: RetrieveTimetableResultsInput!) {
     timetableResults(input: $input) {
@@ -10,9 +8,9 @@ export const GET_TIMETABLE_RESULTS_LIST = `
   }
 `
 
-// 時間割結果詳細取得クエリ
+// 時間割結果取得（学校曜日も含む）
 export const GET_TIMETABLE_RESULTS = `
-  query GetTimetableResults($input: RetrieveTimetableResultsInput!) {
+  query GetTimetableResults($input: RetrieveTimetableResultsInput!, $schoolDaysInput: RetrieveSchoolDaysInput!) {
     timetableResults(input: $input) {
       id
       ttid
@@ -52,6 +50,14 @@ export const GET_TIMETABLE_RESULTS = `
         constraintViolationCode
         violatingKeys
       }
+    }
+    schoolDays(input: $schoolDaysInput) {
+      id
+      ttid
+      dayOfWeek
+      isAvailable
+      amPeriods
+      pmPeriods
     }
   }
 `

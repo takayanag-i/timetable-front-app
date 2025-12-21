@@ -1,42 +1,44 @@
 'use client'
 
 import styles from '../TimetableResultUi.module.css'
-import type { TeacherViewData } from './types'
+import type { InstructorViewData } from './types'
 
-interface TeacherViewClientProps {
-  data: TeacherViewData
+interface InstructorViewClientProps {
+  data: InstructorViewData
 }
 
 /**
  * 教員ビュー - 表示専用Client Component
  */
-export default function TeacherViewClient({ data }: TeacherViewClientProps) {
-  const { teachers, availableDays, periods } = data
+export default function InstructorViewClient({
+  data,
+}: InstructorViewClientProps) {
+  const { instructors, columnHeaders, rowHeaders } = data
 
   return (
     <div className={styles.timetablesSection}>
-      {teachers.map(teacher => (
-        <div key={teacher.instructorId} className={styles.homeroomTimetable}>
-          <h2 className={styles.homeroomTitle}>{teacher.instructorName}</h2>
+      {instructors.map(instructor => (
+        <div key={instructor.instructorId} className={styles.homeroomTimetable}>
+          <h2 className={styles.homeroomTitle}>{instructor.instructorName}</h2>
           <table className={styles.timetableTable}>
             <thead>
               <tr>
                 <th className={styles.headerCell}>時限</th>
-                {availableDays.map(day => (
-                  <th key={day.key} className={styles.headerCell}>
-                    {day.label}
+                {columnHeaders.map(header => (
+                  <th key={header.key} className={styles.headerCell}>
+                    {header.label}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {periods.map(period => (
+              {rowHeaders.map(period => (
                 <tr key={period}>
                   <td className={styles.periodCell}>{period}</td>
-                  {availableDays.map(day => {
-                    const cell = teacher.cells[`${day.key}-${period}`]
+                  {columnHeaders.map(header => {
+                    const cell = instructor.cells[`${header.key}-${period}`]
                     return (
-                      <td key={day.key} className={styles.cell}>
+                      <td key={header.key} className={styles.cell}>
                         {cell ? (
                           <div className={styles.entry}>
                             <div className={styles.courseName}>

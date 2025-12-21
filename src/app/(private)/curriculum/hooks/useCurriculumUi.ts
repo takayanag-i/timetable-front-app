@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useModal } from '@/components/shared/Modal'
-import { HomeroomModalData } from '@/types/ui-types'
+import type { HomeroomModalData } from '@/app/(private)/curriculum/components/HomeroomModal/types'
 import { SchoolDay } from '@/core/domain/entity'
 
 /**

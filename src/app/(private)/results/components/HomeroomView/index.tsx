@@ -1,43 +1,48 @@
-import type { TimetableResultType } from '@/app/(private)/results/graphql/types'
+import type {
+  TimetableEntryQueryResponse,
+  TimetableResultQueryResponse,
+  SchoolDayQueryResponse,
+} from '@/app/(private)/results/graphql/types'
 import {
-  ENGLISH_DAYS_OF_WEEK,
   DAY_OF_WEEK_MAP,
   truncateJoinedText,
+  calculateMaxPeriodFromSchoolDays,
+  getAvailableDaysFromSchoolDays,
 } from '../../utils/timetable-utils'
 import HomeroomViewClient from './HomeroomViewClient'
-import type { CellData, HomeroomTimetableData, HomeroomViewData } from './types'
+import type {
+  CellData,
+  ColumnHeader,
+  HomeroomTimetableData,
+  HomeroomViewData,
+} from './types'
 
 interface HomeroomViewProps {
-  timetableResult: TimetableResultType
+  timetableResult: TimetableResultQueryResponse
+  schoolDays: SchoolDayQueryResponse[]
 }
 
 /**
- * セルデータを計算する
+ * セルデータを作成する
  *
  * @param entry - 時間割エントリ
- * @returns 計算済みのセルデータ
+ * @returns セルデータ
  */
-function buildCellData(
-  entry: TimetableResultType['timetableEntries'][0]
-): CellData {
-  const courseDetails = entry.course.courseDetails ?? []
-
+function buildCellData(entry: TimetableEntryQueryResponse): CellData {
   const instructorText = truncateJoinedText(
-    courseDetails
-      .map(detail => detail.instructor?.instructorName ?? '')
-      .filter(Boolean),
+    entry.course.courseDetails.map(detail => detail.instructor.instructorName),
     '/',
     6
   )
 
   const roomText = truncateJoinedText(
-    courseDetails.map(detail => detail.room?.roomName ?? '*'),
+    entry.course.courseDetails.map(detail => detail.room?.roomName ?? '*'),
     '/',
     6
   )
 
   return {
-    subjectName: entry.course.subject?.subjectName,
+    subjectName: entry.course.subject.subjectName,
     instructorText,
     roomText,
   }
@@ -50,7 +55,7 @@ function buildCellData(
  * @returns 学級ごとにグループ化されたデータ
  */
 function groupEntriesByHomeroom(
-  entries: TimetableResultType['timetableEntries']
+  entries: TimetableEntryQueryResponse[]
 ): HomeroomTimetableData[] {
   const grouped = entries.reduce<Map<string, HomeroomTimetableData>>(
     (acc, entry) => {
@@ -59,12 +64,14 @@ function groupEntriesByHomeroom(
 
       const existing = acc.get(homeroomId)
       if (existing) {
+        // 学級がaccに既にある場合
         existing.cells[cellKey] = buildCellData(entry)
       } else {
+        // 学級がaccにない場合
         acc.set(homeroomId, {
           homeroomId,
           homeroomName: entry.homeroom.homeroomName,
-          gradeName: entry.homeroom.grade?.gradeName,
+          gradeName: entry.homeroom.grade.gradeName,
           cells: { [cellKey]: buildCellData(entry) },
         })
       }
@@ -74,63 +81,50 @@ function groupEntriesByHomeroom(
     new Map()
   )
 
+  // valueのみを配列にして返却
   return Array.from(grouped.values())
 }
 
 /**
- * 使用されている曜日を抽出する
+ * 列ヘッダを生成する
  *
- * @param entries - 時間割エントリの配列
- * @returns 曜日のキーとラベルの配列
+ * @param schoolDays - 学校曜日の配列
+ * @returns 列ヘッダの配列
  */
-function extractAvailableDays(
-  entries: TimetableResultType['timetableEntries']
-): HomeroomViewData['availableDays'] {
-  const usedDays = new Set(entries.map(entry => entry.dayOfWeek))
-
-  return ENGLISH_DAYS_OF_WEEK.filter(day => usedDays.has(day)).map(day => ({
+function buildColumnHeaders(
+  schoolDays: SchoolDayQueryResponse[]
+): ColumnHeader[] {
+  return getAvailableDaysFromSchoolDays(schoolDays).map(day => ({
     key: day,
     label: DAY_OF_WEEK_MAP[day],
   }))
 }
 
 /**
- * 最大時限数を計算する
+ * 行ヘッダを生成する
  *
- * @param entries - 時間割エントリの配列
- * @returns 最大時限数
+ * @param schoolDays - 学校曜日の配列
+ * @returns 行ヘッダの配列
  */
-function calculateMaxPeriod(
-  entries: TimetableResultType['timetableEntries']
-): number {
-  if (entries.length === 0) return 0
-  return Math.max(...entries.map(entry => entry.period))
+function buildRowHeaders(schoolDays: SchoolDayQueryResponse[]): number[] {
+  const maxPeriod = calculateMaxPeriodFromSchoolDays(schoolDays)
+  return Array.from({ length: maxPeriod }, (_, i) => i + 1)
 }
 
 /**
- * 時間割データを表示用に変換する
- *
- * @param timetableResult - 時間割結果
- * @returns 表示用のデータ
+ * 学級ビューのデータを返却するServer Component
  */
-function buildViewData(timetableResult: TimetableResultType): HomeroomViewData {
+export default function HomeroomView({
+  timetableResult,
+  schoolDays,
+}: HomeroomViewProps) {
   const { timetableEntries } = timetableResult
 
-  const maxPeriod = calculateMaxPeriod(timetableEntries)
-  const periods = Array.from({ length: maxPeriod }, (_, i) => i + 1)
-
-  return {
+  const data: HomeroomViewData = {
     homerooms: groupEntriesByHomeroom(timetableEntries),
-    availableDays: extractAvailableDays(timetableEntries),
-    periods,
+    columnHeaders: buildColumnHeaders(schoolDays),
+    rowHeaders: buildRowHeaders(schoolDays),
   }
-}
 
-/**
- * 学級ビュー - 学級ごとに時間割を表示（Server Component）
- */
-export default function HomeroomView({ timetableResult }: HomeroomViewProps) {
-  const viewData = buildViewData(timetableResult)
-
-  return <HomeroomViewClient data={viewData} />
+  return <HomeroomViewClient data={data} />
 }

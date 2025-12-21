@@ -6,16 +6,22 @@ export interface CellData {
 }
 
 /** 教員ごとの時間割データ（事前計算済み） */
-export interface TeacherTimetableData {
+export interface InstructorRowData {
   instructorId: string
   instructorName: string
   /** cells[`${day}-${period}`] でアクセス */
   cells: Record<string, CellData>
 }
 
+/** 列ヘッダーのデータ */
+export interface ColumnHeader {
+  key: string
+  label: string
+}
+
 /** ビュー全体の表示用データ */
-export interface TeacherViewData {
-  teachers: TeacherTimetableData[]
-  availableDays: Array<{ key: string; label: string }>
-  periods: number[]
+export interface InstructorListViewData {
+  instructors: InstructorRowData[]
+  columnHeaders: ColumnHeader[]
+  rowHeaders: string[]
 }

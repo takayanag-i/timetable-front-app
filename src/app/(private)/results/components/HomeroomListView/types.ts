@@ -14,7 +14,7 @@ export interface HomeroomRowData {
   cells: Record<string, CellData>
 }
 
-/** 列ヘッダーのデータ */
+/** 列ヘッダ */
 export interface ColumnHeader {
   key: string
   label: string
@@ -24,4 +24,5 @@ export interface ColumnHeader {
 export interface HomeroomListViewData {
   homerooms: HomeroomRowData[]
   columnHeaders: ColumnHeader[]
+  rowHeaders: string[]
 }

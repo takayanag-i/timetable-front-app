@@ -1,18 +1,30 @@
-// GraphQL型定義 - Results関連
-
-// 時間割結果一覧用の型
-export interface TimetableResultListItemType {
+// 時間割結果一覧
+export interface TimetableResultListQueryResponse {
   id: string
   ttid: string
 }
 
-// 時間割結果エントリ（1コマ分の授業情報）
-export interface TimetableResultEntryType {
+// 時間割結果
+export interface TimetableResultQueryResponse {
+  id: string
+  ttid: string
+  timetableEntries: TimetableEntryQueryResponse[]
+  constraintViolations: ConstraintViolationQueryResponse[]
+}
+
+// 時間割結果と学校曜日の複合レスポンス
+export interface TimetableResultWithSchoolDaysResponse {
+  timetableResults: TimetableResultQueryResponse[]
+  schoolDays: SchoolDayQueryResponse[]
+}
+
+// 時間割エントリ
+export interface TimetableEntryQueryResponse {
   id: string
   homeroom: {
     id: string
     homeroomName: string
-    grade?: {
+    grade: {
       id: string
       gradeName: string
     }
@@ -22,12 +34,12 @@ export interface TimetableResultEntryType {
   course: {
     id: string
     courseName: string
-    subject?: {
+    subject: {
       id: string
       subjectName: string
     }
-    courseDetails?: Array<{
-      instructor?: {
+    courseDetails: Array<{
+      instructor: {
         id: string
         instructorName: string
       }
@@ -39,17 +51,20 @@ export interface TimetableResultEntryType {
   }
 }
 
-// 時間割結果の制約違反情報
-export interface TimetableResultViolationType {
+// 制約違反
+export interface ConstraintViolationQueryResponse {
   id: string
   constraintViolationCode: string
   violatingKeys: unknown
 }
 
-// 時間割結果（最適化結果全体）
-export interface TimetableResultType {
+// 学校曜日
+// GraphQLスキーマ: amPeriods/pmPeriodsはInt（nullable）のため optional かつ null を許可
+export interface SchoolDayQueryResponse {
   id: string
   ttid: string
-  timetableEntries: TimetableResultEntryType[]
-  constraintViolations: TimetableResultViolationType[]
+  dayOfWeek: string
+  isAvailable: boolean
+  amPeriods?: number | null
+  pmPeriods?: number | null
 }

@@ -97,8 +97,6 @@ export async function myServerAction(
 
 型定義は以下の6つのカテゴリに分類し、適切な場所に配置すること：
 
-**注意**: 以前は`@/types/bff-types`にAPI Route用の型を定義していましたが、現在は各API Route配下に配置します。
-
 #### 1. ドメインエンティティ (`@/core/domain/entity`)
 
 - **用途**: ビジネスロジックの核心となるドメインモデル
@@ -120,17 +118,20 @@ export interface Homeroom {
 }
 ```
 
-#### 2. GraphQL型 (`@/lib/graphql/types`)
+#### 2. GraphQL型（各機能ディレクトリの`graphql/types.ts`）
 
 - **用途**: GraphQL API（Spring Boot）との通信で使用する型
-- **配置**: `src/lib/graphql/types.ts`
+- **配置**: 各機能ディレクトリ内の`graphql/types.ts`
 - **特徴**:
   - GraphQLスキーマと連動
   - Query/MutationのInput/Response型
-  - query/mutation定義とコロケーション
+  - query/mutation定義とコロケーション（同じディレクトリ内）
   - ドメインエンティティを参照しない（依存関係の明確化のため）
-- **命名規則**: `{EntityName}Response`, `{EntityName}Input`, `{EntityName}MasterResponse` など
-- **例**: `ConstraintDefinitionResponse`, `ConstraintDefinitionMasterResponse`, `UpsertHomeroomsInput` など
+- **命名規則**: 
+  - Query Response: `{EntityName}QueryResponse` または `{EntityName}Type`
+  - Mutation Input: `{EntityName}Input` または `Upsert{EntityName}Input`
+  - Master Response: `{EntityName}MasterResponse`
+- **例**: `TimetableResultQueryResponse`, `GraphQLSubjectType`, `UpsertHomeroomsInput`, `ConstraintDefinitionMasterResponse` など
 
 **GraphQLスキーマからTypeScript型へのマッピング規則**:
 - GraphQLスキーマの定義に基づいて型を定義する
@@ -143,13 +144,16 @@ export interface Homeroom {
   - ただし、GraphQLクエリでフィールドを指定しない場合はレスポンスに含まれないため、実際のクエリで使用するかどうかに応じてoptionalにする場合もある
 
 ```typescript
-// ✅ GraphQL型（@/lib/graphql/types.ts）
-// GraphQLスキーマ: penaltyWeight: Float (nullable)
-export interface ConstraintDefinitionResponse {
+// ✅ GraphQL型（各機能ディレクトリのgraphql/types.ts）
+// src/app/(private)/results/[id]/graphql/types.ts
+// GraphQLスキーマ: amPeriods/pmPeriodsはInt（nullable）
+export interface SchoolDayQueryResponse {
   id: string
-  constraintDefinitionCode: string
-  softFlag: boolean
-  penaltyWeight?: number | null  // nullableなので optional かつ null を許可
+  ttid: string
+  dayOfWeek: string
+  isAvailable: boolean
+  amPeriods?: number | null  // nullableなので optional かつ null を許可
+  pmPeriods?: number | null
 }
 ```
 
@@ -181,38 +185,25 @@ export interface OptimizeResult {
 
 #### 4. Server Actions型 (`@/types/server-action-types`)
 
-- **用途**: Server Actionsで使用する型
+- **用途**: Server Actionsで使用する統一的な型
 - **配置**: `src/types/server-action-types.ts`
+
+#### 5. UI型（各コンポーネントディレクトリの`types.ts`）
+
+- **用途**: UIコンポーネント間のデータ受け渡し、フォーム値、表示用データなど
+- **配置**: 各コンポーネントディレクトリ内の`types.ts`
 - **特徴**:
-  - Server Actions専用の型定義
-  - GraphQLでカバーできない型のみ定義
-  - Server Actionsの戻り値型など
-- **例**: `ActionResult<T>`, `HomeroomData` など
+  - コンポーネント専用の型定義
+  - ドメインエンティティ、GraphQL型でカバーできないもののみ定義
+  - フォーム値、モーダル用データ、表示用データなど
+  - コンポーネントとコロケーション（同じディレクトリ内）
+- **例**: `CourseFormValues`, `ConstraintDefinitionFormValues`, `HomeroomViewData`, `CellData` など
 
 ```typescript
-// ✅ Server Actions型
-export type ActionResult<T = unknown> =
-  | { success: true; data: T }
-  | { success: false; error: string }
-```
-
-#### 5. UI型 (`@/types/ui-types`)
-
-- **用途**: UIコンポーネント間のデータ受け渡し、フォーム値など
-- **配置**: `src/types/ui-types.ts`
-- **特徴**:
-  - ドメインエンティティ、GraphQL型、BFF型でカバーできないもののみ定義
-  - フォーム値、モーダル用データなど
-- **例**: `CourseFormValues`, `ConstraintDefinitionFormValues`, `HomeroomModalData` など
-
-```typescript
-// ✅ UI型（ドメインエンティティを参照）
-import type { HomeroomDay } from '@/core/domain/entity'
-
-export interface CourseFormValues {
-  subjectId: string
-  courseName: string
-  courseDetails: { instructorId: string }[]
+export interface CellData {
+  subjectName: string
+  instructorText: string
+  roomText: string
 }
 ```
 
@@ -226,15 +217,6 @@ export interface CourseFormValues {
   - 変換が必要な場合は、fetcherやhelper関数内で行う
 - **例**: `fastapi-client.ts`内の`ConstraintDefinition`, `OptimizeAnnualTimetableRequest` など
 
-```typescript
-// ✅ 外部API型（fastapi-client.ts内）
-export interface ConstraintDefinition {
-  constraintDefinitionCode: string
-  softFlag: boolean
-  penaltyWeight?: number
-  parameters?: ConstraintParameter[]
-}
-```
 
 ### 型定義の使い分けルール
 
@@ -284,11 +266,25 @@ export interface ConstraintDefinition {
   }
   ```
 
-- **GraphQL Response**: `{EntityName}Response` の形式で命名する（既存のQuery/Mutationレスポンス型）
+- **GraphQL Query Response**: `{EntityName}QueryResponse` または `{EntityName}Type` の形式で命名する
   ```typescript
-  export interface ConstraintDefinitionResponse {
+  export interface TimetableResultQueryResponse {
     id: string
-    constraintDefinitionCode: string
+    ttid: string
+    timetableEntries: TimetableEntryQueryResponse[]
+  }
+  
+  export interface GraphQLSubjectType {
+    id: string
+    subjectName: string
+  }
+  ```
+
+- **GraphQL Mutation Response**: `{EntityName}Response` の形式で命名する（既存のMutationレスポンス型）
+  ```typescript
+  export interface UpsertHomeroomsResponse {
+    id: string
+    homeroomName: string
   }
   ```
 

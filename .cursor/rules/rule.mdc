@@ -107,17 +107,6 @@ export async function myServerAction(
   - ビジネスルールを表現する
 - **例**: `Homeroom`, `Block`, `Course`, `Subject`, `Instructor`, `ConstraintDefinition` など
 
-```typescript
-// ✅ ドメインエンティティ
-export interface Homeroom {
-  id: string
-  homeroomName: string
-  homeroomDays: HomeroomDay[]
-  blocks: Block[]
-  grade?: Grade | null
-}
-```
-
 #### 2. GraphQL型（各機能ディレクトリの`graphql/types.ts`）
 
 - **用途**: GraphQL API（Spring Boot）との通信で使用する型

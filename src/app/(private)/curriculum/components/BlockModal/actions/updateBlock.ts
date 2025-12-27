@@ -22,7 +22,7 @@ export async function updateBlock(
 ): Promise<ActionResult> {
   const blockId = formData.get('blockId') as string
   const blockName = formData.get('blockName') as string
-  const homeroomId = formData.get('homeroomId') as string | null
+  const homeroomId = formData.get('homeroomId') as string
 
   // システムエラー
   if (!blockId?.trim()) {
@@ -35,6 +35,17 @@ export async function updateBlock(
     return errorResult(appError)
   }
 
+  if (!homeroomId?.trim()) {
+    // 学級IDが欠損している場合
+    const appError = createAppError(
+      new Error('学級IDが指定されていません'),
+      ErrorCode.DATA_VALIDATION_ERROR
+    )
+    logger.error(appError.getMessage())
+    return errorResult(appError)
+  }
+
+  // 入力チェックエラー
   if (!blockName?.trim()) {
     return errorResult('ブロック名を入力してください')
   }
@@ -48,8 +59,8 @@ export async function updateBlock(
             blocks: [
               {
                 id: blockId,
+                homeroomId,
                 blockName: blockName.trim(),
-                ...(homeroomId ? { homeroomId } : {}),
               },
             ],
             by: 'system',

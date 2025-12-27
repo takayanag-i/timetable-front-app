@@ -17,9 +17,18 @@ interface BlockEntryProps {
 /**
  * ブロックエントリ コンポーネント
  */
-export default function BlockEntry(props: BlockEntryProps) {
+export default function BlockEntry({
+  blockId,
+  homeroomId,
+  gradeId,
+  blockName,
+  lanes,
+  onAddCourse,
+  onEditCourse,
+  onEditBlock,
+}: BlockEntryProps) {
   // laneIdでソートする
-  const sortedLanes = [...props.lanes].sort((a, b) => a.id.localeCompare(b.id))
+  const sortedLanes = [...lanes].sort((a, b) => a.id.localeCompare(b.id))
 
   return (
     <div className={styles.blockEntry}>
@@ -27,26 +36,26 @@ export default function BlockEntry(props: BlockEntryProps) {
         type="button"
         className={styles.blockHeaderButton}
         onClick={() =>
-          props.onEditBlock({
-            blockId: props.blockId,
-            blockName: props.blockName,
-            homeroomId: props.homeroomId,
+          onEditBlock({
+            blockId,
+            blockName,
+            homeroomId,
             laneCount: sortedLanes.length,
           })
         }
       >
-        <span className={styles.blockName}>{props.blockName}</span>
+        <span className={styles.blockName}>{blockName}</span>
       </button>
       <div className={styles.laneContainer}>
         {sortedLanes.map(lane => (
           <LaneEntry
             key={lane.id}
             id={lane.id}
-            blockId={props.blockId}
-            gradeId={props.gradeId}
+            blockId={blockId}
+            gradeId={gradeId}
             courses={lane.courses}
-            onAddCourse={props.onAddCourse}
-            onEditCourse={props.onEditCourse}
+            onAddCourse={onAddCourse}
+            onEditCourse={onEditCourse}
           />
         ))}
       </div>

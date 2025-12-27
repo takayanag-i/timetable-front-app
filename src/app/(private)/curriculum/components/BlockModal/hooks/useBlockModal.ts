@@ -3,40 +3,47 @@ import { createBlock, updateBlock, deleteBlock } from '../actions'
 import type { ActionResult } from '@/types/server-action-types'
 
 interface UseBlockModalArgs {
-  homeroomId: string | null
   mode: 'create' | 'edit'
   blockId: string | null
+  homeroomId: string | null
 }
 
 export function useBlockModal({
-  homeroomId,
   mode,
   blockId,
+  homeroomId,
 }: UseBlockModalArgs) {
   // エラーメッセージ
   const [error, setError] = useState<string | null>(null)
 
+  // エラーをクリアする
+  const clearError = useCallback(() => {
+    setError(null)
+  }, [])
+
+  // 前回の値を保持する
   const prevHomeroomIdRef = useRef<string | null>(null)
   const prevBlockIdRef = useRef<string | null>(null)
   const prevModeRef = useRef<'create' | 'edit'>(mode)
 
+  // 現在の値が前回の値と変わっていたら、エラーをクリア
   useEffect(() => {
     if (
       prevHomeroomIdRef.current !== homeroomId ||
       prevBlockIdRef.current !== blockId ||
       prevModeRef.current !== mode
     ) {
-      setError(null)
+      clearError()
       prevHomeroomIdRef.current = homeroomId
       prevBlockIdRef.current = blockId
       prevModeRef.current = mode
     }
-  }, [blockId, homeroomId, mode])
+  }, [blockId, homeroomId, mode, clearError])
 
   // Server Action
   const [createResult, createAction, createPending] = useActionState(
     createBlock,
-    null
+    null as ActionResult | null
   )
   const [updateResult, updateAction, updatePending] = useActionState(
     updateBlock,
@@ -47,29 +54,32 @@ export function useBlockModal({
     null as ActionResult | null
   )
 
-  // 保存結果を監視してエラーを表示
+  // 保存（作成または更新）結果を監視してエラーを表示
   useEffect(() => {
     const result = mode === 'create' ? createResult : updateResult
 
     if (result?.success === false) {
+      const defaultMessage =
+        mode === 'create'
+          ? 'ブロックの作成に失敗しました'
+          : 'ブロックの更新に失敗しました'
       setError(
-        result.error ||
-          (mode === 'create'
-            ? 'ブロックの作成に失敗しました'
-            : 'ブロックの更新に失敗しました')
+        result.errorCode ? defaultMessage : result.error || defaultMessage
       )
     }
-  }, [createResult, mode, updateResult])
+  }, [createResult, updateResult, mode])
 
+  // 削除結果を監視してエラーを表示
   useEffect(() => {
     if (deleteResult?.success === false) {
-      setError(deleteResult.error || 'ブロックの削除に失敗しました')
+      const defaultMessage = 'ブロックの削除に失敗しました'
+      setError(
+        deleteResult.errorCode
+          ? defaultMessage
+          : deleteResult.error || defaultMessage
+      )
     }
   }, [deleteResult])
-
-  const clearError = useCallback(() => {
-    setError(null)
-  }, [])
 
   return {
     error,

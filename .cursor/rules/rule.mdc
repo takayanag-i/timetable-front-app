@@ -155,8 +155,47 @@ if (!result.success || !result.data) {
 
 ### エラーコードの使い分け
 
+#### エラーの分類
+
+Server Actionsでのエラーは、**システムエラー**と**ユーザー入力エラー**に分類する：
+
+1. **システムエラー（ユーザーにはどうしようもない）**
+   - hidden inputで渡される値が欠損している場合（例: `homeroomId`, `blockId`）
+   - システム内部のエラー
+   - GraphQL実行結果のエラー
+   - 例外が発生した場合
+   - **実装**: `createAppError` と `ErrorCode` を使用し、`logger.error()` でログに記録する
+
+2. **ユーザー入力エラー（ユーザーが入力する値）**
+   - ユーザーが入力するフィールドが空の場合（例: `blockName`, `homeroomName`）
+   - バリデーションエラー（例: レーン数が1未満）
+   - **実装**: 通常の `errorResult()` を使用（`createAppError` は不要）
+
+#### 実装例
+
+```typescript
+// システムエラー: hidden inputで渡される値が欠損している場合
+if (!homeroomId) {
+  // 学級IDが欠損している場合
+  const appError = createAppError(
+    new Error('学級IDが指定されていません'),
+    ErrorCode.DATA_VALIDATION_ERROR
+  )
+  logger.error(appError.getMessage())
+  return errorResult(appError)
+}
+
+// ユーザー入力エラー: ユーザーが入力する値が空の場合
+if (!blockName?.trim()) {
+  // ブロック名が欠損している場合
+  return errorResult('ブロック名を入力してください')
+}
+```
+
+#### ErrorCodeの使い分け
+
 - **`ErrorCode.DATA_NOT_FOUND`**: データ取得時のエラー
-- **`ErrorCode.DATA_VALIDATION_ERROR`**: データ作成・更新・削除時のエラー
+- **`ErrorCode.DATA_VALIDATION_ERROR`**: データ作成・更新・削除時のエラー、システムエラー全般
 - **`ErrorCode.DATA_PARSING_ERROR`**: JSONパースエラーなど
 
 ### JSDocコメント
@@ -410,6 +449,29 @@ export interface CellData {
   ```
 
 - **理由**: コンポーネントとフックを区別し、型の意図を明確にするため
+
+## コンポーネントのProps
+
+- **分割代入を使用**: コンポーネントのPropsは分割代入で受け取ること
+- `props.`を明示的に使用するのではなく、分割代入を使用する
+
+```typescript
+// ✅ 正しい: 分割代入を使用
+export default function BlockEntry({
+  blockId,
+  homeroomId,
+  blockName,
+  lanes,
+  onEditBlock,
+}: BlockEntryProps) {
+  // ...
+}
+
+// ❌ 誤り: props.を明示的に使用
+export default function BlockEntry(props: BlockEntryProps) {
+  return <div>{props.blockName}</div>
+}
+```
 
 ## インポート順序
 

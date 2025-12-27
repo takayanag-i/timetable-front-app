@@ -87,7 +87,7 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
   type BlockModalContext =
     | {
         mode: 'create'
-        homeroomId: string | null
+        homeroomId: string
       }
     | {
         mode: 'edit'
@@ -148,7 +148,7 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
     return {
       blockName: '',
       laneCount: 1,
-      homeroomId: blockModalContext?.homeroomId || '',
+      homeroomId: blockModalContext?.homeroomId ?? '',
       blockId: '',
     }
   }, [blockModalContext])
@@ -513,7 +513,7 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
             ? `${blockModalContext.blockName}を編集`
             : 'ブロックを追加'
         }
-        homeroomId={blockModalContext?.homeroomId ?? null}
+        homeroomId={blockModalContext?.homeroomId ?? ''}
         blockId={
           blockModalContext?.mode === 'edit' ? blockModalContext.blockId : null
         }

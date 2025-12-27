@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { Subject, Course } from '@/core/domain/entity'
-import { fetchCourseOptions } from '../actions/actions'
+import { fetchCourseOptions } from '../actions'
 import styles from '../ConstraintDefinitionModal.module.css'
 
 interface CourseSelectFieldProps {

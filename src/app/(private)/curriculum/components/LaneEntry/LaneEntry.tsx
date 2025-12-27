@@ -8,7 +8,7 @@ import { Course as CourseEntity } from '@/core/domain/entity'
 interface LaneEntryProps {
   id: string
   blockId: string
-  gradeId?: string | null
+  gradeId: string | null
   courses?: CourseEntity[]
   /** Server Actionを受け取る */
   onAddCourse?: (formData: FormData) => void

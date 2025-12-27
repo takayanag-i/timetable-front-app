@@ -1,5 +1,54 @@
 // GraphQL型定義 - Curriculum関連
 
+// GraphQL API用の学級編集用型（最小限のフィールド）
+export interface GraphQLHomeroomForEditType {
+  id: string
+  homeroomName: string
+  grade?: {
+    id: string
+    gradeName: string
+  } | null
+  homeroomDays: GraphQLHomeroomDayType[]
+}
+
+// GraphQL API用の学級型
+export interface GraphQLHomeroomType {
+  id: string
+  homeroomName: string
+  grade?: {
+    id: string
+    gradeName: string
+  } | null
+  homeroomDays: GraphQLHomeroomDayType[]
+  blocks: Array<{
+    id: string
+    blockName: string
+    lanes: Array<{
+      id: string
+      courses: Array<{
+        id: string
+        courseName: string
+        subject?: {
+          id: string
+          subjectName: string
+          credits?: number | null
+        } | null
+        courseDetails: Array<{
+          id: string
+          instructor?: {
+            id: string
+            instructorName: string
+          } | null
+          room?: {
+            id: string
+            roomName: string
+          } | null
+        }>
+      }>
+    }>
+  }>
+}
+
 // GraphQL API用の学級曜日型
 export interface GraphQLHomeroomDayType {
   id: string
@@ -78,4 +127,26 @@ export interface UpsertHomeroomsInput {
       periods: number
     }>
   }[]
+}
+
+// 講座モーダルオプション取得用の複合レスポンス型（GraphQL型）
+export interface CourseModalOptionsResponse {
+  subjects: GraphQLSubjectType[]
+  instructors: GraphQLInstructorType[]
+  courses: Array<{
+    id: string
+    courseName: string
+    courseDetails: Array<{
+      instructor?: {
+        id: string
+        instructorName: string
+      } | null
+    }>
+    subject?: {
+      id: string
+      subjectName: string | null
+      grade?: { id: string; gradeName: string }
+      discipline?: { disciplineCode: string; disciplineName: string }
+    }
+  }>
 }

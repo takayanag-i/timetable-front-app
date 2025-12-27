@@ -58,6 +58,11 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
 }
 
 /**
+ * デフォルトのエラーメッセージ（エラーメッセージが不明な場合）
+ */
+export const UNKNOWN_ERROR_MESSAGE = '不明なエラー'
+
+/**
  * アプリケーションエラークラス
  */
 export class AppError extends Error {

@@ -1,9 +1,25 @@
-// CourseModal 専用の型定義
+/**
+ * CourseModal で扱うフォーム値
+ */
+export interface CourseFormValues {
+  subjectId: string
+  courseName: string
+  courseDetails: { instructorId: string }[]
+}
 
 /**
- * UI用の科目型
+ * 講座モーダル用オプション
  */
-export interface UISubjectType {
+export interface CourseModalOptions {
+  subjects: CourseModalSubject[]
+  instructors: CourseModalInstructor[]
+  courses: CourseModalCourse[]
+}
+
+/**
+ * CourseModal用の科目型
+ */
+export interface CourseModalSubject {
   id: string
   subjectName: string
   credits?: number | null
@@ -19,34 +35,21 @@ export interface UISubjectType {
 }
 
 /**
- * UI用の教員型
+ * CourseModal用の教員型
  */
-export interface UIInstructorType {
+export interface CourseModalInstructor {
   id: string
   instructorName: string
   disciplineCode: string
 }
 
 /**
- * 講座モーダル用オプション
+ * CourseModal用の講座型
  */
-export interface CourseModalOptions {
-  subjects: UISubjectType[]
-  instructors: UIInstructorType[]
-  courses: {
-    id: string
-    courseName: string
-    subjectId: string
-    instructorIds: string[]
-    instructorNames: string[]
-  }[]
-}
-
-/**
- * CourseModal で扱うフォーム値
- */
-export interface CourseFormValues {
-  subjectId: string
+export interface CourseModalCourse {
+  id: string
   courseName: string
-  courseDetails: { instructorId: string }[]
+  subjectId: string
+  instructorIds: string[]
+  instructorNames: string[]
 }

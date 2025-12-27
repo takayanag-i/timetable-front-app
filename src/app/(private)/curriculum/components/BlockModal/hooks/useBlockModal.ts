@@ -1,7 +1,5 @@
 import { useState, useEffect, useActionState, useRef, useCallback } from 'react'
-import { createBlockAndAddToHomeroom } from '../../../actions/createBlock'
-import { updateBlock } from '../../../actions/updateBlock'
-import { deleteBlock } from '../../../actions/deleteBlock'
+import { createBlock, updateBlock, deleteBlock } from '../actions'
 import type { ActionResult } from '@/types/server-action-types'
 
 interface UseBlockModalArgs {
@@ -37,7 +35,7 @@ export function useBlockModal({
 
   // Server Action
   const [createResult, createAction, createPending] = useActionState(
-    createBlockAndAddToHomeroom,
+    createBlock,
     null
   )
   const [updateResult, updateAction, updatePending] = useActionState(

@@ -1,6 +1,7 @@
 import 'server-only' // client componentでimportするとエラーにする
 
-import { Grade, Homeroom } from '@/core/domain/entity'
+import type { Grade, Homeroom } from '@/app/(private)/curriculum/types'
+import type { GraphQLHomeroomType } from '@/app/(private)/curriculum/graphql/types'
 import {
   executeGraphQLForServerAction,
   getDefaultTtid,
@@ -11,12 +12,72 @@ import {
   GET_HOMEROOMS_AND_GRADES,
 } from '@/app/(private)/curriculum/graphql/queries'
 import { logger } from '@/lib/logger'
-import { createAppError, ErrorCode } from '@/lib/errors'
+import { createAppError, ErrorCode, UNKNOWN_ERROR_MESSAGE } from '@/lib/errors'
 
-// 学級・学年一覧の複合レスポンス型
+// 学級・学年一覧の複合レスポンス型（GraphQL型）
 interface HomeroomsAndGradesResponse {
-  homerooms: Homeroom[]
+  homerooms: GraphQLHomeroomType[]
   grades: Grade[]
+}
+
+/**
+ * GraphQL型からHomeroom型に変換
+ */
+function convertGraphQLHomeroomToHomeroom(
+  graphqlHomeroom: GraphQLHomeroomType
+): Homeroom {
+  return {
+    id: graphqlHomeroom.id,
+    homeroomName: graphqlHomeroom.homeroomName,
+    grade: graphqlHomeroom.grade
+      ? {
+          id: graphqlHomeroom.grade.id,
+          gradeName: graphqlHomeroom.grade.gradeName,
+        }
+      : null,
+    homeroomDays: graphqlHomeroom.homeroomDays.map(day => ({
+      id: day.id,
+      dayOfWeek: day.dayOfWeek,
+      periods: day.periods,
+    })),
+    blocks: graphqlHomeroom.blocks.map(block => ({
+      id: block.id,
+      blockName: block.blockName,
+      lanes: block.lanes.map(lane => ({
+        id: lane.id,
+        courses: lane.courses.map(course => ({
+          id: course.id,
+          courseName: course.courseName,
+          subject: course.subject
+            ? {
+                id: course.subject.id,
+                subjectName: course.subject.subjectName || '',
+                credits: course.subject.credits || null,
+              }
+            : null,
+          courseDetails: course.courseDetails
+            .filter(
+              detail =>
+                detail.instructor !== null && detail.instructor !== undefined
+            )
+            .map(detail => ({
+              id: detail.id,
+              instructor: {
+                id: detail.instructor!.id,
+                instructorName: detail.instructor!.instructorName,
+                disciplineCode: '', // GraphQLレスポンスに含まれていないため空文字列
+              },
+              room: detail.room
+                ? {
+                    id: detail.room.id,
+                    roomName: detail.room.roomName,
+                  }
+                : null,
+            })),
+        })),
+      })),
+    })),
+  }
 }
 
 /**
@@ -45,20 +106,25 @@ export async function getHomeroomsAndGrades(): Promise<{
 
     if (!result.success || !result.data) {
       const appError = createAppError(
-        new Error(result.error || '不明なエラー'),
+        new Error(result.error || UNKNOWN_ERROR_MESSAGE),
         ErrorCode.DATA_NOT_FOUND
       )
-      logger.error('Failed to fetch homerooms and grades', appError)
+      logger.error(appError.getMessage())
       return { homerooms: [], grades: [] }
     }
 
+    // GraphQL型からHomeroom型に変換
+    const homerooms = (result.data.homerooms || []).map(
+      convertGraphQLHomeroomToHomeroom
+    )
+
     return {
-      homerooms: result.data.homerooms || [],
+      homerooms,
       grades: result.data.grades || [],
     }
   } catch (error) {
     const appError = createAppError(error, ErrorCode.DATA_NOT_FOUND)
-    logger.error('Error fetching homerooms and grades', appError)
+    logger.error(appError.getMessage())
     return { homerooms: [], grades: [] }
   }
 }
@@ -67,8 +133,8 @@ export async function getHomerooms(): Promise<Homeroom[]> {
   try {
     const ttid = getDefaultTtid()
 
-    // GraphQLから直接取得
-    const result = await executeGraphQLForServerAction<Homeroom[]>(
+    // GraphQLから取得
+    const result = await executeGraphQLForServerAction<GraphQLHomeroomType[]>(
       {
         query: GET_HOMEROOMS,
         variables: {
@@ -82,17 +148,18 @@ export async function getHomerooms(): Promise<Homeroom[]> {
 
     if (!result.success || !result.data) {
       const appError = createAppError(
-        new Error(result.error || '不明なエラー'),
+        new Error(result.error || UNKNOWN_ERROR_MESSAGE),
         ErrorCode.DATA_NOT_FOUND
       )
-      logger.error('Failed to fetch homerooms', appError)
+      logger.error(appError.getMessage())
       return []
     }
 
-    return result.data
+    // GraphQL型からHomeroom型に変換
+    return result.data.map(convertGraphQLHomeroomToHomeroom)
   } catch (error) {
     const appError = createAppError(error, ErrorCode.DATA_NOT_FOUND)
-    logger.error('Error fetching homerooms', appError)
+    logger.error(appError.getMessage())
     return []
   }
 }
@@ -115,17 +182,17 @@ export async function getGrades(): Promise<Grade[]> {
 
     if (!result.success || !result.data) {
       const appError = createAppError(
-        new Error(result.error || '不明なエラー'),
+        new Error(result.error || UNKNOWN_ERROR_MESSAGE),
         ErrorCode.DATA_NOT_FOUND
       )
-      logger.error('Failed to fetch grades', appError)
+      logger.error(appError.getMessage())
       return []
     }
 
     return result.data
   } catch (error) {
     const appError = createAppError(error, ErrorCode.DATA_NOT_FOUND)
-    logger.error('Error fetching grades', appError)
+    logger.error(appError.getMessage())
     return []
   }
 }

@@ -1,7 +1,7 @@
 'use server'
 
 import { ActionResult } from '@/types/server-action-types'
-import { SchoolDay } from '@/core/domain/entity'
+import type { SchoolDay } from '@/app/(private)/curriculum/types'
 import { errorResult, successResult } from '@/lib/action-helpers'
 import {
   executeGraphQLForServerAction,
@@ -9,7 +9,7 @@ import {
 } from '@/lib/graphql-client'
 import { GET_SCHOOL_DAYS } from '@/app/(private)/curriculum/graphql/queries'
 import { logger } from '@/lib/logger'
-import { createAppError, ErrorCode } from '@/lib/errors'
+import { createAppError, ErrorCode, UNKNOWN_ERROR_MESSAGE } from '@/lib/errors'
 
 /**
  * 学校曜日を取得するServer Action
@@ -28,26 +28,28 @@ export async function fetchSchoolDays(
     const result = await executeGraphQLForServerAction<SchoolDay[]>(
       {
         query: GET_SCHOOL_DAYS,
-        variables: { ttid },
+        variables: {
+          input: {
+            ttid,
+          },
+        },
       },
       'schoolDays'
     )
 
     if (!result.success || !result.data) {
       const appError = createAppError(
-        new Error(result.error || '不明なエラー'),
+        new Error(result.error || UNKNOWN_ERROR_MESSAGE),
         ErrorCode.DATA_NOT_FOUND
       )
-      logger.error('Failed to fetch school days', appError)
-      return errorResult(
-        `学校曜日データの取得に失敗しました: ${appError.getMessage()}`
-      )
+      logger.error(appError.getMessage())
+      return errorResult(appError)
     }
 
     return successResult(result.data)
   } catch (error) {
     const appError = createAppError(error, ErrorCode.DATA_NOT_FOUND)
-    logger.error('Error fetching school days', appError)
+    logger.error(appError.getMessage())
     return errorResult(appError)
   }
 }

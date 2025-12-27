@@ -28,6 +28,7 @@ export const GET_HOMEROOMS = `
               credits
             }
             courseDetails {
+              id
               instructor {
                 id
                 instructorName
@@ -44,9 +45,28 @@ export const GET_HOMEROOMS = `
   }
 `
 
+// 学級編集用の最小限のクエリ（blocksやcoursesは不要）
+export const GET_HOMEROOM_FOR_EDIT = `
+  query GetHomeroomForEdit($input: RetrieveHomeroomsInput!) {
+    homerooms(input: $input) {
+      id
+      homeroomName
+      grade {
+        id
+        gradeName
+      }
+      homeroomDays {
+        id
+        dayOfWeek
+        periods
+      }
+    }
+  }
+`
+
 export const GET_SCHOOL_DAYS = `
-  query GetSchoolDays($ttid: UUID!) {
-    schoolDays(input: { ttid: $ttid }) {
+  query GetSchoolDays($input: RetrieveSchoolDaysInput!) {
+    schoolDays(input: $input) {
       id
       dayOfWeek
       amPeriods
@@ -57,8 +77,8 @@ export const GET_SCHOOL_DAYS = `
 `
 
 export const GET_SUBJECTS = `
-  query GetSubjects($ttid: UUID!) {
-    subjects(input: { ttid: $ttid }) {
+  query GetSubjects($input: RetrieveSubjectsInput!) {
+    subjects(input: $input) {
       id
       subjectName
       discipline {
@@ -75,8 +95,8 @@ export const GET_SUBJECTS = `
 `
 
 export const GET_INSTRUCTORS = `
-  query GetInstructors($ttid: UUID!) {
-    instructors(input: { ttid: $ttid }) {
+  query GetInstructors($input: RetrieveInstructorsInput!) {
+    instructors(input: $input) {
       id
       instructorName
       disciplineCode
@@ -85,8 +105,8 @@ export const GET_INSTRUCTORS = `
 `
 
 export const GET_COURSES = `
-  query GetCourses($ttid: UUID!) {
-    courses(input: { ttid: $ttid }) {
+  query GetCourses($input: RetrieveCoursesInput!) {
+    courses(input: $input) {
       id
       courseName
       subject {
@@ -189,6 +209,7 @@ export const GET_HOMEROOMS_AND_GRADES = `
               credits
             }
             courseDetails {
+              id
               instructor {
                 id
                 instructorName
@@ -211,8 +232,8 @@ export const GET_HOMEROOMS_AND_GRADES = `
 
 // 複合クエリ: 科目・教員・講座を同時に取得（リクエスト数削減）
 export const GET_COURSE_MODAL_OPTIONS = `
-  query GetCourseModalOptions($ttid: UUID!, $coursesInput: RetrieveCoursesInput!) {
-    subjects(input: { ttid: $ttid }) {
+  query GetCourseModalOptions($subjectsInput: RetrieveSubjectsInput!, $instructorsInput: RetrieveInstructorsInput!, $coursesInput: RetrieveCoursesInput!) {
+    subjects(input: $subjectsInput) {
       id
       subjectName
       discipline {
@@ -225,7 +246,7 @@ export const GET_COURSE_MODAL_OPTIONS = `
         gradeName
       }
     }
-    instructors(input: { ttid: $ttid }) {
+    instructors(input: $instructorsInput) {
       id
       instructorName
       disciplineCode

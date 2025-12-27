@@ -5,9 +5,16 @@ import { errorResult, successResult } from '@/lib/action-helpers'
 import { executeGraphQLMutation } from '@/lib/graphql-client'
 import { UPSERT_BLOCKS } from '@/app/(private)/curriculum/graphql/mutations'
 import { revalidatePath } from 'next/cache'
+import { logger } from '@/lib/logger'
+import { createAppError, ErrorCode, UNKNOWN_ERROR_MESSAGE } from '@/lib/errors'
+import type { UpsertBlockResponse } from '../types'
 
 /**
  * ブロックを更新するServer Action
+ *
+ * @param _prevState - 前回の状態（未使用）
+ * @param formData - フォームデータ（blockId, blockName, homeroomId）
+ * @returns ブロック更新結果
  */
 export async function updateBlock(
   _prevState: ActionResult | null,
@@ -17,8 +24,15 @@ export async function updateBlock(
   const blockName = formData.get('blockName') as string
   const homeroomId = formData.get('homeroomId') as string | null
 
+  // システムエラー
   if (!blockId?.trim()) {
-    return errorResult('ブロックIDが指定されていません')
+    // ブロックIDが欠損している場合
+    const appError = createAppError(
+      new Error('ブロックIDが指定されていません'),
+      ErrorCode.DATA_VALIDATION_ERROR
+    )
+    logger.error(appError.getMessage())
+    return errorResult(appError)
   }
 
   if (!blockName?.trim()) {
@@ -26,12 +40,7 @@ export async function updateBlock(
   }
 
   try {
-    const result = await executeGraphQLMutation<
-      Array<{
-        id: string
-        blockName: string
-      }>
-    >(
+    const result = await executeGraphQLMutation<UpsertBlockResponse[]>(
       {
         query: UPSERT_BLOCKS,
         variables: {
@@ -51,23 +60,19 @@ export async function updateBlock(
     )
 
     if (!result.success || !result.data || result.data.length === 0) {
-      return errorResult(
-        `ブロックの更新に失敗しました: ${result.error || '不明なエラー'}`
+      const appError = createAppError(
+        new Error(result.error || UNKNOWN_ERROR_MESSAGE),
+        ErrorCode.DATA_VALIDATION_ERROR
       )
+      logger.error(appError.getMessage())
+      return errorResult(appError)
     }
 
     revalidatePath('/curriculum')
-    return successResult({ message: 'ブロックを更新しました' })
+    return successResult({})
   } catch (error) {
-    console.error('Error updating block:', error)
-    if (error instanceof Error) {
-      if (error.message.includes('fetch')) {
-        return errorResult(
-          'バックエンドへの接続に失敗しました。バックエンドサーバーが起動しているか確認してください。'
-        )
-      }
-      return errorResult(`エラー: ${error.message}`)
-    }
-    return errorResult('ブロックの更新に失敗しました')
+    const appError = createAppError(error, ErrorCode.DATA_VALIDATION_ERROR)
+    logger.error(appError.getMessage())
+    return errorResult(appError)
   }
 }

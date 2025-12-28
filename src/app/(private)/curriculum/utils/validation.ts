@@ -1,4 +1,4 @@
-import type { Homeroom } from '@/core/domain/entity'
+import type { Homeroom } from '@/app/(private)/curriculum/types'
 
 /**
  * ホームルームのコマ数とcredits合計のバリデーション結果

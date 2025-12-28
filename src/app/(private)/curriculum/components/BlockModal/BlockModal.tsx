@@ -8,9 +8,7 @@ import styles from './BlockModal.module.css'
 import { useForm } from 'react-hook-form'
 import type { BlockFormValues } from './types'
 
-/**
- * BlockModal コンポーネントのProps
- */
+
 interface BlockModalProps {
   /** モーダルの表示状態 */
   isOpen: boolean
@@ -19,9 +17,9 @@ interface BlockModalProps {
   /** モーダルのタイトル（任意） */
   title?: string
   /** 学級ID */
-  homeroomId: string | null
-  /** ブロックID（編集時のみ） */
-  blockId?: string | null
+  homeroomId: string
+  /** ブロックID（編集時のみ、作成時はnull） */
+  blockId: string | null
   /** フォームの初期値 */
   initialValues: BlockFormValues
   /** 処理成功時のコールバック */
@@ -59,9 +57,9 @@ export default function BlockModal({
     deleteResult,
     clearError,
   } = useBlockModal({
-    homeroomId,
     mode,
-    blockId: blockId ?? null,
+    blockId,
+    homeroomId,
   })
 
   // タイトルは mode/初期値から動的に組み立てる

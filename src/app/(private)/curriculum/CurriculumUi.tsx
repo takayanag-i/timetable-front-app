@@ -12,20 +12,26 @@ import HomeroomEntry from '@/app/(private)/curriculum/components/HomeroomEntry/H
 import HomeroomModal from '@/app/(private)/curriculum/components/HomeroomModal/HomeroomModal'
 import { CourseModal } from '@/app/(private)/curriculum/components/CourseModal/CourseModal'
 import BlockModal from '@/app/(private)/curriculum/components/BlockModal/BlockModal'
-import { fetchSchoolDays } from './actions/actions'
-import { fetchHomeroom } from '@/app/(private)/curriculum/components/HomeroomModal/actions'
-import { fetchCourseModalOptions } from '@/app/(private)/curriculum/components/CourseModal/actions'
-import { useCurriculumUi } from './hooks/useCurriculumUi'
 import {
+  fetchHomeroom,
+  fetchSchoolDays,
+  fetchCourseModalOptions,
+} from './actions'
+import { useCurriculumUi } from './hooks/useCurriculumUi'
+import type {
   Grade,
   Homeroom as HomeroomEntity,
+  HomeroomForEdit,
   SchoolDay,
-} from '@/core/domain/entity'
+} from '@/app/(private)/curriculum/types'
 import {
   CourseModalOptions,
   CourseFormValues,
 } from '@/app/(private)/curriculum/components/CourseModal/types'
-import type { BlockFormValues } from '@/app/(private)/curriculum/components/BlockModal/types'
+import type {
+  BlockFormValues,
+  OnEditBlockData,
+} from '@/app/(private)/curriculum/components/BlockModal/types'
 import type { HomeroomFormValues } from '@/app/(private)/curriculum/components/HomeroomModal/types'
 import { ActionResult } from '@/types/server-action-types'
 import { defaultHomeroomDays } from '@/app/(private)/curriculum/components/HomeroomModal/hooks/useHomeroomModal'
@@ -62,8 +68,9 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
   // 学級取得Server Action
   const [fetchedHomeroomResult, fetchHomeroomAction] = useActionState(
     fetchHomeroom,
-    null as ActionResult<HomeroomEntity> | null
+    null as ActionResult<HomeroomForEdit> | null
   )
+
   // 学校曜日取得Server Action
   const [fetchedSchoolDaysResult, fetchSchoolDaysAction, isPending] =
     useActionState(fetchSchoolDays, null as ActionResult<SchoolDay[]> | null)
@@ -80,7 +87,7 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
   type BlockModalContext =
     | {
         mode: 'create'
-        homeroomId: string | null
+        homeroomId: string
       }
     | {
         mode: 'edit'
@@ -141,7 +148,7 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
     return {
       blockName: '',
       laneCount: 1,
-      homeroomId: blockModalContext?.homeroomId || '',
+      homeroomId: blockModalContext?.homeroomId ?? '',
       blockId: '',
     }
   }, [blockModalContext])
@@ -438,12 +445,7 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
                   })
                   setIsBlockModalOpen(true)
                 }}
-                onEditBlock={(block: {
-                  blockId: string
-                  blockName: string
-                  homeroomId: string
-                  laneCount: number
-                }) => {
+                onEditBlock={(block: OnEditBlockData) => {
                   setBlockModalContext({
                     mode: 'edit',
                     homeroomId: block.homeroomId,
@@ -511,7 +513,7 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
             ? `${blockModalContext.blockName}を編集`
             : 'ブロックを追加'
         }
-        homeroomId={blockModalContext?.homeroomId ?? null}
+        homeroomId={blockModalContext?.homeroomId ?? ''}
         blockId={
           blockModalContext?.mode === 'edit' ? blockModalContext.blockId : null
         }

@@ -11,7 +11,7 @@ interface CourseEntryProps {
   subjectId?: string
   instructorIds?: string[]
   laneId?: string
-  gradeId?: string | null
+  gradeId: string | null
   /** Server Actionを受け取る */
   onEdit?: (formData: FormData) => void
 }

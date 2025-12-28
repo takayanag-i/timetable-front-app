@@ -1,37 +1,33 @@
 import styles from './BlockEntry.module.css'
 import LaneEntry from '@/app/(private)/curriculum/components/LaneEntry/LaneEntry'
 import { Lane } from '@/core/domain/entity'
+import type { OnEditBlockData } from '@/app/(private)/curriculum/components/BlockModal/types'
 
-/**
- * BlockEntry コンポーネントのProps
- */
 interface BlockEntryProps {
   blockId: string
-  lanes: Lane[]
-  blockName: string
-  gradeId?: string | null
-  onAddCourse?: (formData: FormData) => void
-  onEditCourse?: (formData: FormData) => void
-  onEditBlock?: (data: {
-    blockId: string
-    blockName: string
-    homeroomId: string
-    laneCount: number
-  }) => void
   homeroomId: string
+  gradeId: string | null
+  blockName: string
+  lanes: Lane[]
+  onAddCourse: (formData: FormData) => void
+  onEditCourse: (formData: FormData) => void
+  onEditBlock: (data: OnEditBlockData) => void
 }
 
+/**
+ * ブロックエントリ コンポーネント
+ */
 export default function BlockEntry({
   blockId,
+  homeroomId,
+  gradeId,
   blockName,
   lanes,
-  gradeId,
   onAddCourse,
   onEditCourse,
   onEditBlock,
-  homeroomId,
 }: BlockEntryProps) {
-  // laneIdでソートして表示順を安定させる
+  // laneIdでソートする
   const sortedLanes = [...lanes].sort((a, b) => a.id.localeCompare(b.id))
 
   return (
@@ -40,7 +36,7 @@ export default function BlockEntry({
         type="button"
         className={styles.blockHeaderButton}
         onClick={() =>
-          onEditBlock?.({
+          onEditBlock({
             blockId,
             blockName,
             homeroomId,

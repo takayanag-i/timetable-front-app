@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import { useModal } from '@/components/shared/Modal'
 import type { HomeroomModalData } from '@/app/(private)/curriculum/components/HomeroomModal/types'
-import { SchoolDay } from '@/core/domain/entity'
+import type { SchoolDay } from '@/app/(private)/curriculum/types'
 
 /**
  * カリキュラム設定画面のホームルームモーダル状態を管理するカスタムフック

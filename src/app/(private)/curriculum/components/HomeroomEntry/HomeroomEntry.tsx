@@ -1,6 +1,7 @@
 import BlockEntry from '@/app/(private)/curriculum/components/BlockEntry/BlockEntry'
 import styles from './HomeroomEntry.module.css'
 import { Block as BlockEntity } from '@/core/domain/entity'
+import type { OnEditBlockData } from '@/app/(private)/curriculum/components/BlockModal/types'
 
 /**
  * HomeroomEntry コンポーネントのProps
@@ -9,7 +10,7 @@ interface HomeroomEntryProps {
   blocks: BlockEntity[]
   homeroomId: string
   homeroomName: string
-  gradeId?: string | null
+  gradeId: string | null
   /** 登録されたコースの単位数合計 */
   totalCredits: number
   /** ホームルームのコマ数総和 */
@@ -17,17 +18,12 @@ interface HomeroomEntryProps {
   /** Server Actionを受け取る */
   onEdit: (formData: FormData) => void
   /** 講座追加Server Actionを受け取る */
-  onAddCourse?: (formData: FormData) => void
+  onAddCourse: (formData: FormData) => void
   /** 講座編集Server Actionを受け取る */
-  onEditCourse?: (formData: FormData) => void
+  onEditCourse: (formData: FormData) => void
   /** ブロック追加Server Actionを受け取る */
   onAddBlock?: (formData: FormData) => void
-  onEditBlock?: (data: {
-    blockId: string
-    blockName: string
-    homeroomId: string
-    laneCount: number
-  }) => void
+  onEditBlock: (data: OnEditBlockData) => void
 }
 
 export default function HomeroomEntry({

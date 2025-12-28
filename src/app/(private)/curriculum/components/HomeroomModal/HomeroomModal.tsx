@@ -2,7 +2,7 @@
 import { useEffect, useRef } from 'react'
 import Modal from '@/components/shared/Modal'
 import Input from '@/components/shared/Input'
-import type { Grade } from '@/core/domain/entity'
+import type { Grade } from '@/app/(private)/curriculum/types'
 import type { HomeroomFormValues } from './types'
 import { useHomeroomModal } from './hooks/useHomeroomModal'
 import styles from './HomeroomModal.module.css'

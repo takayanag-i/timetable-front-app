@@ -1,5 +1,5 @@
 import { useState, useEffect, useActionState, useRef, useCallback } from 'react'
-import { createCourseAndAddToLane } from '../actions'
+import { createCourse } from '../actions'
 import type { ActionResult } from '@/types/server-action-types'
 
 interface UseCourseAddOrChangeArgs {
@@ -28,7 +28,7 @@ export function useCourseAddOrChange({
   }, [laneId, blockId])
 
   const [createResult, createAction, isCreating] = useActionState(
-    createCourseAndAddToLane,
+    createCourse,
     null as ActionResult | null
   )
 

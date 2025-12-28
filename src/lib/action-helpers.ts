@@ -3,7 +3,7 @@
  */
 import type { ActionResult } from '@/types/server-action-types'
 import { logger } from './logger'
-import { createAppError, ErrorCode } from './errors'
+import { createAppError, ErrorCode, AppError } from './errors'
 
 /**
  * 成功結果を作成
@@ -21,7 +21,16 @@ export function successResult<T>(data: T): ActionResult<T> {
  * @param error - エラーメッセージまたはAppError
  * @returns エラー結果
  */
-export function errorResult(error: string | Error): ActionResult<never> {
+export function errorResult(
+  error: string | Error | AppError
+): ActionResult<never> {
+  if (error instanceof AppError) {
+    return {
+      success: false,
+      error: error.getMessage(),
+      errorCode: error.code,
+    }
+  }
   const errorMessage = error instanceof Error ? error.message : error
   return { success: false, error: errorMessage }
 }

@@ -62,32 +62,185 @@ try {
 
 ## Server Actions
 
-- 統一的なエラーハンドリングパターンを使用すること
-- `errorResult()`と`successResult()`を使用すること
+### ファイル構造と命名規則
+
+- **1ファイル1関数の原則**: 各Server Actionは個別のファイルに定義する
+- **ファイル命名規則**: `{actionName}.ts` の形式で命名する
+  - 例: `fetchSchoolDays.ts`, `createBlock.ts`, `updateHomeroom.ts`, `deleteCourse.ts`
+- **ディレクトリ構造**: `actions/` ディレクトリ配下に配置し、`index.ts`でエクスポートする
+
+```
+actions/
+├── fetchSchoolDays.ts
+├── createBlock.ts
+├── updateBlock.ts
+├── deleteBlock.ts
+└── index.ts
+```
+
+### 配置場所の決定規則
+
+Server Actionの配置場所は、**そのServer Actionが「どこで使われているか**で決定する。
+
+#### 「で使われている」の定義
+
+- **コンポーネント内で直接使用**: コンポーネント内（またはそのコンポーネント専用のフック内）で`useActionState`やフォームの`action`属性として直接使用されている場合
+- **親コンポーネントで使用**: 親コンポーネントで`useActionState`やフォームの`action`属性として直接使用されている場合
+
+#### 配置規則
+
+1. **特定のコンポーネント専用のServer Action**: そのコンポーネント配下の`actions/`に配置
+   - 例: `HomeroomModal`内で使用される`createHomeroom`, `updateHomeroom`, `deleteHomeroom` → `components/HomeroomModal/actions/`
+   - 例: `CourseModal`内で使用される`createCourse`, `updateCourse`, `removeCourseFromLane` → `components/CourseModal/actions/`
+
+2. **親コンポーネントで使用されるServer Action**: 親コンポーネントと同じ階層の`actions/`に配置
+   - 例: `CurriculumUi.tsx`で直接使用される`fetchHomeroom`, `fetchSchoolDays`, `fetchCourseModalOptions` → `curriculum/actions/`
+   - 例: `CurriculumUi.tsx`経由で使用される`createBlock`, `updateBlock`, `deleteBlock` → `curriculum/actions/`
+
+#### 判断基準
+
+- コンポーネント内（またはそのコンポーネント専用のフック内）で`useActionState`を使用している → そのコンポーネント配下の`actions/`
+- 親コンポーネントで`useActionState`を使用している → 親コンポーネントと同じ階層の`actions/`
+
+### 関数命名規則
+
+- **取得系**: `fetch{Entity}` の形式で命名する
+  - 例: `fetchSchoolDays`, `fetchHomeroom`, `fetchCourseDetails`
+- **作成系**: `create{Entity}` の形式で命名する
+  - 例: `createBlock`, `createHomeroom`, `createCourse`
+- **更新系**: `update{Entity}` の形式で命名する
+  - 例: `updateBlock`, `updateHomeroom`, `updateCourse`
+- **削除系**: `delete{Entity}` の形式で命名する
+  - 例: `deleteBlock`, `deleteHomeroom`, `deleteConstraintDefinition`
+
+### 実装パターン
+
+- **必須インポート**: `'use server'`, `ActionResult`, `errorResult`, `successResult`, `logger`, `createAppError`, `ErrorCode`, `UNKNOWN_ERROR_MESSAGE`
+- **取得系**: `executeGraphQLForServerAction`を使用
+- **作成・更新・削除系**: `executeGraphQLMutation`を使用し、成功時に`revalidatePath`を呼び出す
+- **エラーハンドリング**: GraphQL実行結果のエラーチェックとcatch節の両方を実装
+- `console.log`、`console.error`の直接使用は禁止。`logger`と`createAppError`を使用すること
+
+### エラーハンドリングパターン
+
+すべてのServer Actionsで統一されたエラーハンドリングパターンを使用すること：
+
+#### GraphQL実行結果のエラーチェック
 
 ```typescript
-'use server'
-import { errorResult, successResult } from '@/lib/action-helpers'
-import { logger } from '@/lib/logger'
-import { createAppError, ErrorCode } from '@/lib/errors'
-
-export async function myServerAction(
-  _prevState: ActionResult<Data> | null,
-  formData: FormData
-): Promise<ActionResult<Data>> {
-  try {
-    return successResult(data)
-  } catch (error) {
-    const appError = createAppError(error, ErrorCode.DATA_NOT_FOUND)
-    logger.error('Server action error', appError)
-    return errorResult(appError)
-  }
+if (!result.success || !result.data) {
+  const appError = createAppError(
+    new Error(result.error || UNKNOWN_ERROR_MESSAGE),
+    ErrorCode.DATA_NOT_FOUND // または適切なErrorCode
+  )
+  logger.error(appError.getMessage())
+  return errorResult(appError)
 }
 ```
+
+#### catch節のエラーハンドリング
+
+```typescript
+} catch (error) {
+  const appError = createAppError(error, ErrorCode.DATA_NOT_FOUND) // または適切なErrorCode
+  logger.error(appError.getMessage())
+  return errorResult(appError)
+}
+```
+
+**統一ルール**:
+- `UNKNOWN_ERROR_MESSAGE`を使用（文字列リテラル`'不明なエラー'`は禁止）
+- `logger.error()`の引数は`appError.getMessage()`のみ（メッセージ文字列は不要）
+- `errorResult()`の引数は`appError`オブジェクト（文字列メッセージは不要）
+
+### エラーコードの使い分け
+
+#### エラーの分類
+
+Server Actionsでのエラーは、**システムエラー**と**ユーザー入力エラー**に分類する：
+
+1. **システムエラー（ユーザーにはどうしようもない）**
+   - hidden inputで渡される値が欠損している場合（例: `homeroomId`, `blockId`）
+   - システム内部のエラー
+   - GraphQL実行結果のエラー
+   - 例外が発生した場合
+   - **実装**: `createAppError` と `ErrorCode` を使用し、`logger.error()` でログに記録する
+
+2. **ユーザー入力エラー（ユーザーが入力する値）**
+   - ユーザーが入力するフィールドが空の場合（例: `blockName`, `homeroomName`）
+   - バリデーションエラー（例: レーン数が1未満）
+   - **実装**: 通常の `errorResult()` を使用（`createAppError` は不要）
+
+#### 実装例
+
+```typescript
+// システムエラー: hidden inputで渡される値が欠損している場合
+if (!homeroomId) {
+  // 学級IDが欠損している場合
+  const appError = createAppError(
+    new Error('学級IDが指定されていません'),
+    ErrorCode.DATA_VALIDATION_ERROR
+  )
+  logger.error(appError.getMessage())
+  return errorResult(appError)
+}
+
+// ユーザー入力エラー: ユーザーが入力する値が空の場合
+if (!blockName?.trim()) {
+  // ブロック名が欠損している場合
+  return errorResult('ブロック名を入力してください')
+}
+```
+
+#### ErrorCodeの使い分け
+
+- **`ErrorCode.DATA_NOT_FOUND`**: データ取得時のエラー
+- **`ErrorCode.DATA_VALIDATION_ERROR`**: データ作成・更新・削除時のエラー、システムエラー全般
+- **`ErrorCode.DATA_PARSING_ERROR`**: JSONパースエラーなど
+
+### JSDocコメント
+
+- すべてのServer Action関数にJSDocコメントを記述する
+- `@param`で各パラメータを説明する
+- `@returns`で戻り値を説明する
+
+### index.tsでのエクスポート
+
+- `actions/index.ts`で全関数をエクスポートする
+- 型定義も必要に応じてエクスポートする
 
 ## GraphQLクライアント
 
 - `@/lib/graphql-client`の`executeGraphQLForServerAction`または`executeGraphQLMutation`を使用すること
+
+### GraphQLクエリ変数の定義規則
+
+GraphQLスキーマでInput型が定義されている場合は、必ずそのInput型を使用すること：
+
+- **Input型を使用**: GraphQLスキーマで`RetrieveXxxInput`などのInput型が定義されている場合、クエリ変数はそのInput型として定義する
+- **変数の形式**: `variables: { input: { ... } }`の形式で渡す
+- **例**: 
+  ```typescript
+  // ✅ 正しい: Input型を使用
+  query GetHomerooms($input: RetrieveHomeroomsInput!) {
+    homerooms(input: $input) { ... }
+  }
+  
+  variables: {
+    input: {
+      id,
+    },
+  }
+  
+  // ❌ 誤り: 直接値を渡す
+  query GetHomerooms($id: ID!) {
+    homerooms(input: { id: $id }) { ... }
+  }
+  
+  variables: {
+    id,
+  }
+  ```
 
 ## 型定義
 
@@ -96,8 +249,6 @@ export async function myServerAction(
 ### 型定義の分類と配置
 
 型定義は以下の6つのカテゴリに分類し、適切な場所に配置すること：
-
-**注意**: 以前は`@/types/bff-types`にAPI Route用の型を定義していましたが、現在は各API Route配下に配置します。
 
 #### 1. ドメインエンティティ (`@/core/domain/entity`)
 
@@ -109,28 +260,20 @@ export async function myServerAction(
   - ビジネスルールを表現する
 - **例**: `Homeroom`, `Block`, `Course`, `Subject`, `Instructor`, `ConstraintDefinition` など
 
-```typescript
-// ✅ ドメインエンティティ
-export interface Homeroom {
-  id: string
-  homeroomName: string
-  homeroomDays: HomeroomDay[]
-  blocks: Block[]
-  grade?: Grade | null
-}
-```
-
-#### 2. GraphQL型 (`@/lib/graphql/types`)
+#### 2. GraphQL型（各機能ディレクトリの`graphql/types.ts`）
 
 - **用途**: GraphQL API（Spring Boot）との通信で使用する型
-- **配置**: `src/lib/graphql/types.ts`
+- **配置**: 各機能ディレクトリ内の`graphql/types.ts`
 - **特徴**:
   - GraphQLスキーマと連動
   - Query/MutationのInput/Response型
-  - query/mutation定義とコロケーション
+  - query/mutation定義とコロケーション（同じディレクトリ内）
   - ドメインエンティティを参照しない（依存関係の明確化のため）
-- **命名規則**: `{EntityName}Response`, `{EntityName}Input`, `{EntityName}MasterResponse` など
-- **例**: `ConstraintDefinitionResponse`, `ConstraintDefinitionMasterResponse`, `UpsertHomeroomsInput` など
+- **命名規則**: 
+  - Query Response: `{EntityName}QueryResponse` または `{EntityName}Type`
+  - Mutation Input: `{EntityName}Input` または `Upsert{EntityName}Input`
+  - Master Response: `{EntityName}MasterResponse`
+- **例**: `TimetableResultQueryResponse`, `GraphQLSubjectType`, `UpsertHomeroomsInput`, `ConstraintDefinitionMasterResponse` など
 
 **GraphQLスキーマからTypeScript型へのマッピング規則**:
 - GraphQLスキーマの定義に基づいて型を定義する
@@ -143,13 +286,16 @@ export interface Homeroom {
   - ただし、GraphQLクエリでフィールドを指定しない場合はレスポンスに含まれないため、実際のクエリで使用するかどうかに応じてoptionalにする場合もある
 
 ```typescript
-// ✅ GraphQL型（@/lib/graphql/types.ts）
-// GraphQLスキーマ: penaltyWeight: Float (nullable)
-export interface ConstraintDefinitionResponse {
+// ✅ GraphQL型（各機能ディレクトリのgraphql/types.ts）
+// src/app/(private)/results/[id]/graphql/types.ts
+// GraphQLスキーマ: amPeriods/pmPeriodsはInt（nullable）
+export interface SchoolDayQueryResponse {
   id: string
-  constraintDefinitionCode: string
-  softFlag: boolean
-  penaltyWeight?: number | null  // nullableなので optional かつ null を許可
+  ttid: string
+  dayOfWeek: string
+  isAvailable: boolean
+  amPeriods?: number | null  // nullableなので optional かつ null を許可
+  pmPeriods?: number | null
 }
 ```
 
@@ -181,38 +327,25 @@ export interface OptimizeResult {
 
 #### 4. Server Actions型 (`@/types/server-action-types`)
 
-- **用途**: Server Actionsで使用する型
+- **用途**: Server Actionsで使用する統一的な型
 - **配置**: `src/types/server-action-types.ts`
+
+#### 5. UI型（各コンポーネントディレクトリの`types.ts`）
+
+- **用途**: UIコンポーネント間のデータ受け渡し、フォーム値、表示用データなど
+- **配置**: 各コンポーネントディレクトリ内の`types.ts`
 - **特徴**:
-  - Server Actions専用の型定義
-  - GraphQLでカバーできない型のみ定義
-  - Server Actionsの戻り値型など
-- **例**: `ActionResult<T>`, `HomeroomData` など
+  - コンポーネント専用の型定義
+  - ドメインエンティティ、GraphQL型でカバーできないもののみ定義
+  - フォーム値、モーダル用データ、表示用データなど
+  - コンポーネントとコロケーション（同じディレクトリ内）
+- **例**: `CourseFormValues`, `ConstraintDefinitionFormValues`, `HomeroomViewData`, `CellData` など
 
 ```typescript
-// ✅ Server Actions型
-export type ActionResult<T = unknown> =
-  | { success: true; data: T }
-  | { success: false; error: string }
-```
-
-#### 5. UI型 (`@/types/ui-types`)
-
-- **用途**: UIコンポーネント間のデータ受け渡し、フォーム値など
-- **配置**: `src/types/ui-types.ts`
-- **特徴**:
-  - ドメインエンティティ、GraphQL型、BFF型でカバーできないもののみ定義
-  - フォーム値、モーダル用データなど
-- **例**: `CourseFormValues`, `ConstraintDefinitionFormValues`, `HomeroomModalData` など
-
-```typescript
-// ✅ UI型（ドメインエンティティを参照）
-import type { HomeroomDay } from '@/core/domain/entity'
-
-export interface CourseFormValues {
-  subjectId: string
-  courseName: string
-  courseDetails: { instructorId: string }[]
+export interface CellData {
+  subjectName: string
+  instructorText: string
+  roomText: string
 }
 ```
 
@@ -226,15 +359,6 @@ export interface CourseFormValues {
   - 変換が必要な場合は、fetcherやhelper関数内で行う
 - **例**: `fastapi-client.ts`内の`ConstraintDefinition`, `OptimizeAnnualTimetableRequest` など
 
-```typescript
-// ✅ 外部API型（fastapi-client.ts内）
-export interface ConstraintDefinition {
-  constraintDefinitionCode: string
-  softFlag: boolean
-  penaltyWeight?: number
-  parameters?: ConstraintParameter[]
-}
-```
 
 ### 型定義の使い分けルール
 
@@ -284,11 +408,25 @@ export interface ConstraintDefinition {
   }
   ```
 
-- **GraphQL Response**: `{EntityName}Response` の形式で命名する（既存のQuery/Mutationレスポンス型）
+- **GraphQL Query Response**: `{EntityName}QueryResponse` または `{EntityName}Type` の形式で命名する
   ```typescript
-  export interface ConstraintDefinitionResponse {
+  export interface TimetableResultQueryResponse {
     id: string
-    constraintDefinitionCode: string
+    ttid: string
+    timetableEntries: TimetableEntryQueryResponse[]
+  }
+  
+  export interface GraphQLSubjectType {
+    id: string
+    subjectName: string
+  }
+  ```
+
+- **GraphQL Mutation Response**: `{EntityName}Response` の形式で命名する（既存のMutationレスポンス型）
+  ```typescript
+  export interface UpsertHomeroomsResponse {
+    id: string
+    homeroomName: string
   }
   ```
 
@@ -311,6 +449,29 @@ export interface ConstraintDefinition {
   ```
 
 - **理由**: コンポーネントとフックを区別し、型の意図を明確にするため
+
+## コンポーネントのProps
+
+- **分割代入を使用**: コンポーネントのPropsは分割代入で受け取ること
+- `props.`を明示的に使用するのではなく、分割代入を使用する
+
+```typescript
+// ✅ 正しい: 分割代入を使用
+export default function BlockEntry({
+  blockId,
+  homeroomId,
+  blockName,
+  lanes,
+  onEditBlock,
+}: BlockEntryProps) {
+  // ...
+}
+
+// ❌ 誤り: props.を明示的に使用
+export default function BlockEntry(props: BlockEntryProps) {
+  return <div>{props.blockName}</div>
+}
+```
 
 ## インポート順序
 

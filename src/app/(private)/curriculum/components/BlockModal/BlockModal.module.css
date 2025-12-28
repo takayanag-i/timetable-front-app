@@ -29,12 +29,20 @@
   color: var(--color-text-muted);
 }
 
+.buttonContainer {
+  margin-top: var(--space-2xl);
+}
+
 .buttonGroup {
   display: flex;
   gap: var(--space-lg);
   justify-content: center;
-  margin-top: var(--space-2xl);
   flex-wrap: wrap;
+  margin-top: var(--space-2xl);
+}
+
+.deleteForm {
+  display: inline-flex;
 }
 
 .buttonGroup button,

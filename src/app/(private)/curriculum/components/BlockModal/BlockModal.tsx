@@ -1,6 +1,5 @@
 'use client'
-import { useEffect, useRef } from 'react'
-import type { FormEvent } from 'react'
+import { useEffect, useRef, startTransition } from 'react'
 import Modal from '@/components/shared/Modal'
 import Input from '@/components/shared/Input'
 import { useBlockModal } from './hooks/useBlockModal'
@@ -10,34 +9,22 @@ import type { BlockFormValues } from './types'
 
 
 interface BlockModalProps {
-  /** モーダルの表示状態 */
   isOpen: boolean
-  /** モーダルのモード */
   mode: 'create' | 'edit'
-  /** モーダルのタイトル（任意） */
-  title?: string
-  /** 学級ID */
   homeroomId: string
-  /** ブロックID（編集時のみ、作成時はnull） */
   blockId: string | null
-  /** フォームの初期値 */
   initialValues: BlockFormValues
-  /** 処理成功時のコールバック */
   onSuccess: () => void
-  /** 削除成功時のコールバック */
-  onDeleteSuccess?: () => void
-  /** モーダルを閉じる際のコールバック */
+  onDeleteSuccess: () => void
   onClose: () => void
 }
 
 /**
- * ブロック追加/編集モーダル
- * RHF を使いつつネイティブ submit で Server Action を呼ぶ
+ * ブロックモーダル
  */
 export default function BlockModal({
   isOpen,
   mode,
-  title,
   homeroomId,
   blockId,
   initialValues,
@@ -45,9 +32,11 @@ export default function BlockModal({
   onDeleteSuccess,
   onClose,
 }: BlockModalProps) {
-  // 統合されたカスタムフック（Server Action処理 + エラーハンドリング）
+
+  // カスタムフック
   const {
     error,
+    clearError,
     // Server Action
     saveAction,
     savePending,
@@ -55,27 +44,26 @@ export default function BlockModal({
     deleteAction,
     deletePending,
     deleteResult,
-    clearError,
   } = useBlockModal({
     mode,
     blockId,
     homeroomId,
   })
 
-  // タイトルは mode/初期値から動的に組み立てる
+  // モーダルタイトルの編集
   const modalTitle =
-    title ??
-    (mode === 'edit'
+    mode === 'edit'
       ? initialValues.blockName
         ? `${initialValues.blockName}を編集`
         : 'ブロックを編集'
-      : 'ブロックを追加')
+      : 'ブロックを追加'
 
-  // RHF hooks
+  // RHFのフック
   const {
     register,
     reset,
     watch,
+    trigger,
     formState: { errors },
   } = useForm<BlockFormValues>({
     defaultValues: initialValues,
@@ -83,20 +71,18 @@ export default function BlockModal({
   })
 
   const blockNameRegister = register('blockName', {
-    validate: value =>
-      value.trim().length > 0 || 'ブロック名を入力してください',
+    // 必須チェック
+    validate: value => value.trim().length > 0 || 'ブロック名を入力してください',
   })
   const laneCountRegister = register('laneCount', {
+    // 数値に変換
     valueAsNumber: true,
+    // 必須チェック、数値チェック
+    validate: value => !Number.isNaN(value) || 'レーン数を数値で入力してください',
+    // 最小値チェック
     min: { value: 1, message: 'レーン数は1以上で入力してください' },
-    setValueAs: value => {
-      const parsed = parseInt(value, 10)
-      if (Number.isNaN(parsed)) return 1
-      return Math.max(1, parsed)
-    },
   })
-  const homeroomIdRegister = register('homeroomId')
-  const blockIdRegister = register('blockId')
+
 
   // モーダルが開いたときに初期値をリセット
   useEffect(() => {
@@ -106,182 +92,210 @@ export default function BlockModal({
     }
   }, [isOpen, reset, initialValues, clearError])
 
-  // Button の制御用に各フィールドの値を取得
-  const blockNameValue = watch('blockName') ?? ''
-  const laneCountValue = watch('laneCount') ?? 1
-  const homeroomIdValue = watch('homeroomId')
-  const blockIdValue = watch('blockId')
-
+  // 前回の保存結果を保持
   const prevSaveResultRef = useRef<typeof saveResult>(null)
-  // 保存成功時のリセット
+  
+  // 保存成功時の処理
   useEffect(() => {
     if (saveResult?.success && saveResult !== prevSaveResultRef.current) {
+      // コールバックを呼び出し
       onSuccess()
-      reset({
+
+      // リセット
+      const resetValues: BlockFormValues = {
         ...initialValues,
         blockName: mode === 'create' ? '' : initialValues.blockName,
-        laneCount:
-          mode === 'create' ? 1 : initialValues.laneCount || laneCountValue,
-      })
+        laneCount: mode === 'create' ? 1 : initialValues.laneCount,
+      }
+      reset(resetValues)
+
+      // エラークリア
       clearError()
     }
     prevSaveResultRef.current = saveResult
   }, [
-    clearError,
-    initialValues,
-    laneCountValue,
+    saveResult,
     mode,
+    initialValues,
     onSuccess,
     reset,
-    saveResult,
+    clearError,
   ])
 
-  // 削除成功時も同様にリセット
+  // 前回の削除結果を保持
   const prevDeleteResultRef = useRef<typeof deleteResult>(null)
+  
+  // 削除成功時の処理
   useEffect(() => {
     if (deleteResult?.success && deleteResult !== prevDeleteResultRef.current) {
-      onDeleteSuccess?.()
+      // コールバックを呼び出し
+      onDeleteSuccess()
+
+      // リセット
       reset(initialValues)
+
+      // エラークリア
       clearError()
-    } else if (deleteResult?.success === false) {
-      // 削除失敗時はエラー表示を保持するためリセットしない
     }
     prevDeleteResultRef.current = deleteResult
   }, [clearError, initialValues, deleteResult, onDeleteSuccess, reset])
 
-  // 閉じる際は状態を初期化
+  // モーダルを閉じるときの処理
   const handleClose = () => {
+    // リセット
     reset(initialValues)
+
+    // エラークリア
     clearError()
+
+    // コールバックを呼び出し
     onClose()
   }
 
-  // ネイティブ confirm で削除確認
-  const handleDeleteSubmit = (event: FormEvent<HTMLFormElement>) => {
+  // フォームの値を監視
+  const blockNameValue = watch('blockName') ?? ''
+  const laneCountValue = watch('laneCount') ?? 1
+
+  // 保存処理
+  const handleSave = async () => {
+    const isValid = await trigger()
+    if (!isValid) return
+
+    // FormDataを作成
+    const formData = new FormData()
+    formData.append('homeroomId', homeroomId)
+    formData.append('blockName', blockNameValue.trim())
+    if (mode === 'create') {
+      formData.append('laneCount', String(laneCountValue))
+    }
+    if (mode === 'edit' && blockId) {
+      formData.append('blockId', blockId)
+    }
+
+    // Server Actionを実行
+    startTransition(() => {
+      saveAction(formData)
+    })
+  }
+
+  // 削除処理
+  const handleDelete = () => {
     if (
       !window.confirm(
         'このブロックを削除すると、ブロック内のレーンや講座も削除されます。本当に削除しますか？'
       )
     ) {
-      event.preventDefault()
+      return
     }
+
+    // FormDataを作成
+    const formData = new FormData()
+    if (blockId) {
+      formData.append('blockId', blockId)
+    }
+
+    // Server Actionを実行
+    startTransition(() => {
+      deleteAction(formData)
+    })
   }
 
   // 保存ボタンの無効化条件
   const isSaveDisabled =
     savePending ||
-    !blockNameValue.trim() ||
-    (mode === 'create' && (!homeroomIdValue || laneCountValue < 1)) ||
-    (mode === 'edit' && !blockIdValue)
+    !!errors.blockName ||
+    !!errors.laneCount ||
+    (mode === 'create' && !homeroomId) ||
+    (mode === 'edit' && !blockId)
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose}>
-      {/* タイトル表示 */}
+      {/* タイトル */}
       <div className={styles.header}>
         <h2 className={styles.title}>{modalTitle}</h2>
       </div>
 
-      {/* エラー表示 */}
+      {/* エラー */}
       {error && (
         <div className={styles.errorMessage} role="alert">
           エラー: {error}
         </div>
       )}
 
-      {/* RHF + ネイティブ submit のフォーム */}
-      <form action={saveAction}>
-        <input
-          type="hidden"
-          {...homeroomIdRegister}
-          value={homeroomIdValue}
-          readOnly
-        />
-        <input
-          type="hidden"
-          {...blockIdRegister}
-          value={blockIdValue}
-          readOnly
-        />
+      {/* ブロック名 */}
+      <Input
+        id="blockName"
+        label="ブロック名"
+        placeholder="ブロック名を入力"
+        {...blockNameRegister}
+        aria-invalid={errors.blockName ? 'true' : 'false'}
+      />
+      {errors.blockName && (
+        <p className={styles.fieldError}>{errors.blockName.message}</p>
+      )}
 
-        {/* ブロック名入力 */}
-        <Input
-          id="blockName"
-          label="ブロック名"
-          placeholder="ブロック名を入力"
-          {...blockNameRegister}
-          aria-invalid={errors.blockName ? 'true' : 'false'}
-        />
-        {errors.blockName && (
-          <p className={styles.fieldError}>{errors.blockName.message}</p>
-        )}
-
-        {/* レーン数（作成時のみ editable） */}
-        {mode === 'create' ? (
-          <>
-            <Input
-              id="laneCount"
-              type="number"
-              min={1}
-              label="レーン数"
-              placeholder="レーン数を入力"
-              {...laneCountRegister}
-              aria-invalid={errors.laneCount ? 'true' : 'false'}
-            />
-            {errors.laneCount && (
-              <p className={styles.fieldError}>{errors.laneCount.message}</p>
-            )}
-          </>
-        ) : (
-          <>
-            <div className={styles.wrapper}>
-              <span className={styles.label}>レーン数</span>
-              <span className={styles.laneCountDisplay}>
-                {laneCountValue ?? 1}
-              </span>
-            </div>
-            <input
-              type="hidden"
-              {...laneCountRegister}
-              value={laneCountValue ?? 1}
-              readOnly
-            />
-          </>
-        )}
-
-        <div className={styles.buttonGroup}>
-          <input
-            type="submit"
-            value={savePending ? '保存中...' : '保存'}
-            className={styles.saveButton}
-            disabled={
-              isSaveDisabled ||
-              (mode === 'create' && !homeroomId) ||
-              (mode === 'edit' && !blockId)
-            }
+      {/* レーン数 */}
+      {mode === 'create' ? (
+        <>
+          <Input
+            id="laneCount"
+            type="number"
+            min={1}
+            label="レーン数"
+            placeholder="レーン数を入力"
+            {...laneCountRegister}
+            aria-invalid={errors.laneCount ? 'true' : 'false'}
           />
+          {errors.laneCount && (
+            <p className={styles.fieldError}>{errors.laneCount.message}</p>
+          )}
+        </>
+      ) : (
+        <div className={styles.wrapper}>
+          <span className={styles.label}>レーン数</span>
+          <span className={styles.laneCountDisplay}>
+            {initialValues.laneCount}
+          </span>
+        </div>
+      )}
 
+      {/* ボタン群 */}
+      <div className={styles.buttonGroup}>
+        {/* 保存ボタン */}
+        <button
+          type="button"
+          onClick={handleSave}
+          className={styles.saveButton}
+          disabled={
+            isSaveDisabled ||
+            (mode === 'create' && !homeroomId) ||
+            (mode === 'edit' && !blockId)
+          }
+        >
+          {savePending ? '保存中...' : '保存'}
+        </button>
+
+        {/* 削除ボタン（編集時のみ） */}
+        {mode === 'edit' && blockId && (
           <button
             type="button"
-            onClick={handleClose}
-            className={styles.cancelButton}
-          >
-            閉じる
-          </button>
-        </div>
-      </form>
-
-      {mode === 'edit' && blockId && (
-        <form action={deleteAction} onSubmit={handleDeleteSubmit}>
-          <input type="hidden" name="blockId" value={blockId} />
-          <button
-            type="submit"
+            onClick={handleDelete}
             className={styles.deleteButton}
             disabled={deletePending}
           >
             {deletePending ? '削除中...' : '削除'}
           </button>
-        </form>
-      )}
+        )}
+
+        {/* 閉じるボタン */}
+        <button
+          type="button"
+          onClick={handleClose}
+          className={styles.cancelButton}
+        >
+          閉じる
+        </button>
+      </div>
     </Modal>
   )
 }

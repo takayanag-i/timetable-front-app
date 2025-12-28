@@ -508,11 +508,6 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
       <BlockModal
         isOpen={isBlockModalOpen}
         mode={blockModalContext?.mode ?? 'create'}
-        title={
-          blockModalContext?.mode === 'edit'
-            ? `${blockModalContext.blockName}を編集`
-            : 'ブロックを追加'
-        }
         homeroomId={blockModalContext?.homeroomId ?? ''}
         blockId={
           blockModalContext?.mode === 'edit' ? blockModalContext.blockId : null

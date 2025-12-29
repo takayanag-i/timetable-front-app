@@ -1,18 +1,14 @@
 import styles from './CourseEntry.module.css'
 
-/**
- * CourseEntry コンポーネントのProps
- */
 interface CourseEntryProps {
   courseId: string
   courseName: string
   instructorNames: string
   room: string
   subjectId?: string
-  instructorIds?: string[]
-  laneId?: string
+  instructorIds: string[]
+  laneId: string
   gradeId: string | null
-  /** Server Actionを受け取る */
   onEdit?: (formData: FormData) => void
 }
 
@@ -38,12 +34,12 @@ export default function CourseEntry({
       <input type="hidden" name="courseId" value={courseId} />
       <input type="hidden" name="courseName" value={courseName} />
       {subjectId && <input type="hidden" name="subjectId" value={subjectId} />}
-      {instructorIds?.length
+      {instructorIds.length
         ? instructorIds.map(id => (
             <input key={id} type="hidden" name="instructorIds" value={id} />
           ))
         : null}
-      {laneId && <input type="hidden" name="laneId" value={laneId} />}
+      <input type="hidden" name="laneId" value={laneId} />
       <input type="hidden" name="gradeId" value={gradeId || ''} />
       <button
         type="submit"

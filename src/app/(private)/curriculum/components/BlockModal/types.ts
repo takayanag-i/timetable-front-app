@@ -1,7 +1,5 @@
-// BlockModal 専用の型定義
-
 /**
- * BlockModal で扱うフォーム値
+ * BlockModalのフォーム値型
  */
 export interface BlockFormValues {
   blockName: string

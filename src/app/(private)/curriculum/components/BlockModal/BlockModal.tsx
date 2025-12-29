@@ -7,7 +7,6 @@ import styles from './BlockModal.module.css'
 import { useForm } from 'react-hook-form'
 import type { BlockFormValues } from './types'
 
-
 interface BlockModalProps {
   isOpen: boolean
   mode: 'create' | 'edit'
@@ -32,7 +31,6 @@ export default function BlockModal({
   onDeleteSuccess,
   onClose,
 }: BlockModalProps) {
-
   // カスタムフック
   const {
     error,
@@ -72,17 +70,18 @@ export default function BlockModal({
 
   const blockNameRegister = register('blockName', {
     // 必須チェック
-    validate: value => value.trim().length > 0 || 'ブロック名を入力してください',
+    validate: value =>
+      value.trim().length > 0 || 'ブロック名を入力してください',
   })
   const laneCountRegister = register('laneCount', {
     // 数値に変換
     valueAsNumber: true,
     // 必須チェック、数値チェック
-    validate: value => !Number.isNaN(value) || 'レーン数を数値で入力してください',
+    validate: value =>
+      !Number.isNaN(value) || 'レーン数を数値で入力してください',
     // 最小値チェック
     min: { value: 1, message: 'レーン数は1以上で入力してください' },
   })
-
 
   // モーダルが開いたときに初期値をリセット
   useEffect(() => {
@@ -94,7 +93,7 @@ export default function BlockModal({
 
   // 前回の保存結果を保持
   const prevSaveResultRef = useRef<typeof saveResult>(null)
-  
+
   // 保存成功時の処理
   useEffect(() => {
     if (saveResult?.success && saveResult !== prevSaveResultRef.current) {
@@ -113,18 +112,11 @@ export default function BlockModal({
       clearError()
     }
     prevSaveResultRef.current = saveResult
-  }, [
-    saveResult,
-    mode,
-    initialValues,
-    onSuccess,
-    reset,
-    clearError,
-  ])
+  }, [saveResult, mode, initialValues, onSuccess, reset, clearError])
 
   // 前回の削除結果を保持
   const prevDeleteResultRef = useRef<typeof deleteResult>(null)
-  
+
   // 削除成功時の処理
   useEffect(() => {
     if (deleteResult?.success && deleteResult !== prevDeleteResultRef.current) {

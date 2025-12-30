@@ -26,8 +26,9 @@ export async function updateCourse(
     new Set(
       formData
         .getAll('instructorIds')
-        .map(value => (typeof value === 'string' ? value.trim() : ''))
-        .filter((value): value is string => value.length > 0)
+        .filter((value): value is string => typeof value === 'string')
+        .map(value => value.trim())
+        .filter(value => value.length > 0)
     )
   )
 

@@ -9,6 +9,7 @@ import {
 } from '@/lib/graphql-client'
 import { FETCH_LANES } from '@/app/(private)/curriculum/graphql/queries'
 import { UPSERT_LANES } from '@/app/(private)/curriculum/graphql/mutations'
+import type { GraphQLLane } from '@/app/(private)/curriculum/graphql/types'
 import { logger } from '@/lib/logger'
 import { createAppError, ErrorCode } from '@/lib/errors'
 
@@ -32,9 +33,7 @@ export async function removeCourseFromLane(
 
   try {
     // 1. 既存のレーン情報を取得
-    const lanesResult = await executeGraphQLForServerAction<
-      Array<{ id: string; courses: Array<{ id: string }> }>
-    >(
+    const lanesResult = await executeGraphQLForServerAction<GraphQLLane[]>(
       {
         query: FETCH_LANES,
         variables: {
@@ -61,17 +60,26 @@ export async function removeCourseFromLane(
       )
     }
 
-    const existingCourseIds = lanesResult.data[0].courses.map(
-      course => course.id
-    )
+    const lane = lanesResult.data[0]
+    if (!lane.id) {
+      throw new Error('レーンIDが取得できませんでした')
+    }
+    if (!lane.courses) {
+      throw new Error('講座情報が取得できませんでした')
+    }
+
+    const existingCourseIds = lane.courses.map(course => {
+      if (!course.id) {
+        throw new Error('講座IDが取得できませんでした')
+      }
+      return course.id
+    })
 
     // 2. 指定された講座を除外
     const updatedCourseIds = existingCourseIds.filter(id => id !== courseId)
 
     // 3. レーンを更新（講座を削除）
-    const updatedLanesResult = await executeGraphQLMutation<
-      Array<{ id: string }>
-    >(
+    const updatedLanesResult = await executeGraphQLMutation<GraphQLLane[]>(
       {
         query: UPSERT_LANES,
         variables: {

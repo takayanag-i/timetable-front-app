@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, startTransition } from 'react'
 import styles from '../CourseModal.module.css'
 import type { CourseModalOptions, CourseFormValues } from '../types'
 import { useCourseCurrent } from '../hooks/useCourseCurrent'
@@ -115,6 +115,43 @@ export function CourseCurrent({
     onClose()
   }, [resetFormState, onClose])
 
+  const handleSave = useCallback(() => {
+    if (!isFormValid) return
+
+    const formData = new FormData()
+    formData.append('courseId', courseId)
+    formData.append('subjectId', subjectIdValue || '')
+    formData.append('courseName', courseNameValue)
+    instructorIdsToSubmit.forEach(instructorId => {
+      formData.append('instructorIds', instructorId)
+    })
+
+    startTransition(() => {
+      updateAction(formData)
+    })
+  }, [
+    isFormValid,
+    courseId,
+    subjectIdValue,
+    courseNameValue,
+    instructorIdsToSubmit,
+    updateAction,
+  ])
+
+  const handleDelete = useCallback(() => {
+    if (!confirm('本当にこの講座をレーンから削除しますか？')) {
+      return
+    }
+
+    const formData = new FormData()
+    formData.append('laneId', laneId)
+    formData.append('courseId', courseId)
+
+    startTransition(() => {
+      removeAction(formData)
+    })
+  }, [laneId, courseId, removeAction])
+
   // モーダルが開いたときに初期値をリセット
   useEffect(() => {
     if (isOpen) {
@@ -153,23 +190,7 @@ export function CourseCurrent({
         </div>
       )}
 
-      <form action={updateAction} className={styles.form}>
-        <input type="hidden" name="courseId" value={courseId} />
-        <input type="hidden" name="subjectId" value={subjectIdValue} />
-        <input type="hidden" name="courseName" value={courseNameValue} />
-        {instructorIdsToSubmit.length > 0 ? (
-          instructorIdsToSubmit.map((instructorId, index) => (
-            <input
-              key={`${instructorId}-${index}`}
-              type="hidden"
-              name="instructorIds"
-              value={instructorId}
-            />
-          ))
-        ) : (
-          <input type="hidden" name="instructorIds" value="" />
-        )}
-
+      <div className={styles.form}>
         {/* 科目フィールド（変更不可） */}
         <div className={styles.field}>
           <label className={styles.label}>科目 *</label>
@@ -263,35 +284,27 @@ export function CourseCurrent({
             キャンセル
           </button>
           <button
-            type="submit"
+            type="button"
+            onClick={handleSave}
             className={styles.primaryButton}
             disabled={isPending || !isFormValid}
           >
             {isPending ? '保存中...' : '保存'}
           </button>
         </div>
-      </form>
+      </div>
 
-      {/* 削除用の独立したフォーム */}
-      <form
-        action={removeAction}
-        onSubmit={e => {
-          if (!confirm('本当にこの講座をレーンから削除しますか？')) {
-            e.preventDefault()
-          }
-        }}
-        className={styles.deleteForm}
-      >
-        <input type="hidden" name="laneId" value={laneId} />
-        <input type="hidden" name="courseId" value={courseId} />
+      {/* 削除ボタン */}
+      <div className={styles.deleteForm}>
         <button
-          type="submit"
+          type="button"
+          onClick={handleDelete}
           className={styles.deleteButton}
           disabled={isPending}
         >
           レーンから削除
         </button>
-      </form>
+      </div>
     </>
   )
 }

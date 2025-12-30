@@ -1,6 +1,13 @@
 'use client'
 
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
+import {
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+  useCallback,
+  startTransition,
+} from 'react'
 import styles from '../CourseModal.module.css'
 import type { CourseModalOptions, CourseFormValues } from '../types'
 import { useCourseAddOrChange } from '../hooks/useCourseAddOrChange'
@@ -198,7 +205,7 @@ export function CourseAddOrChange({
     onClose()
   }, [resetFormState, onClose])
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSave = useCallback(() => {
     const trimmedCourseName = courseNameValue.trim()
     if (!trimmedCourseName) return
 
@@ -208,12 +215,40 @@ export function CourseAddOrChange({
     )
 
     if (exactMatchCourse && !selectedCourseId) {
-      e.preventDefault()
       setErrorManually(
         `同名の講座「${trimmedCourseName}」が既に存在します。サジェストから選択してください。`
       )
+      return
     }
-  }
+
+    if (!isFormValid) return
+
+    const formData = new FormData()
+    formData.append('subjectId', subjectIdValue || '')
+    formData.append('courseName', courseNameToSubmit)
+    instructorIdsToSubmit.forEach(instructorId => {
+      formData.append('instructorIds', instructorId)
+    })
+    formData.append('selectedCourseId', selectedCourseId || '')
+    formData.append('laneId', laneId || '')
+    formData.append('blockId', blockId || '')
+
+    startTransition(() => {
+      createAction(formData)
+    })
+  }, [
+    courseNameValue,
+    coursesInSelectedSubject,
+    selectedCourseId,
+    isFormValid,
+    subjectIdValue,
+    courseNameToSubmit,
+    instructorIdsToSubmit,
+    laneId,
+    blockId,
+    createAction,
+    setErrorManually,
+  ])
 
   // モーダルが開いたときに初期値をリセット
   useEffect(() => {
@@ -243,29 +278,7 @@ export function CourseAddOrChange({
         </div>
       )}
 
-      <form
-        action={createAction}
-        onSubmit={handleSubmit}
-        className={styles.form}
-      >
-        <input type="hidden" name="subjectId" value={subjectIdValue} />
-        <input type="hidden" name="courseName" value={courseNameToSubmit} />
-        {instructorIdsToSubmit.length > 0 ? (
-          instructorIdsToSubmit.map((instructorId, index) => (
-            <input
-              key={`${instructorId}-${index}`}
-              type="hidden"
-              name="instructorIds"
-              value={instructorId}
-            />
-          ))
-        ) : (
-          <input type="hidden" name="instructorIds" value="" />
-        )}
-        <input type="hidden" name="selectedCourseId" value={selectedCourseId} />
-        <input type="hidden" name="laneId" value={laneId || ''} />
-        <input type="hidden" name="blockId" value={blockId || ''} />
-
+      <div className={styles.form}>
         <SubjectSelectField
           subjects={filteredSubjects}
           value={subjectIdValue}
@@ -347,14 +360,15 @@ export function CourseAddOrChange({
             キャンセル
           </button>
           <button
-            type="submit"
+            type="button"
+            onClick={handleSave}
             className={styles.primaryButton}
             disabled={isPending || !isFormValid}
           >
             {isPending ? '保存中...' : '保存'}
           </button>
         </div>
-      </form>
+      </div>
     </>
   )
 }

@@ -1,13 +1,15 @@
+'use client'
+import { startTransition } from 'react'
 import BlockEntry from '@/app/(private)/curriculum/components/BlockEntry/BlockEntry'
 import styles from './HomeroomEntry.module.css'
-import { Block as BlockEntity } from '@/core/domain/entity'
+import type { Block } from '@/app/(private)/curriculum/types'
 import type { OnEditBlockData } from '@/app/(private)/curriculum/components/BlockModal/types'
 
 /**
  * HomeroomEntry コンポーネントのProps
  */
 interface HomeroomEntryProps {
-  blocks: BlockEntity[]
+  blocks: Block[]
   homeroomId: string
   homeroomName: string
   gradeId: string | null
@@ -41,14 +43,33 @@ export default function HomeroomEntry({
 }: HomeroomEntryProps) {
   const isCreditsInsufficient = totalCredits < totalPeriods
 
+  const handleEdit = () => {
+    const formData = new FormData()
+    formData.append('homeroomId', homeroomId)
+    startTransition(() => {
+      onEdit(formData)
+    })
+  }
+
+  const handleAddBlock = () => {
+    if (!onAddBlock) return
+
+    const formData = new FormData()
+    formData.append('homeroomId', homeroomId)
+    startTransition(() => {
+      onAddBlock(formData)
+    })
+  }
+
   return (
     <div className={styles.homeroomEntry}>
-      <form action={onEdit}>
-        <input type="hidden" name="homeroomId" value={homeroomId} />
-        <button type="submit" className={styles.homeroomTitle}>
-          {homeroomName}
-        </button>
-      </form>
+      <button
+        type="button"
+        onClick={handleEdit}
+        className={styles.homeroomTitle}
+      >
+        {homeroomName}
+      </button>
       {blocks.map(block => (
         <BlockEntry
           key={block.id}
@@ -75,12 +96,13 @@ export default function HomeroomEntry({
         </span>
       </div>
       {onAddBlock && (
-        <form action={onAddBlock}>
-          <input type="hidden" name="homeroomId" value={homeroomId} />
-          <button type="submit" className={styles.addBlockButton}>
-            + ブロックを追加
-          </button>
-        </form>
+        <button
+          type="button"
+          onClick={handleAddBlock}
+          className={styles.addBlockButton}
+        >
+          + ブロックを追加
+        </button>
       )}
     </div>
   )

@@ -63,40 +63,6 @@ export interface Course {
 }
 
 // --------------------------------------
-// Lane (レーン)
-// --------------------------------------
-export interface Lane {
-  id: string
-  courses: Course[]
-}
-
-// --------------------------------------
-// Block (ブロック)
-// --------------------------------------
-export interface Block {
-  id: string
-  blockName: string
-  lanes: Lane[]
-}
-
-// --------------------------------------
-// Homeroom (学級) - Aggregate Root
-// --------------------------------------
-export interface HomeroomDay {
-  id: string
-  dayOfWeek: string
-  periods: number
-}
-
-export interface Homeroom {
-  id: string
-  homeroomName: string
-  homeroomDays: HomeroomDay[]
-  blocks: Block[]
-  grade?: Grade | null
-}
-
-// --------------------------------------
 // SchoolDay (学校曜日) - Configuration Entity
 // --------------------------------------
 export interface SchoolDay {

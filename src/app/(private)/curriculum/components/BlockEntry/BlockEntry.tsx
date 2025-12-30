@@ -1,6 +1,6 @@
 import styles from './BlockEntry.module.css'
 import LaneEntry from '@/app/(private)/curriculum/components/LaneEntry/LaneEntry'
-import { Lane } from '@/core/domain/entity'
+import type { Lane } from '@/app/(private)/curriculum/types'
 import type { OnEditBlockData } from '@/app/(private)/curriculum/components/BlockModal/types'
 
 interface BlockEntryProps {

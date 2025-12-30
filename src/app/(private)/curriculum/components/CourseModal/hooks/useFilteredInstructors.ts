@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import type { Subject, Instructor } from '@/core/domain/entity'
+import type { Subject, Instructor } from '@/app/(private)/curriculum/types'
 
 interface UseFilteredInstructorsArgs {
   subjectId: string

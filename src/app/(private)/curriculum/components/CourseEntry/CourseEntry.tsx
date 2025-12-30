@@ -1,3 +1,5 @@
+'use client'
+import { startTransition } from 'react'
 import styles from './CourseEntry.module.css'
 
 interface CourseEntryProps {
@@ -29,28 +31,37 @@ export default function CourseEntry({
   gradeId,
   onEdit,
 }: CourseEntryProps) {
+  const handleClick = () => {
+    if (!onEdit) return
+
+    const formData = new FormData()
+    formData.append('courseId', courseId)
+    formData.append('courseName', courseName)
+    if (subjectId) {
+      formData.append('subjectId', subjectId)
+    }
+    instructorIds.forEach(id => {
+      formData.append('instructorIds', id)
+    })
+    formData.append('laneId', laneId)
+    formData.append('gradeId', gradeId || '')
+    startTransition(() => {
+      onEdit(formData)
+    })
+  }
+
   return (
-    <form action={onEdit} className={styles.courseForm}>
-      <input type="hidden" name="courseId" value={courseId} />
-      <input type="hidden" name="courseName" value={courseName} />
-      {subjectId && <input type="hidden" name="subjectId" value={subjectId} />}
-      {instructorIds.length
-        ? instructorIds.map(id => (
-            <input key={id} type="hidden" name="instructorIds" value={id} />
-          ))
-        : null}
-      <input type="hidden" name="laneId" value={laneId} />
-      <input type="hidden" name="gradeId" value={gradeId || ''} />
-      <button
-        type="submit"
-        className={`${styles.courseEntry} ${
-          onEdit ? styles.courseEntryClickable : styles.courseEntryDefault
-        }`}
-      >
-        <div title={courseName}>{truncateText(courseName, 8)}</div>
-        <div title={instructorNames}>{truncateText(instructorNames, 6)}</div>
-        <div title={room}>{truncateText(room, 6)}</div>
-      </button>
-    </form>
+    <button
+      type="button"
+      onClick={handleClick}
+      className={`${styles.courseEntry} ${
+        onEdit ? styles.courseEntryClickable : styles.courseEntryDefault
+      }`}
+      disabled={!onEdit}
+    >
+      <div title={courseName}>{truncateText(courseName, 8)}</div>
+      <div title={instructorNames}>{truncateText(instructorNames, 6)}</div>
+      <div title={room}>{truncateText(room, 6)}</div>
+    </button>
   )
 }

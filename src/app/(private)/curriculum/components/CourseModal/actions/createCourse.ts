@@ -7,7 +7,7 @@ import {
   executeGraphQLForServerAction,
   executeGraphQLMutation,
 } from '@/lib/graphql-client'
-import { GET_LANES } from '@/app/(private)/curriculum/graphql/queries'
+import { FETCH_LANES } from '@/app/(private)/curriculum/graphql/queries'
 import {
   UPSERT_COURSES,
   UPSERT_LANES,
@@ -50,7 +50,7 @@ export async function createCourse(
       Array<{ id: string; courses: Array<{ id: string }> }>
     >(
       {
-        query: GET_LANES,
+        query: FETCH_LANES,
         variables: {
           input: {
             id: laneId,

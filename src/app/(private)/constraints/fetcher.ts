@@ -8,11 +8,9 @@ import {
 import {
   GET_CONSTRAINT_DEFINITIONS,
   GET_CONSTRAINT_DEFINITION_MASTERS,
-} from '@/app/(private)/constraints/graphql/queries'
-import {
-  GET_SCHOOL_DAYS,
+  FETCH_SCHOOL_DAYS,
   GET_COURSES,
-} from '@/app/(private)/curriculum/graphql/queries'
+} from '@/app/(private)/constraints/graphql/queries'
 import type { ConstraintDefinitionMasterResponse } from '@/app/(private)/constraints/graphql/types'
 import { logger } from '@/lib/logger'
 import { createAppError, ErrorCode } from '@/lib/errors'
@@ -30,7 +28,9 @@ export async function getCourses(): Promise<Course[]> {
       {
         query: GET_COURSES,
         variables: {
-          ttid,
+          input: {
+            ttid,
+          },
         },
       },
       'courses'
@@ -130,9 +130,11 @@ export async function getMaxPeriodsPerDay(): Promise<number> {
 
     const result = await executeGraphQLForServerAction<SchoolDay[]>(
       {
-        query: GET_SCHOOL_DAYS,
+        query: FETCH_SCHOOL_DAYS,
         variables: {
-          ttid,
+          input: {
+            ttid,
+          },
         },
       },
       'schoolDays'

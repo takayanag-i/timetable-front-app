@@ -1,10 +1,10 @@
 'use server'
 
-import { Course } from '@/core/domain/entity'
+import type { Course } from '@/app/(private)/curriculum/types'
 import { ActionResult } from '@/types/server-action-types'
 import { errorResult, successResult } from '@/lib/action-helpers'
 import { executeGraphQLForServerAction } from '@/lib/graphql-client'
-import { GET_COURSE_WITH_SUBJECT } from '@/app/(private)/curriculum/graphql/queries'
+import { FETCH_COURSE_DETAILS } from '@/app/(private)/curriculum/graphql/queries'
 import { logger } from '@/lib/logger'
 import { createAppError, ErrorCode } from '@/lib/errors'
 
@@ -34,7 +34,7 @@ export async function fetchCourseDetails(
       Array<Course & { subject: { id: string; subjectName: string } }>
     >(
       {
-        query: GET_COURSE_WITH_SUBJECT,
+        query: FETCH_COURSE_DETAILS,
         variables: {
           input: {
             id: courseId,

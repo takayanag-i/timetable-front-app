@@ -7,7 +7,7 @@ import {
   executeGraphQLForServerAction,
   executeGraphQLMutation,
 } from '@/lib/graphql-client'
-import { GET_LANES } from '@/app/(private)/curriculum/graphql/queries'
+import { FETCH_LANES } from '@/app/(private)/curriculum/graphql/queries'
 import { UPSERT_LANES } from '@/app/(private)/curriculum/graphql/mutations'
 import { logger } from '@/lib/logger'
 import { createAppError, ErrorCode } from '@/lib/errors'
@@ -36,7 +36,7 @@ export async function removeCourseFromLane(
       Array<{ id: string; courses: Array<{ id: string }> }>
     >(
       {
-        query: GET_LANES,
+        query: FETCH_LANES,
         variables: {
           input: {
             id: laneId,

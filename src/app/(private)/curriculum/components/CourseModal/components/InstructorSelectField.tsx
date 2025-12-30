@@ -1,4 +1,4 @@
-import type { Instructor } from '@/core/domain/entity'
+import type { Instructor } from '@/app/(private)/curriculum/types'
 import styles from '../CourseModal.module.css'
 
 interface InstructorSelectFieldProps {

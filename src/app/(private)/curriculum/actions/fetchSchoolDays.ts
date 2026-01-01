@@ -55,18 +55,6 @@ export async function fetchSchoolDays(
       if (!graphqlSchoolDay.dayOfWeek) {
         throw new Error('曜日が取得できませんでした')
       }
-      if (
-        graphqlSchoolDay.amPeriods === undefined ||
-        graphqlSchoolDay.amPeriods === null
-      ) {
-        throw new Error('午前時限数が取得できませんでした')
-      }
-      if (
-        graphqlSchoolDay.pmPeriods === undefined ||
-        graphqlSchoolDay.pmPeriods === null
-      ) {
-        throw new Error('午後時限数が取得できませんでした')
-      }
       if (graphqlSchoolDay.isAvailable === undefined) {
         throw new Error('利用可能フラグが取得できませんでした')
       }
@@ -74,8 +62,8 @@ export async function fetchSchoolDays(
       return {
         id: graphqlSchoolDay.id,
         dayOfWeek: graphqlSchoolDay.dayOfWeek,
-        amPeriods: graphqlSchoolDay.amPeriods,
-        pmPeriods: graphqlSchoolDay.pmPeriods,
+        amPeriods: graphqlSchoolDay.amPeriods ?? 0,
+        pmPeriods: graphqlSchoolDay.pmPeriods ?? 0,
         isAvailable: graphqlSchoolDay.isAvailable,
       }
     })

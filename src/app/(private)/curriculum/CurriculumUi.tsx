@@ -6,6 +6,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  startTransition,
 } from 'react'
 import { useRouter } from 'next/navigation'
 import HomeroomEntry from '@/app/(private)/curriculum/components/HomeroomEntry/HomeroomEntry'
@@ -32,6 +33,12 @@ import type {
   BlockFormValues,
   OnEditBlockData,
 } from '@/app/(private)/curriculum/components/BlockModal/types'
+import type {
+  OnEditHomeroomData,
+  OnAddCourseData,
+  OnEditCourseData,
+  OnAddBlockData,
+} from '@/app/(private)/curriculum/components/HomeroomEntry/types'
 import type { HomeroomFormValues } from '@/app/(private)/curriculum/components/HomeroomModal/types'
 import { ActionResult } from '@/types/server-action-types'
 import { defaultHomeroomDays } from '@/app/(private)/curriculum/components/HomeroomModal/hooks/useHomeroomModal'
@@ -238,33 +245,46 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
     }
   }, [fetchedCourseModalOptionsResult])
 
-  // 講座編集ハンドラー（FormDataベース）
-  const handleEditCourse = (formData: FormData) => {
-    const courseId = formData.get('courseId') as string
-    const courseName = formData.get('courseName') as string
-    const subjectId = formData.get('subjectId') as string | null
-    const instructorIds = formData
-      .getAll('instructorIds')
-      .map(value => (typeof value === 'string' ? value : ''))
-      .filter((value): value is string => value.length > 0)
-    const laneId = formData.get('laneId') as string
-    const gradeId = formData.get('gradeId') as string | null
-
-    console.log('DEBUG handleEditCourse called with:', {
-      courseId,
-      courseName,
-      subjectId,
-      laneId,
+  // 学級編集ハンドラー
+  const handleEditHomeroom = (data: OnEditHomeroomData) => {
+    const formData = new FormData()
+    formData.append('homeroomId', data.homeroomId)
+    startTransition(() => {
+      fetchHomeroomAction(formData)
     })
+  }
 
+  // 講座追加ハンドラー
+  const handleAddCourse = (data: OnAddCourseData) => {
+    setIsEditMode(false)
+    setCurrentLaneId(data.laneId)
+    setCurrentGradeId(data.gradeId || null)
+    startTransition(() => {
+      fetchCourseModalOptionsAction()
+    })
+  }
+
+  // 講座編集ハンドラー
+  const handleEditCourse = (data: OnEditCourseData) => {
     setIsEditMode(true)
-    setEditingCourseId(courseId)
-    setEditingCourseName(courseName)
-    setEditingSubjectId(subjectId || '')
-    setEditingInstructorIds(instructorIds.length ? instructorIds : [])
-    setCurrentLaneId(laneId)
-    setCurrentGradeId(gradeId || null)
-    fetchCourseModalOptionsAction()
+    setEditingCourseId(data.courseId)
+    setEditingCourseName(data.courseName)
+    setEditingSubjectId(data.subjectId || '')
+    setEditingInstructorIds(data.instructorIds.length ? data.instructorIds : [])
+    setCurrentLaneId(data.laneId)
+    setCurrentGradeId(data.gradeId || null)
+    startTransition(() => {
+      fetchCourseModalOptionsAction()
+    })
+  }
+
+  // ブロック追加ハンドラー
+  const handleAddBlock = (data: OnAddBlockData) => {
+    setBlockModalContext({
+      mode: 'create',
+      homeroomId: data.homeroomId,
+    })
+    setIsBlockModalOpen(true)
   }
 
   // モーダル成功時のハンドラー
@@ -419,29 +439,10 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
                 gradeId={homeroom.grade?.id ?? null}
                 totalCredits={creditsData.totalCredits}
                 totalPeriods={creditsData.totalPeriods}
-                onEdit={fetchHomeroomAction}
-                onAddCourse={(formData: FormData) => {
-                  const laneId = formData.get('laneId') as string
-                  const blockId = formData.get('blockId') as string
-                  const gradeId = formData.get('gradeId') as string | null
-                  console.log('DEBUG CurriculumUi - onAddCourse called with:', {
-                    laneId,
-                    blockId,
-                  })
-                  setIsEditMode(false)
-                  setCurrentLaneId(laneId)
-                  setCurrentGradeId(gradeId || null)
-                  fetchCourseModalOptionsAction()
-                }}
+                onEditHomeroom={handleEditHomeroom}
+                onAddCourse={handleAddCourse}
                 onEditCourse={handleEditCourse}
-                onAddBlock={(formData: FormData) => {
-                  const homeroomId = formData.get('homeroomId') as string
-                  setBlockModalContext({
-                    mode: 'create',
-                    homeroomId,
-                  })
-                  setIsBlockModalOpen(true)
-                }}
+                onAddBlock={handleAddBlock}
                 onEditBlock={(block: OnEditBlockData) => {
                   setBlockModalContext({
                     mode: 'edit',

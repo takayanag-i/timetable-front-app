@@ -1,8 +1,11 @@
 'use client'
-import { startTransition } from 'react'
 import styles from './LaneEntry.module.css'
 import CourseEntry from '@/app/(private)/curriculum/components/CourseEntry/CourseEntry'
 import type { Course } from '@/app/(private)/curriculum/types'
+import type {
+  OnAddCourseData,
+  OnEditCourseData,
+} from '@/app/(private)/curriculum/components/HomeroomEntry/types'
 
 /**
  * LaneEntry コンポーネントのProps
@@ -12,10 +15,8 @@ interface LaneEntryProps {
   blockId: string
   gradeId: string | null
   courses?: Course[]
-  /** Server Actionを受け取る */
-  onAddCourse?: (formData: FormData) => void
-  /** Server Actionを受け取る */
-  onEditCourse?: (formData: FormData) => void
+  onAddCourse?: (data: OnAddCourseData) => void
+  onEditCourse?: (data: OnEditCourseData) => void
 }
 
 export default function LaneEntry({
@@ -28,13 +29,10 @@ export default function LaneEntry({
 }: LaneEntryProps) {
   const handleAddCourse = () => {
     if (!onAddCourse) return
-
-    const formData = new FormData()
-    formData.append('laneId', id)
-    formData.append('blockId', blockId)
-    formData.append('gradeId', gradeId || '')
-    startTransition(() => {
-      onAddCourse(formData)
+    onAddCourse({
+      laneId: id,
+      blockId,
+      gradeId,
     })
   }
 

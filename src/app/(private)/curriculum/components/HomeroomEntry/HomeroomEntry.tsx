@@ -1,9 +1,14 @@
 'use client'
-import { startTransition } from 'react'
 import BlockEntry from '@/app/(private)/curriculum/components/BlockEntry/BlockEntry'
 import styles from './HomeroomEntry.module.css'
 import type { Block } from '@/app/(private)/curriculum/types'
 import type { OnEditBlockData } from '@/app/(private)/curriculum/components/BlockModal/types'
+import type {
+  OnEditHomeroomData,
+  OnAddCourseData,
+  OnEditCourseData,
+  OnAddBlockData,
+} from './types'
 
 /**
  * HomeroomEntry コンポーネントのProps
@@ -13,18 +18,12 @@ interface HomeroomEntryProps {
   homeroomId: string
   homeroomName: string
   gradeId: string | null
-  /** 登録されたコースの単位数合計 */
   totalCredits: number
-  /** ホームルームのコマ数総和 */
   totalPeriods: number
-  /** Server Actionを受け取る */
-  onEdit: (formData: FormData) => void
-  /** 講座追加Server Actionを受け取る */
-  onAddCourse: (formData: FormData) => void
-  /** 講座編集Server Actionを受け取る */
-  onEditCourse: (formData: FormData) => void
-  /** ブロック追加Server Actionを受け取る */
-  onAddBlock?: (formData: FormData) => void
+  onEditHomeroom: (data: OnEditHomeroomData) => void
+  onAddCourse: (data: OnAddCourseData) => void
+  onEditCourse: (data: OnEditCourseData) => void
+  onAddBlock: (data: OnAddBlockData) => void
   onEditBlock: (data: OnEditBlockData) => void
 }
 
@@ -35,7 +34,7 @@ export default function HomeroomEntry({
   gradeId,
   totalCredits,
   totalPeriods,
-  onEdit,
+  onEditHomeroom,
   onAddCourse,
   onEditCourse,
   onAddBlock,
@@ -43,29 +42,11 @@ export default function HomeroomEntry({
 }: HomeroomEntryProps) {
   const isCreditsInsufficient = totalCredits < totalPeriods
 
-  const handleEdit = () => {
-    const formData = new FormData()
-    formData.append('homeroomId', homeroomId)
-    startTransition(() => {
-      onEdit(formData)
-    })
-  }
-
-  const handleAddBlock = () => {
-    if (!onAddBlock) return
-
-    const formData = new FormData()
-    formData.append('homeroomId', homeroomId)
-    startTransition(() => {
-      onAddBlock(formData)
-    })
-  }
-
   return (
     <div className={styles.homeroomEntry}>
       <button
         type="button"
-        onClick={handleEdit}
+        onClick={() => onEditHomeroom({ homeroomId })}
         className={styles.homeroomTitle}
       >
         {homeroomName}
@@ -95,15 +76,13 @@ export default function HomeroomEntry({
           {totalCredits}/{totalPeriods}
         </span>
       </div>
-      {onAddBlock && (
-        <button
-          type="button"
-          onClick={handleAddBlock}
-          className={styles.addBlockButton}
-        >
-          + ブロックを追加
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={() => onAddBlock({ homeroomId })}
+        className={styles.addBlockButton}
+      >
+        + ブロックを追加
+      </button>
     </div>
   )
 }

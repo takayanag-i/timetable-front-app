@@ -1,6 +1,6 @@
 'use client'
-import { startTransition } from 'react'
 import styles from './CourseEntry.module.css'
+import type { OnEditCourseData } from '@/app/(private)/curriculum/components/HomeroomEntry/types'
 
 interface CourseEntryProps {
   courseId: string
@@ -11,7 +11,7 @@ interface CourseEntryProps {
   instructorIds: string[]
   laneId: string
   gradeId: string | null
-  onEdit?: (formData: FormData) => void
+  onEdit?: (data: OnEditCourseData) => void
 }
 
 // 文字数制限ユーティリティ関数
@@ -33,20 +33,13 @@ export default function CourseEntry({
 }: CourseEntryProps) {
   const handleClick = () => {
     if (!onEdit) return
-
-    const formData = new FormData()
-    formData.append('courseId', courseId)
-    formData.append('courseName', courseName)
-    if (subjectId) {
-      formData.append('subjectId', subjectId)
-    }
-    instructorIds.forEach(id => {
-      formData.append('instructorIds', id)
-    })
-    formData.append('laneId', laneId)
-    formData.append('gradeId', gradeId || '')
-    startTransition(() => {
-      onEdit(formData)
+    onEdit({
+      courseId,
+      courseName,
+      subjectId: subjectId || null,
+      instructorIds,
+      laneId,
+      gradeId,
     })
   }
 

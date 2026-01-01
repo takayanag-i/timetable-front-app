@@ -2,6 +2,10 @@ import styles from './BlockEntry.module.css'
 import LaneEntry from '@/app/(private)/curriculum/components/LaneEntry/LaneEntry'
 import type { Lane } from '@/app/(private)/curriculum/types'
 import type { OnEditBlockData } from '@/app/(private)/curriculum/components/BlockModal/types'
+import type {
+  OnAddCourseData,
+  OnEditCourseData,
+} from '@/app/(private)/curriculum/components/HomeroomEntry/types'
 
 interface BlockEntryProps {
   blockId: string
@@ -9,8 +13,8 @@ interface BlockEntryProps {
   gradeId: string | null
   blockName: string
   lanes: Lane[]
-  onAddCourse: (formData: FormData) => void
-  onEditCourse: (formData: FormData) => void
+  onAddCourse: (data: OnAddCourseData) => void
+  onEditCourse: (data: OnEditCourseData) => void
   onEditBlock: (data: OnEditBlockData) => void
 }
 

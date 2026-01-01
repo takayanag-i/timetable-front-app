@@ -5,7 +5,7 @@ import type { ActionResult } from '@/types/server-action-types'
 interface UseBlockModalArgs {
   mode: 'create' | 'edit'
   blockId: string | null
-  homeroomId: string | null
+  homeroomId: string
 }
 
 export function useBlockModal({
@@ -22,7 +22,7 @@ export function useBlockModal({
   }, [])
 
   // 前回の値を保持する
-  const prevHomeroomIdRef = useRef<string | null>(null)
+  const prevHomeroomIdRef = useRef<string>(homeroomId)
   const prevBlockIdRef = useRef<string | null>(null)
   const prevModeRef = useRef<'create' | 'edit'>(mode)
 

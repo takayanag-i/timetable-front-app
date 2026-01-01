@@ -68,7 +68,6 @@ export async function fetchCourseModalOptions(
         return {
           id: subject.id,
           subjectName: subject.subjectName,
-          credits: subject.credits,
           discipline: subject.discipline
             ? (() => {
                 if (!subject.discipline.disciplineCode) {
@@ -82,7 +81,7 @@ export async function fetchCourseModalOptions(
                   disciplineName: subject.discipline.disciplineName,
                 }
               })()
-            : undefined,
+            : null,
           grade: subject.grade
             ? (() => {
                 if (!subject.grade.id) {
@@ -94,7 +93,6 @@ export async function fetchCourseModalOptions(
                 return {
                   id: subject.grade.id,
                   gradeName: subject.grade.gradeName,
-                  ttid: subject.grade.ttid,
                 }
               })()
             : null,

@@ -95,8 +95,7 @@ function convertGraphQLCourseToCourse(graphqlCourse: GraphQLCourse): Course {
       : null,
     courseDetails: (graphqlCourse.courseDetails || [])
       .filter(
-        detail =>
-          detail.instructor !== null && detail.instructor !== undefined
+        detail => detail.instructor !== null && detail.instructor !== undefined
       )
       .map(detail => {
         if (!detail.id) {

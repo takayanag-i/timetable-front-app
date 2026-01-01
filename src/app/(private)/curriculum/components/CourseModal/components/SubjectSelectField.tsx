@@ -1,8 +1,8 @@
 import styles from '../CourseModal.module.css'
-import type { CourseModalOptions } from '../types'
+import type { CourseModalOptions, CourseModalSubject } from '../types'
 
 interface SubjectSelectFieldProps {
-  subjects: CourseModalOptions['subjects']
+  subjects: CourseModalSubject[]
   value: string
   onChange: (subjectId: string) => void
 }

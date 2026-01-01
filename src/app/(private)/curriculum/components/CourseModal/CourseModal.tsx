@@ -6,52 +6,39 @@ import styles from './CourseModal.module.css'
 import type { CourseModalOptions, CourseFormValues } from './types'
 import { CourseCurrent } from './components/CourseCurrent'
 import { CourseAddOrChange } from './components/CourseAddOrChange'
+import { createAppError, ErrorCode } from '@/lib/errors'
 
-/**
- * CourseModal コンポーネントのProps
- */
 interface CourseModalProps {
-  /** モーダル表示フラグ */
   isOpen: boolean
-  /** モーダルを閉じる際のコールバック */
-  onClose: () => void
-  /** 成功時コールバック */
-  onSuccess?: () => void
-  /** 科目/教員/既存講座オプション */
-  courseModalOptions: CourseModalOptions | null
-  /** 操作対象レーンID */
-  laneId?: string
-  /** 操作対象ブロックID */
-  blockId?: string
-  /** 編集モード（true なら既存講座編集） */
-  editMode?: boolean
-  /** 編集対象の講座ID */
+  editMode: boolean
+  laneId: string
   courseId?: string
-  /** フォーム初期値 */
-  initialValues: CourseFormValues
-  /** 絞り込み対象の学年ID */
   gradeId?: string
+  initialValues: CourseFormValues
+  courseModalOptions: CourseModalOptions
+  onClose: () => void
+  onSuccess: () => void
 }
 
 /**
- * 講座モーダル（新規作成・講座変更・現在の講座編集の切り替え）
+ * 講座モーダル
  */
 export function CourseModal({
   isOpen,
+  editMode,
+  laneId,
+  courseId,
+  gradeId,
+  initialValues,
+  courseModalOptions,
   onClose,
   onSuccess,
-  courseModalOptions,
-  laneId,
-  blockId,
-  editMode = false,
-  courseId,
-  initialValues,
-  gradeId,
 }: CourseModalProps) {
   // 編集モードの必須ID欠損
   if (editMode && (!courseId || !laneId)) {
-    throw new Error(
-      'CourseModal: 編集モードの必須IDが不足しています（courseId または laneId）'
+    throw createAppError(
+      new Error('編集モードの必須IDが不足しています'),
+      ErrorCode.DATA_VALIDATION_ERROR
     )
   }
 
@@ -118,7 +105,6 @@ export function CourseModal({
             onSuccess={onSuccess}
             courseModalOptions={courseModalOptions}
             laneId={laneId}
-            blockId={blockId}
             initialValues={{
               ...initialValues,
               courseName: '',
@@ -142,7 +128,6 @@ export function CourseModal({
         onSuccess={onSuccess}
         courseModalOptions={courseModalOptions}
         laneId={laneId}
-        blockId={blockId}
         initialValues={initialValues}
         gradeId={gradeId}
       />

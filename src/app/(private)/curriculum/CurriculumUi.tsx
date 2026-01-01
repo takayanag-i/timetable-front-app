@@ -103,7 +103,6 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
   // 講座モーダルの状態管理
   const [isCourseModalOpen, setIsCourseModalOpen] = useState(false)
   const [currentLaneId, setCurrentLaneId] = useState<string | null>(null)
-  const [currentBlockId, setCurrentBlockId] = useState<string | null>(null)
   const [currentGradeId, setCurrentGradeId] = useState<string | null>(null)
   // 編集モード用の状態
   const [isEditMode, setIsEditMode] = useState(false)
@@ -128,6 +127,7 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
         : [{ instructorId: '' }]
 
     return {
+      courseId: '',
       subjectId: isEditMode ? editingSubjectId || '' : '',
       courseName: isEditMode ? editingCourseName || '' : '',
       courseDetails,
@@ -271,7 +271,6 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
   const handleCourseModalSuccess = () => {
     setIsCourseModalOpen(false)
     setCurrentLaneId(null)
-    setCurrentBlockId(null)
     setCurrentGradeId(null)
     setIsEditMode(false)
     setEditingCourseId(null)
@@ -286,7 +285,6 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
   const handleCourseModalClose = () => {
     setIsCourseModalOpen(false)
     setCurrentLaneId(null)
-    setCurrentBlockId(null)
     setCurrentGradeId(null)
     setIsEditMode(false)
     setEditingCourseId(null)
@@ -432,7 +430,6 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
                   })
                   setIsEditMode(false)
                   setCurrentLaneId(laneId)
-                  setCurrentBlockId(blockId)
                   setCurrentGradeId(gradeId || null)
                   fetchCourseModalOptionsAction()
                 }}
@@ -490,12 +487,12 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
       <CourseModal
         isOpen={isCourseModalOpen}
         courseModalOptions={
-          fetchedCourseModalOptionsResult?.success
+          fetchedCourseModalOptionsResult?.success &&
+          fetchedCourseModalOptionsResult.data
             ? fetchedCourseModalOptionsResult.data
-            : null
+            : { subjects: [], instructors: [], courses: [] }
         }
-        laneId={currentLaneId || undefined}
-        blockId={currentBlockId || undefined}
+        laneId={currentLaneId!}
         editMode={isEditMode}
         courseId={editingCourseId || undefined}
         initialValues={courseModalInitialValues}

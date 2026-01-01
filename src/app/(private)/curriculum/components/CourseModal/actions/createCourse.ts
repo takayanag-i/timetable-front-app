@@ -42,7 +42,7 @@ export async function createCourse(
         .filter(value => value.length > 0)
     )
   )
-  const selectedCourseId = formData.get('selectedCourseId') as string
+  const courseId = formData.get('courseId') as string
 
   // システムエラー
   if (!laneId) {
@@ -215,10 +215,10 @@ export async function createCourse(
   }
 
   // 既存講座IDの有無で処理を分岐
-  switch (!!selectedCourseId) {
+  switch (!!courseId) {
     case true:
       // 既存の講座をレーンに追加する
-      return addCourseToLane(selectedCourseId)
+      return addCourseToLane(courseId)
     case false:
       // 新しい講座を作成してレーンに追加する
       return createCourseAndAddToLane(subjectId, courseName, instructorIds)

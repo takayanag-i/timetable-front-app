@@ -9,42 +9,31 @@ import {
   startTransition,
 } from 'react'
 import styles from '../CourseModal.module.css'
-import type { CourseModalOptions, CourseFormValues } from '../types'
+import type {
+  CourseModalOptions,
+  CourseFormValues,
+  CourseModalCourse,
+} from '../types'
 import { useCourseAddOrChange } from '../hooks/useCourseAddOrChange'
 import { useCourseSuggestions } from '../hooks/useCourseSuggestions'
-import { useFilteredInstructors } from '../hooks/useFilteredInstructors'
 import { SubjectSelectField } from './SubjectSelectField'
-import { CourseNameFieldContainer } from './CourseNameFieldContainer'
+import { CourseNameField } from './CourseNameField'
 import { InstructorSelectField } from './InstructorSelectField'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { useInstructorFields } from '../hooks/useInstructorFields'
 
-/**
- * CourseAddOrChange コンポーネントのProps
- */
 interface CourseAddOrChangeProps {
-  /** モーダルの表示状態 */
   isOpen: boolean
-  /** モーダルを閉じる際のコールバック */
-  onClose: () => void
-  /** 成功時コールバック */
-  onSuccess?: () => void
-  /** 科目/教員/既存講座オプション */
-  courseModalOptions: CourseModalOptions | null
-  /** レーンID */
-  laneId?: string
-  /** ブロックID */
-  blockId?: string
-  /** フォームの初期値 */
-  initialValues: CourseFormValues
-  /** 絞り込み対象の学年ID */
+  laneId: string
   gradeId?: string
+  initialValues: CourseFormValues
+  courseModalOptions: CourseModalOptions
+  onClose: () => void
+  onSuccess: () => void
 }
 
 /**
- * 講座追加・変更コンポーネント（新規作成・講座変更用）
- * - 科目は選択可
- * - 講座名はサジェストあり（フォーカス時に全講座表示、入力で絞り込み）
+ * 講座追加・講座変更コンポーネント
  */
 export function CourseAddOrChange({
   isOpen,
@@ -52,45 +41,49 @@ export function CourseAddOrChange({
   onSuccess,
   courseModalOptions,
   laneId,
-  blockId,
   initialValues,
   gradeId,
 }: CourseAddOrChangeProps) {
-  const [selectedCourseId, setSelectedCourseId] = useState('')
-
+  // カスタムフック
   const {
     error,
     clearError,
-    setError: setErrorManually,
+    setError,
     createAction,
     createPending,
     createResult,
   } = useCourseAddOrChange({
     laneId,
-    blockId,
   })
 
+  // RHFのフック
   const { control, watch, setValue, reset } = useForm<CourseFormValues>({
     defaultValues: initialValues,
     mode: 'onChange',
   })
 
+  // 配列の項目に対するフック
   const { fields, append, remove, replace } = useFieldArray({
     control,
     name: 'courseDetails',
   })
 
+  // フォームの値を監視
+  const courseIdValue = watch('courseId')
   const subjectIdValue = watch('subjectId')
   const courseNameValue = watch('courseName')
   const courseDetailsValue = watch('courseDetails') || []
 
+  // ペンディング状態
   const isPending = createPending
 
-  const subjectOptions = courseModalOptions?.subjects || []
-  const instructorOptions = courseModalOptions?.instructors || []
-  const courseOptions = courseModalOptions?.courses || []
+  // 科目、教員、講座のオプションリスト
+  const subjectOptions = courseModalOptions.subjects || []
+  const instructorOptions = courseModalOptions.instructors || []
+  const courseOptions = courseModalOptions.courses || []
 
-  const filteredSubjects = useMemo(() => {
+  // 学年に応じた科目リストを取得
+  const filteredSubjectOptions = useMemo(() => {
     if (!gradeId) {
       return subjectOptions
     }
@@ -100,20 +93,15 @@ export function CourseAddOrChange({
     return subjectForGrade
   }, [subjectOptions, gradeId])
 
-  const { coursesInSelectedSubject, suggestedCourses, selectedCourse } =
+  // 講座サジェストコンポーネントのカスタムフック
+  const { coursesInSelectedSubject, suggestedCourses, exactMatchCourse } =
     useCourseSuggestions({
-      subjectId: subjectIdValue,
       courses: courseOptions,
-      selectedCourseId,
+      subjectId: subjectIdValue,
       courseName: courseNameValue,
     })
 
-  const { availableInstructors } = useFilteredInstructors({
-    subjectId: subjectIdValue,
-    subjects: filteredSubjects,
-    instructors: instructorOptions,
-  })
-
+  // 教員フィールドコンポーネントのカスタムフック
   const {
     addInstructorField,
     removeInstructorField,
@@ -127,59 +115,40 @@ export function CourseAddOrChange({
     setValue,
   })
 
+  // 教員IDの存在チェック
   const hasInstructor =
     courseDetailsValue.length > 0 &&
     courseDetailsValue.every(detail => !!detail.instructorId)
+
+  // 科目ID、講座名、教員IDが存在する場合、フォームが有効
   const isFormValid = !!subjectIdValue && !!courseNameValue && hasInstructor
 
-  const courseNameToSubmit = courseNameValue
-
-  const instructorIdsToSubmit = courseDetailsValue.map(
-    detail => detail.instructorId
-  )
-
+  // フォームをリセットする
   const resetFormState = useCallback(() => {
     reset({
+      courseId: '',
       subjectId: '',
       courseName: '',
       courseDetails: [{ instructorId: '' }],
     })
     replace([{ instructorId: '' }])
     clearError()
-    setSelectedCourseId('')
   }, [reset, replace, clearError])
 
+  // 講座名が変わったときの処理
   const handleCourseNameChange = useCallback(
     (nextValue: string) => {
-      const trimmedValue = nextValue.trim()
-      const normalizedValue = trimmedValue.toLowerCase()
-
-      // 入力内容が完全一致する講座があるかチェック
-      const matchedCourse = coursesInSelectedSubject.find(
-        course => course.courseName.toLowerCase() === normalizedValue
-      )
-
-      // 完全一致する講座がある場合でも、ユーザーがサジェストをクリックするまで
-      // 選択を維持しない（selectedCourseIdをリセットしない）
-      // ただし、現在選択されている講座と完全一致する場合はリセットしない
-      if (!matchedCourse || matchedCourse.id !== selectedCourseId) {
-        setSelectedCourseId('')
-        resetInstructorFields()
-      }
-
+      setValue('courseId', '')
       setValue('courseName', nextValue)
+      resetInstructorFields()
     },
-    [
-      coursesInSelectedSubject,
-      selectedCourseId,
-      resetInstructorFields,
-      setValue,
-    ]
+    [resetInstructorFields, setValue]
   )
 
+  // 講座を選択したときの処理
   const handleSelectExistingCourse = useCallback(
-    (course: { id: string; courseName: string; instructorIds: string[] }) => {
-      setSelectedCourseId(course.id)
+    (course: CourseModalCourse) => {
+      setValue('courseId', course.id)
       setValue('courseName', course.courseName)
       replace(
         course.instructorIds.length > 0
@@ -190,33 +159,32 @@ export function CourseAddOrChange({
     [replace, setValue]
   )
 
+  // 科目が変わったときの処理
   const handleSubjectChange = useCallback(
     (subjectId: string) => {
+      setValue('courseId', '')
       setValue('subjectId', subjectId)
       setValue('courseName', '')
       resetInstructorFields()
-      setSelectedCourseId('')
     },
     [resetInstructorFields, setValue]
   )
 
+  // モーダルを閉じるときの処理
   const handleClose = useCallback(() => {
     resetFormState()
     onClose()
   }, [resetFormState, onClose])
 
+  // 保存処理
   const handleSave = useCallback(() => {
     const trimmedCourseName = courseNameValue.trim()
     if (!trimmedCourseName) return
 
-    const exactMatchCourse = coursesInSelectedSubject.find(
-      course =>
-        course.courseName.toLowerCase() === trimmedCourseName.toLowerCase()
-    )
-
-    if (exactMatchCourse && !selectedCourseId) {
-      setErrorManually(
-        `同名の講座「${trimmedCourseName}」が既に存在します。サジェストから選択してください。`
+    if (exactMatchCourse && !courseIdValue) {
+      // 同一名称の講座は新規登録できない
+      setError(
+        `同名の講座「${trimmedCourseName}」は既に存在します。サジェストから選択してください。`
       )
       return
     }
@@ -224,30 +192,29 @@ export function CourseAddOrChange({
     if (!isFormValid) return
 
     const formData = new FormData()
-    formData.append('subjectId', subjectIdValue || '')
-    formData.append('courseName', courseNameToSubmit)
-    instructorIdsToSubmit.forEach(instructorId => {
-      formData.append('instructorIds', instructorId)
+    formData.append('courseId', courseIdValue)
+    formData.append('subjectId', subjectIdValue)
+    formData.append('courseName', courseNameValue)
+    courseDetailsValue.forEach(detail => {
+      if (detail.instructorId) {
+        formData.append('instructorIds', detail.instructorId)
+      }
     })
-    formData.append('selectedCourseId', selectedCourseId || '')
-    formData.append('laneId', laneId || '')
-    formData.append('blockId', blockId || '')
+    formData.append('laneId', laneId)
 
     startTransition(() => {
       createAction(formData)
     })
   }, [
     courseNameValue,
-    coursesInSelectedSubject,
-    selectedCourseId,
+    exactMatchCourse,
+    courseIdValue,
     isFormValid,
     subjectIdValue,
-    courseNameToSubmit,
-    instructorIdsToSubmit,
+    courseDetailsValue,
     laneId,
-    blockId,
     createAction,
-    setErrorManually,
+    setError,
   ])
 
   // モーダルが開いたときに初期値をリセット
@@ -259,13 +226,14 @@ export function CourseAddOrChange({
     }
   }, [isOpen, reset, replace, initialValues, clearError])
 
-  // 成功時の処理
+  // 前回の保存結果を保持
   const prevCreateResultRef = useRef<typeof createResult>(null)
+  // 保存結果が変わったときの処理
   useEffect(() => {
     if (createResult?.success && createResult !== prevCreateResultRef.current) {
       resetFormState()
       clearError()
-      onSuccess?.()
+      onSuccess()
     }
     prevCreateResultRef.current = createResult
   }, [createResult, resetFormState, clearError, onSuccess])
@@ -280,17 +248,17 @@ export function CourseAddOrChange({
 
       <div className={styles.form}>
         <SubjectSelectField
-          subjects={filteredSubjects}
+          subjects={filteredSubjectOptions}
           value={subjectIdValue}
           onChange={handleSubjectChange}
         />
 
-        <CourseNameFieldContainer
+        <CourseNameField
           value={courseNameValue}
           subjectId={subjectIdValue || ''}
-          editMode={false}
           coursesInSelectedSubject={coursesInSelectedSubject}
           suggestedCourses={suggestedCourses}
+          exactMatchCourse={exactMatchCourse}
           onNameChange={handleCourseNameChange}
           onSelectExistingCourse={handleSelectExistingCourse}
         />
@@ -301,12 +269,6 @@ export function CourseAddOrChange({
               .filter((_, detailIndex) => detailIndex !== index)
               .map(item => item.instructorId)
               .filter((id): id is string => Boolean(id))
-
-            const filteredInstructors = availableInstructors.filter(
-              instructor =>
-                instructor.id === courseDetailsValue[index]?.instructorId ||
-                !selectedOtherInstructorIds.includes(instructor.id)
-            )
 
             return (
               <div
@@ -320,11 +282,10 @@ export function CourseAddOrChange({
                   onChange={instructorId =>
                     updateInstructorField(index, instructorId)
                   }
-                  instructors={filteredInstructors}
-                  disabled={availableInstructors.length === 0}
-                  showNoInstructorsHelper={
-                    Boolean(subjectIdValue) && availableInstructors.length === 0
-                  }
+                  subjectId={subjectIdValue}
+                  subjects={filteredSubjectOptions}
+                  instructors={instructorOptions}
+                  selectedInstructorIds={selectedOtherInstructorIds}
                 />
                 {courseDetailsValue.length > 1 && (
                   <button

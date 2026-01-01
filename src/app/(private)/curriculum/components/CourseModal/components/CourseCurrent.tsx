@@ -4,36 +4,23 @@ import { useEffect, useRef, useCallback, startTransition } from 'react'
 import styles from '../CourseModal.module.css'
 import type { CourseModalOptions, CourseFormValues } from '../types'
 import { useCourseCurrent } from '../hooks/useCourseCurrent'
-import { useFilteredInstructors } from '../hooks/useFilteredInstructors'
 import { SubjectSelectField } from './SubjectSelectField'
 import { InstructorSelectField } from './InstructorSelectField'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { useInstructorFields } from '../hooks/useInstructorFields'
 
-/**
- * CourseCurrent コンポーネントのProps
- */
 interface CourseCurrentProps {
-  /** モーダルの表示状態 */
   isOpen: boolean
-  /** モーダルを閉じる際のコールバック */
-  onClose: () => void
-  /** 成功時コールバック */
-  onSuccess?: () => void
-  /** 科目/教員/既存講座オプション */
-  courseModalOptions: CourseModalOptions | null
-  /** レーンID */
   laneId: string
-  /** 講座ID */
   courseId: string
-  /** フォームの初期値 */
+  courseModalOptions: CourseModalOptions
   initialValues: CourseFormValues
+  onClose: () => void
+  onSuccess: () => void
 }
 
 /**
- * 講座編集コンポーネント（現在の講座を編集）
- * - 科目は変更不可（disabled）
- * - 講座名はサジェストなし（通常のinput）
+ * 講座編集コンポーネント
  */
 export function CourseCurrent({
   isOpen,
@@ -44,6 +31,7 @@ export function CourseCurrent({
   courseId,
   initialValues,
 }: CourseCurrentProps) {
+  // カスタムフック
   const {
     error,
     clearError,
@@ -58,34 +46,34 @@ export function CourseCurrent({
     courseId,
   })
 
+  // RHFのフック
   const { control, watch, setValue, reset } = useForm<CourseFormValues>({
     defaultValues: initialValues,
     mode: 'onChange',
   })
 
+  // 配列の項目に対するフック
   const { fields, append, remove, replace } = useFieldArray({
     control,
     name: 'courseDetails',
   })
 
-  const subjectIdValue = watch('subjectId')
+  // フォームの値を監視
   const courseNameValue = watch('courseName')
   const courseDetailsValue = watch('courseDetails') || []
 
+  // ペンディング状態
   const isPending = updatePending || removePending
 
-  const subjectOptions = courseModalOptions?.subjects || []
-  const instructorOptions = courseModalOptions?.instructors || []
+  // 科目、教員のオプションリスト
+  const subjectOptions = courseModalOptions.subjects || []
+  const instructorOptions = courseModalOptions.instructors || []
 
-  // 科目は初期値で固定
+  // 科目は編集不可として初期値で固定する
+  const subjectIdValue = initialValues.subjectId
   const currentSubject = subjectOptions.find(s => s.id === subjectIdValue)
 
-  const { availableInstructors } = useFilteredInstructors({
-    subjectId: subjectIdValue,
-    subjects: subjectOptions,
-    instructors: instructorOptions,
-  })
-
+  // 教員フィールドコンポーネントのカスタムフック
   const { addInstructorField, removeInstructorField, updateInstructorField } =
     useInstructorFields({
       courseDetailsValue,
@@ -95,26 +83,28 @@ export function CourseCurrent({
       setValue,
     })
 
+  // 教員IDの存在チェック
   const hasInstructor =
     courseDetailsValue.length > 0 &&
     courseDetailsValue.every(detail => !!detail.instructorId)
+
+  // 科目ID、講座名、教員IDが存在する場合、フォームが有効
   const isFormValid = !!subjectIdValue && !!courseNameValue && hasInstructor
 
-  const instructorIdsToSubmit = courseDetailsValue.map(
-    detail => detail.instructorId
-  )
-
+  // フォームをリセットする
   const resetFormState = useCallback(() => {
     reset(initialValues)
     replace(initialValues.courseDetails)
     clearError()
   }, [reset, replace, initialValues, clearError])
 
+  // モーダルを閉じるときの処理
   const handleClose = useCallback(() => {
     resetFormState()
     onClose()
   }, [resetFormState, onClose])
 
+  // 保存処理
   const handleSave = useCallback(() => {
     if (!isFormValid) return
 
@@ -122,8 +112,10 @@ export function CourseCurrent({
     formData.append('courseId', courseId)
     formData.append('subjectId', subjectIdValue || '')
     formData.append('courseName', courseNameValue)
-    instructorIdsToSubmit.forEach(instructorId => {
-      formData.append('instructorIds', instructorId)
+    courseDetailsValue.forEach(detail => {
+      if (detail.instructorId) {
+        formData.append('instructorIds', detail.instructorId)
+      }
     })
 
     startTransition(() => {
@@ -134,10 +126,11 @@ export function CourseCurrent({
     courseId,
     subjectIdValue,
     courseNameValue,
-    instructorIdsToSubmit,
+    courseDetailsValue,
     updateAction,
   ])
 
+  // 削除処理
   const handleDelete = useCallback(() => {
     if (!confirm('本当にこの講座をレーンから削除しますか？')) {
       return
@@ -161,23 +154,26 @@ export function CourseCurrent({
     }
   }, [isOpen, reset, replace, initialValues, clearError])
 
-  // 成功時の処理
+  // 前回の保存結果を保持
   const prevUpdateResultRef = useRef<typeof updateResult>(null)
+  // 保存結果が変わったときの処理
   useEffect(() => {
     if (updateResult?.success && updateResult !== prevUpdateResultRef.current) {
       resetFormState()
       clearError()
-      onSuccess?.()
+      onSuccess()
     }
     prevUpdateResultRef.current = updateResult
   }, [updateResult, resetFormState, clearError, onSuccess])
 
+  // 前回の削除結果を保持
   const prevRemoveResultRef = useRef<typeof removeResult>(null)
+  // 削除結果が変わったときの処理
   useEffect(() => {
     if (removeResult?.success && removeResult !== prevRemoveResultRef.current) {
       resetFormState()
       clearError()
-      onSuccess?.()
+      onSuccess()
     }
     prevRemoveResultRef.current = removeResult
   }, [removeResult, resetFormState, clearError, onSuccess])
@@ -226,12 +222,6 @@ export function CourseCurrent({
               .map(item => item.instructorId)
               .filter((id): id is string => Boolean(id))
 
-            const filteredInstructors = availableInstructors.filter(
-              instructor =>
-                instructor.id === courseDetailsValue[index]?.instructorId ||
-                !selectedOtherInstructorIds.includes(instructor.id)
-            )
-
             return (
               <div
                 key={`instructor-field-${index}`}
@@ -244,11 +234,10 @@ export function CourseCurrent({
                   onChange={instructorId =>
                     updateInstructorField(index, instructorId)
                   }
-                  instructors={filteredInstructors}
-                  disabled={availableInstructors.length === 0}
-                  showNoInstructorsHelper={
-                    Boolean(subjectIdValue) && availableInstructors.length === 0
-                  }
+                  subjectId={subjectIdValue}
+                  subjects={subjectOptions}
+                  instructors={instructorOptions}
+                  selectedInstructorIds={selectedOtherInstructorIds}
                 />
                 {courseDetailsValue.length > 1 && (
                   <button

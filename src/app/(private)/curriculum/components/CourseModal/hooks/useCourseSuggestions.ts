@@ -1,52 +1,60 @@
 import { useMemo } from 'react'
-import type { CourseModalOptions } from '../types'
+import type { CourseModalCourse } from '../types'
 
-interface UseCourseSuggestionsParams {
-  subjectId: string
-  courses: CourseModalOptions['courses']
-  selectedCourseId: string
+interface UseCourseSuggestionsArgs {
+  courses: CourseModalCourse[]
+  subjectId: string | undefined
   courseName: string
 }
 
+/**
+ * 講座サジェストコンポーネントのカスタムフック
+ */
 export function useCourseSuggestions({
-  subjectId,
   courses,
-  selectedCourseId,
+  subjectId,
   courseName,
-}: UseCourseSuggestionsParams) {
+}: UseCourseSuggestionsArgs) {
+  // 選択中の講座が属する科目の講座リスト
   const coursesInSelectedSubject = useMemo(() => {
     if (!subjectId) return []
     return courses.filter(course => course.subjectId === subjectId)
   }, [courses, subjectId])
 
-  const suggestedCourses = useMemo(() => {
-    if (!subjectId) return []
+  // 完全一致する講座
+  const exactMatchCourse = useMemo(() => {
+    if (!subjectId) return null
     const keyword = courseName.trim().toLowerCase()
-    if (keyword.length === 0) return coursesInSelectedSubject
+    if (keyword.length === 0) return null
 
-    // 完全一致する講座がある場合は、その1件だけを返す
-    const exactMatch = coursesInSelectedSubject.find(
-      course => course.courseName.toLowerCase() === keyword
-    )
-    if (exactMatch) return [exactMatch]
-
-    // 部分一致する講座を返す
-    return coursesInSelectedSubject.filter(course =>
-      course.courseName.toLowerCase().includes(keyword)
+    return (
+      coursesInSelectedSubject.find(
+        course => course.courseName.toLowerCase() === keyword
+      ) || null
     )
   }, [coursesInSelectedSubject, courseName, subjectId])
 
-  const selectedCourse = useMemo(() => {
-    if (!selectedCourseId) return null
-    return (
-      coursesInSelectedSubject.find(course => course.id === selectedCourseId) ||
-      null
+  // サジェストされる講座リスト
+  const suggestedCourses = useMemo(() => {
+    if (!subjectId) return []
+    // 講座名をキーワードにする
+    const keyword = courseName.trim().toLowerCase()
+
+    // 空の場合はサジェストしない
+    if (keyword.length === 0) return coursesInSelectedSubject
+
+    // 完全一致する講座がある場合は、その1件だけを返却
+    if (exactMatchCourse) return [exactMatchCourse]
+
+    // 部分一致する講座リストを返却
+    return coursesInSelectedSubject.filter(course =>
+      course.courseName.toLowerCase().includes(keyword)
     )
-  }, [coursesInSelectedSubject, selectedCourseId])
+  }, [coursesInSelectedSubject, courseName, subjectId, exactMatchCourse])
 
   return {
     coursesInSelectedSubject,
     suggestedCourses,
-    selectedCourse,
+    exactMatchCourse,
   }
 }

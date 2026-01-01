@@ -7,7 +7,7 @@ import {
   executeGraphQLForServerAction,
   getDefaultTtid,
 } from '@/lib/graphql-client'
-import { GET_COURSE_MODAL_OPTIONS } from '@/app/(private)/curriculum/graphql/queries'
+import { FETCH_COURSE_OPTIONS } from '@/app/(private)/constraints/graphql/queries'
 import { logger } from '@/lib/logger'
 import { createAppError, ErrorCode } from '@/lib/errors'
 
@@ -32,9 +32,10 @@ export async function fetchCourseOptions(): Promise<
       courses: Course[]
     }>(
       {
-        query: GET_COURSE_MODAL_OPTIONS,
+        query: FETCH_COURSE_OPTIONS,
         variables: {
-          ttid,
+          subjectsInput: { ttid },
+          instructorsInput: { ttid },
           coursesInput: { ttid },
         },
       },

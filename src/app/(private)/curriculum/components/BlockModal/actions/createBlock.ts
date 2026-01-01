@@ -12,8 +12,8 @@ import type { UpsertBlockResponse } from '../types'
 /**
  * ブロックを作成するServer Action
  *
- * @param _prevState - 前回の状態（未使用）
- * @param formData - フォームデータ（homeroomId, blockName, laneCount）
+ * @param _prevState - 前回の状態
+ * @param formData - フォームデータ
  * @returns ブロック作成結果
  */
 export async function createBlock(

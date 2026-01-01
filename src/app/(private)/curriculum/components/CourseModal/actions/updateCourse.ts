@@ -5,14 +5,15 @@ import { ActionResult } from '@/types/server-action-types'
 import { errorResult, successResult } from '@/lib/action-helpers'
 import { executeGraphQLMutation } from '@/lib/graphql-client'
 import { UPSERT_COURSES } from '@/app/(private)/curriculum/graphql/mutations'
+import type { GraphQLCourse } from '@/app/(private)/curriculum/graphql/types'
 import { logger } from '@/lib/logger'
-import { createAppError, ErrorCode } from '@/lib/errors'
+import { createAppError, ErrorCode, UNKNOWN_ERROR_MESSAGE } from '@/lib/errors'
 
 /**
  * 講座を更新するServer Action
  *
- * @param _prevState - 前回の状態（未使用）
- * @param formData - フォームデータ（courseId, subjectId, courseName, instructorIds）
+ * @param _prevState - 前回の状態
+ * @param formData - フォームデータ
  * @returns 講座更新結果
  */
 export async function updateCourse(
@@ -26,20 +27,36 @@ export async function updateCourse(
     new Set(
       formData
         .getAll('instructorIds')
-        .map(value => (typeof value === 'string' ? value.trim() : ''))
-        .filter((value): value is string => value.length > 0)
+        .filter((value): value is string => typeof value === 'string')
+        .map(value => value.trim())
+        .filter(value => value.length > 0)
     )
   )
 
-  if (!courseId || !subjectId || !courseName || instructorIds.length === 0) {
-    return errorResult('すべての項目を入力してください')
+  // システムエラー
+  if (!courseId) {
+    const appError = createAppError(
+      new Error('講座IDが指定されていません'),
+      ErrorCode.DATA_VALIDATION_ERROR
+    )
+    logger.error(appError.getMessage())
+    return errorResult(appError)
+  }
+
+  // 入力チェックエラー
+  if (!subjectId?.trim()) {
+    return errorResult('教科を選択してください')
+  }
+  if (!courseName?.trim()) {
+    return errorResult('講座名を入力してください')
+  }
+  if (instructorIds.length === 0) {
+    return errorResult('講師を選択してください')
   }
 
   try {
-    // 講座を更新（既存のIDを使用）
-    const result = await executeGraphQLMutation<
-      Array<{ id: string; courseName: string }>
-    >(
+    // 講座を更新する
+    const result = await executeGraphQLMutation<GraphQLCourse[]>(
       {
         query: UPSERT_COURSES,
         variables: {
@@ -60,20 +77,21 @@ export async function updateCourse(
     )
 
     if (!result.success || !result.data || result.data.length === 0) {
+      // 講座の更新に失敗した場合
       const appError = createAppError(
-        new Error(result.error || '不明なエラー'),
+        new Error(result.error || UNKNOWN_ERROR_MESSAGE),
         ErrorCode.DATA_VALIDATION_ERROR
       )
-      logger.error('Failed to update course', appError)
-      return errorResult(`講座の更新に失敗しました: ${appError.getMessage()}`)
+      logger.error(appError.getMessage())
+      return errorResult(appError)
     }
 
     // キャッシュを再検証
     revalidatePath('/curriculum')
-    return successResult({ message: '講座を更新しました' })
+    return successResult({})
   } catch (error) {
     const appError = createAppError(error, ErrorCode.DATA_VALIDATION_ERROR)
-    logger.error('Error updating course', appError)
+    logger.error(appError.getMessage())
     return errorResult(appError)
   }
 }

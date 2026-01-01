@@ -3,6 +3,7 @@ alwaysApply: true
 ---
 
 # チャットルール
+
 - 質問に文章で回答するときは、mdファイルを作成せず、チャットに表示すること。
 
 # Next.js コーディング標準
@@ -121,6 +122,76 @@ Server Actionの配置場所は、**そのServer Actionが「どこで使われ�
 - **エラーハンドリング**: GraphQL実行結果のエラーチェックとcatch節の両方を実装
 - `console.log`、`console.error`の直接使用は禁止。`logger`と`createAppError`を使用すること
 
+### fetchパターンでの型の使い方
+
+取得系のServer Action（`fetch{Entity}`）では、以下のルールに従うこと：
+
+- **ジェネリクスにGraphQL型を指定**: `executeGraphQLForServerAction`のジェネリクスには、GraphQL共通型（`@/types/graphql-types`）または各機能ディレクトリのGraphQL型（`graphql/types.ts`）を指定する
+- **ドメイン型への変換**: GraphQL型からドメイン型（`@/app/(private)/curriculum/types`など）への変換関数を実装し、変換処理を行う
+- **必須フィールドのチェック**: 変換関数内で必須フィールドのチェックを行い、欠損している場合はエラーを投げる
+
+#### 実装例
+
+```typescript
+'use server'
+
+import type { Course } from '@/app/(private)/curriculum/types'
+import type { GraphQLCourse } from '@/app/(private)/curriculum/graphql/types'
+import { ActionResult } from '@/types/server-action-types'
+import { errorResult, successResult } from '@/lib/action-helpers'
+import { executeGraphQLForServerAction } from '@/lib/graphql-client'
+import { FETCH_COURSE_DETAILS } from '@/app/(private)/curriculum/graphql/queries'
+import { logger } from '@/lib/logger'
+import { createAppError, ErrorCode, UNKNOWN_ERROR_MESSAGE } from '@/lib/errors'
+
+/**
+ * GraphQL型からCourse型に変換
+ *
+ * @param graphqlCourse - GraphQL型の講座データ
+ * @returns Course型の講座データ
+ * @throws {Error} 必須フィールドが欠損している場合
+ */
+function convertGraphQLCourseToCourse(graphqlCourse: GraphQLCourse): Course {
+  if (!graphqlCourse.id) {
+    throw new Error('講座IDが取得できませんでした')
+  }
+  if (!graphqlCourse.courseName) {
+    throw new Error('講座名が取得できませんでした')
+  }
+  // ... 変換処理
+}
+
+export async function fetchCourseDetails(
+  _prevState: ActionResult | null,
+  formData: FormData
+): Promise<ActionResult<Course>> {
+  try {
+    // GraphQL型をジェネリクスに指定
+    const result = await executeGraphQLForServerAction<GraphQLCourse[]>({
+      query: FETCH_COURSE_DETAILS,
+      variables: { input: { id: courseId } },
+    }, 'courses')
+
+    if (!result.success || !result.data || result.data.length === 0) {
+      const appError = createAppError(
+        new Error(result.error || UNKNOWN_ERROR_MESSAGE),
+        ErrorCode.DATA_NOT_FOUND
+      )
+      logger.error(appError.getMessage())
+      return errorResult(appError)
+    }
+
+    // GraphQL型からドメイン型に変換
+    const course = convertGraphQLCourseToCourse(result.data[0])
+    return successResult(course)
+  } catch (error) {
+    const appError = createAppError(error, ErrorCode.DATA_NOT_FOUND)
+    logger.error(appError.getMessage())
+    return errorResult(appError)
+  }
+}
+```
+
 ### エラーハンドリングパターン
 
 すべてのServer Actionsで統一されたエラーハンドリングパターンを使用すること：
@@ -149,6 +220,7 @@ if (!result.success || !result.data) {
 ```
 
 **統一ルール**:
+
 - `UNKNOWN_ERROR_MESSAGE`を使用（文字列リテラル`'不明なエラー'`は禁止）
 - `logger.error()`の引数は`appError.getMessage()`のみ（メッセージ文字列は不要）
 - `errorResult()`の引数は`appError`オブジェクト（文字列メッセージは不要）
@@ -209,6 +281,52 @@ if (!blockName?.trim()) {
 - `actions/index.ts`で全関数をエクスポートする
 - 型定義も必要に応じてエクスポートする
 
+### ボタンクリックでのServer Action呼び出し
+
+Server Actionをボタンクリックで呼び出す場合、以下の方針に従うこと：
+
+- **ネイティブフォーム（`<form action={...}>`）は使用しない**
+  - JSXが重くなり、CSSの適用が困難になる
+  - DOM要素が増加し、パフォーマンスに悪影響
+
+- **`onClick`ハンドラー + `startTransition`を使用する**
+  - `'use client'`ディレクティブを追加する
+  - `startTransition`でServer Actionの呼び出しをラップする
+  - `FormData`を作成してServer Actionに渡す
+
+#### 実装パターン
+
+```typescript
+'use client'
+import { startTransition } from 'react'
+
+const handleClick = () => {
+  if (!onAction) return
+
+  const formData = new FormData()
+  formData.append('key1', value1)
+  formData.append('key2', value2)
+
+  startTransition(() => {
+    onAction(formData)
+  })
+}
+
+return (
+  <button type="button" onClick={handleClick}>
+    Click me
+  </button>
+)
+```
+
+#### 利点
+
+1. **JSXが軽い**: `<form>`と複数の`<input type="hidden">`が不要
+2. **CSSが使いやすい**: `<button>`に直接スタイルを適用可能
+3. **コードが簡潔**: `FormData`の構築が関数内で完結
+4. **パフォーマンス**: DOM要素の削減により、レンダリングとメモリ使用が改善
+5. **UIの応答性**: `startTransition`により、Server Actionの実行が非緊急の更新として扱われ、UIがブロックされない
+
 ## GraphQLクライアント
 
 - `@/lib/graphql-client`の`executeGraphQLForServerAction`または`executeGraphQLMutation`を使用すること
@@ -219,24 +337,25 @@ GraphQLスキーマでInput型が定義されている場合は、必ずそのIn
 
 - **Input型を使用**: GraphQLスキーマで`RetrieveXxxInput`などのInput型が定義されている場合、クエリ変数はそのInput型として定義する
 - **変数の形式**: `variables: { input: { ... } }`の形式で渡す
-- **例**: 
+- **例**:
+
   ```typescript
   // ✅ 正しい: Input型を使用
   query GetHomerooms($input: RetrieveHomeroomsInput!) {
     homerooms(input: $input) { ... }
   }
-  
+
   variables: {
     input: {
       id,
     },
   }
-  
+
   // ❌ 誤り: 直接値を渡す
   query GetHomerooms($id: ID!) {
     homerooms(input: { id: $id }) { ... }
   }
-  
+
   variables: {
     id,
   }
@@ -248,7 +367,7 @@ GraphQLスキーマでInput型が定義されている場合は、必ずそのIn
 
 ### 型定義の分類と配置
 
-型定義は以下の6つのカテゴリに分類し、適切な場所に配置すること：
+型定義は以下の7つのカテゴリに分類し、適切な場所に配置すること：
 
 #### 1. ドメインエンティティ (`@/core/domain/entity`)
 
@@ -260,46 +379,80 @@ GraphQLスキーマでInput型が定義されている場合は、必ずそのIn
   - ビジネスルールを表現する
 - **例**: `Homeroom`, `Block`, `Course`, `Subject`, `Instructor`, `ConstraintDefinition` など
 
-#### 2. GraphQL型（各機能ディレクトリの`graphql/types.ts`）
+#### 2. GraphQL共通型 (`@/types/graphql-types`)
 
-- **用途**: GraphQL API（Spring Boot）との通信で使用する型
-- **配置**: 各機能ディレクトリ内の`graphql/types.ts`
+- **用途**: GraphQLスキーマに基づく共通型定義
+- **配置**: `src/types/graphql-types.ts`
 - **特徴**:
-  - GraphQLスキーマと連動
-  - Query/MutationのInput/Response型
-  - query/mutation定義とコロケーション（同じディレクトリ内）
-  - ドメインエンティティを参照しない（依存関係の明確化のため）
-- **命名規則**: 
-  - Query Response: `{EntityName}QueryResponse` または `{EntityName}Type`
-  - Mutation Input: `{EntityName}Input` または `Upsert{EntityName}Input`
-  - Master Response: `{EntityName}MasterResponse`
-- **例**: `TimetableResultQueryResponse`, `GraphQLSubjectType`, `UpsertHomeroomsInput`, `ConstraintDefinitionMasterResponse` など
-
-**GraphQLスキーマからTypeScript型へのマッピング規則**:
-- GraphQLスキーマの定義に基づいて型を定義する
-- **nullableなフィールド**（`Type`、`Int`、`String`など、`!`がついていない）:
-  - TypeScriptでは`field?: Type | null`とする
-  - GraphQLクエリでフィールドを指定しない場合、レスポンスに含まれない（undefined）
-  - GraphQLクエリでフィールドを指定したが値がnullの場合、nullが返される
-- **non-nullableなフィールド**（`Type!`、`Int!`、`String!`など、`!`がついている）:
-  - TypeScriptでは`field: Type`とする（必須）
-  - ただし、GraphQLクエリでフィールドを指定しない場合はレスポンスに含まれないため、実際のクエリで使用するかどうかに応じてoptionalにする場合もある
+  - GraphQLスキーマに定義されているすべての型を定義
+  - GraphQLの特性上、クエリで指定したフィールドのみが返されるため、**すべてのフィールドをoptionalにする**
+  - nullableなフィールドは`| null`も許可
+  - アプリケーション全体で共通して使用される
+- **命名規則**: `GraphQL{EntityName}` の形式で命名する
+  - 例: `GraphQLSchoolDay`, `GraphQLHomeroom`, `GraphQLSubject`, `GraphQLInstructor` など
+- **例**: `GraphQLSchoolDay`, `GraphQLHomeroom`, `GraphQLSubject`, `GraphQLInstructor`, `GraphQLGrade` など
 
 ```typescript
-// ✅ GraphQL型（各機能ディレクトリのgraphql/types.ts）
-// src/app/(private)/results/[id]/graphql/types.ts
-// GraphQLスキーマ: amPeriods/pmPeriodsはInt（nullable）
-export interface SchoolDayQueryResponse {
-  id: string
-  ttid: string
-  dayOfWeek: string
-  isAvailable: boolean
-  amPeriods?: number | null  // nullableなので optional かつ null を許可
+// ✅ GraphQL共通型（@/types/graphql-types.ts）
+// GraphQLの特性上、すべてのフィールドをoptionalにする
+export interface GraphQLSchoolDay {
+  id?: string
+  ttid?: string
+  dayOfWeek?: string
+  isAvailable?: boolean
+  amPeriods?: number | null // nullableなので null を許可
   pmPeriods?: number | null
 }
 ```
 
-#### 3. API Route型（各API Route配下）
+#### 2-1. GraphQL型（各機能ディレクトリの`graphql/types.ts`）
+
+- **用途**: GraphQL API（Spring Boot）との通信で使用する型
+- **配置**: 各機能ディレクトリ内の`graphql/types.ts`
+- **特徴**:
+  - 共通型（`@/types/graphql-types`）を再エクスポート
+  - Mutation Input型やResponse型など、機能固有の型を定義
+  - query/mutation定義とコロケーション（同じディレクトリ内）
+  - ドメインエンティティを参照しない（依存関係の明確化のため）
+- **命名規則**:
+  - Mutation Input: `{EntityName}Input` または `Upsert{EntityName}Input`
+  - Response型: `{EntityName}Response` または `{ActionName}Response`
+  - Master Response: `{EntityName}MasterResponse`
+- **例**: `UpsertHomeroomsInput`, `HomeroomsAndGradesResponse`, `CourseModalOptionsResponse`, `ConstraintDefinitionMasterResponse` など
+
+```typescript
+// ✅ GraphQL型（各機能ディレクトリのgraphql/types.ts）
+// src/app/(private)/curriculum/graphql/types.ts
+// 共通型を再エクスポート
+export type {
+  GraphQLSchoolDay,
+  GraphQLHomeroom,
+  GraphQLGrade,
+  // ...
+} from '@/types/graphql-types'
+
+// Mutation Input型
+export interface UpsertHomeroomsInput {
+  ttid: string
+  by: string
+  homerooms: { ... }[]
+}
+
+// Response型
+export interface HomeroomsAndGradesResponse {
+  homerooms?: GraphQLHomeroom[]
+  grades?: GraphQLGrade[]
+}
+```
+
+#### 3. GraphQL共通型の使用規則
+
+- **共通型を優先**: GraphQLスキーマに定義されている型は`@/types/graphql-types`の共通型を使用する
+- **再エクスポート**: 各機能ディレクトリの`graphql/types.ts`では、共通型を`export type`で再エクスポートする
+- **型エイリアスは禁止**: 共通型のエイリアス（`export type GraphQLHomeroomType = GraphQLHomeroom`など）は作成しない
+- **直接使用**: コード内では共通型を直接使用する（`GraphQLHomeroom`など）
+
+#### 4. API Route型（各API Route配下）
 
 - **用途**: Next.js API Route（`app/api/`配下）で使用する型
 - **配置**: 各API Routeディレクトリ内（例: `src/app/api/optimize/types.ts`）
@@ -325,12 +478,12 @@ export interface OptimizeResult {
 }
 ```
 
-#### 4. Server Actions型 (`@/types/server-action-types`)
+#### 5. Server Actions型 (`@/types/server-action-types`)
 
 - **用途**: Server Actionsで使用する統一的な型
 - **配置**: `src/types/server-action-types.ts`
 
-#### 5. UI型（各コンポーネントディレクトリの`types.ts`）
+#### 6. UI型（各コンポーネントディレクトリの`types.ts`）
 
 - **用途**: UIコンポーネント間のデータ受け渡し、フォーム値、表示用データなど
 - **配置**: 各コンポーネントディレクトリ内の`types.ts`
@@ -349,7 +502,7 @@ export interface CellData {
 }
 ```
 
-#### 6. 外部API型（特殊ケース）
+#### 7. 外部API型（特殊ケース）
 
 - **用途**: 外部API（FastAPIなど）専用の型定義
 - **配置**: APIクライアントファイル内（例: `src/lib/fastapi-client.ts`）
@@ -359,24 +512,130 @@ export interface CellData {
   - 変換が必要な場合は、fetcherやhelper関数内で行う
 - **例**: `fastapi-client.ts`内の`ConstraintDefinition`, `OptimizeAnnualTimetableRequest` など
 
-
 ### 型定義の使い分けルール
 
 1. **ドメインエンティティを優先**: ビジネスロジックに関わる型は`@/core/domain/entity`に定義
-2. **レイヤー間の型定義**: 
+2. **レイヤー間の型定義**:
    - **同じレイヤー内では重複を避ける**: 同じファイルや同じカテゴリ内で同じ概念の型を複数回定義しない
    - **異なるレイヤー間では意図的な分離を許容**: 依存関係を明確にするため、同じ概念の型を異なるレイヤーで定義することがある
-     - 例: `@/core/domain/entity`の`HomeroomDay`と`@/types/graphql-types`の`GraphQLHomeroomDayType`は、レイヤーが異なるため両方定義する
+     - 例: `@/core/domain/entity`の`HomeroomDay`と`@/types/graphql-types`の`GraphQLHomeroomDay`は、レイヤーが異なるため両方定義する
      - 各レイヤーは独立して型を定義し、変換処理で相互に変換する
-3. **参照方向**: 
+3. **参照方向**:
    - GraphQL型、BFF型、UI型 → ドメインエンティティ（参照禁止）
    - ドメインエンティティ → GraphQL型、BFF型、UI型（参照禁止）
    - **重要**: API型（GraphQL型、BFF型、UI型）は`@/core/domain/entity`を参照しない。必要な型は各API型ファイル内で独自に定義する
 4. **変換が必要な場合**: APIレスポンスからドメインエンティティへの変換、またはその逆の変換は、fetcherやaction内で行う
 
+### GraphQL型からドメイン型への変換
+
+GraphQL型（`@/types/graphql-types`）からドメイン型（`@/app/(private)/curriculum/types`など）への変換を行う際は、以下のルールに従うこと：
+
+#### 必須フィールドのチェック
+
+- **デフォルト値の設定は禁止**: 必須フィールドが欠損している場合、デフォルト値（空文字列、0、空配列など）を設定してはいけない
+- **エラーを投げる**: 必須フィールドが`undefined`または`null`の場合は、エラーを投げる
+- **エラーメッセージ**: どのフィールドが欠損しているかを明確に示すエラーメッセージを設定する
+
+#### 実装パターン
+
+```typescript
+/**
+ * GraphQL型からGrade型に変換
+ *
+ * @param graphqlGrade - GraphQL型の学年データ
+ * @returns Grade型の学年データ
+ * @throws {Error} 必須フィールドが欠損している場合
+ */
+function convertGraphQLGradeToGrade(graphqlGrade: GraphQLGrade): Grade {
+  if (!graphqlGrade.id) {
+    throw new Error('学年IDが取得できませんでした')
+  }
+  if (!graphqlGrade.gradeName) {
+    throw new Error('学年名が取得できませんでした')
+  }
+
+  return {
+    id: graphqlGrade.id,
+    gradeName: graphqlGrade.gradeName,
+    ttid: graphqlGrade.ttid,
+  }
+}
+```
+
+#### ネストされたオブジェクトの変換
+
+ネストされたオブジェクトも同様に、必須フィールドのチェックを行う：
+
+```typescript
+function convertGraphQLHomeroomToHomeroom(
+  graphqlHomeroom: GraphQLHomeroom
+): Homeroom {
+  if (!graphqlHomeroom.id) {
+    throw new Error('学級IDが取得できませんでした')
+  }
+  if (!graphqlHomeroom.homeroomName) {
+    throw new Error('学級名が取得できませんでした')
+  }
+
+  return {
+    id: graphqlHomeroom.id,
+    homeroomName: graphqlHomeroom.homeroomName,
+    grade: graphqlHomeroom.grade
+      ? (() => {
+          if (!graphqlHomeroom.grade.id) {
+            throw new Error('学年IDが取得できませんでした')
+          }
+          if (!graphqlHomeroom.grade.gradeName) {
+            throw new Error('学年名が取得できませんでした')
+          }
+          return {
+            id: graphqlHomeroom.grade.id,
+            gradeName: graphqlHomeroom.grade.gradeName,
+          }
+        })()
+      : null,
+    homeroomDays: (graphqlHomeroom.homeroomDays || []).map(day => {
+      if (!day.id) {
+        throw new Error('学級曜日IDが取得できませんでした')
+      }
+      if (!day.dayOfWeek) {
+        throw new Error('曜日が取得できませんでした')
+      }
+      if (day.periods === undefined || day.periods === null) {
+        throw new Error('時限数が取得できませんでした')
+      }
+      return {
+        id: day.id,
+        dayOfWeek: day.dayOfWeek,
+        periods: day.periods,
+      }
+    }),
+    // ...
+  }
+}
+```
+
+#### エラーハンドリング
+
+変換関数内でエラーが発生した場合、既存の`catch`節でキャッチされ、適切にエラーログが記録される：
+
+```typescript
+try {
+  const homerooms = (result.data.homerooms || []).map(
+    convertGraphQLHomeroomToHomeroom
+  )
+  // ...
+} catch (error) {
+  const appError = createAppError(error, ErrorCode.DATA_NOT_FOUND)
+  logger.error(appError.getMessage())
+  return errorResult(appError)
+}
+```
+
 ### 型定義の命名規則
 
 - **REST APIリクエスト**: `{EntityName}Request` の形式で命名する
+
   ```typescript
   export interface OptimizeAnnualTimetableRequest {
     ttid: string
@@ -385,6 +644,7 @@ export interface CellData {
   ```
 
 - **REST APIレスポンス**: `{EntityName}Response` の形式で命名する
+
   ```typescript
   export interface OptimizationResponse {
     entries: TimetableEntry[]
@@ -393,6 +653,7 @@ export interface CellData {
   ```
 
 - **GraphQL Input**: `{EntityName}Input` の形式で命名する
+
   ```typescript
   export interface UpsertHomeroomsInput {
     ttid: string
@@ -401,6 +662,7 @@ export interface CellData {
   ```
 
 - **GraphQL Type**: `{EntityName}Type` の形式で命名する
+
   ```typescript
   export interface GraphQLAnnualDataType {
     schoolDays: GraphQLSchoolDayType[]
@@ -409,13 +671,14 @@ export interface CellData {
   ```
 
 - **GraphQL Query Response**: `{EntityName}QueryResponse` または `{EntityName}Type` の形式で命名する
+
   ```typescript
   export interface TimetableResultQueryResponse {
     id: string
     ttid: string
     timetableEntries: TimetableEntryQueryResponse[]
   }
-  
+
   export interface GraphQLSubjectType {
     id: string
     subjectName: string
@@ -433,6 +696,7 @@ export interface CellData {
 ### インターフェース命名規則
 
 - **コンポーネントのProps**: `{ComponentName}Props` を使用すること
+
   ```typescript
   interface BlockModalProps {
     isOpen: boolean
@@ -441,6 +705,7 @@ export interface CellData {
   ```
 
 - **フックの引数**: `Use{HookName}Args` を使用すること
+
   ```typescript
   interface UseBlockModalArgs {
     homeroomId: string | null

@@ -13,7 +13,7 @@ import {
   executeGraphQLForServerAction,
   getDefaultTtid,
 } from '@/lib/graphql-client'
-import { GET_COURSE_MODAL_OPTIONS } from '@/app/(private)/curriculum/graphql/queries'
+import { FETCH_COURSE_MODAL_OPTIONS } from '@/app/(private)/curriculum/graphql/queries'
 import { logger } from '@/lib/logger'
 import { createAppError, ErrorCode, UNKNOWN_ERROR_MESSAGE } from '@/lib/errors'
 
@@ -33,7 +33,7 @@ export async function fetchCourseModalOptions(
     const result =
       await executeGraphQLForServerAction<CourseModalOptionsResponse>(
         {
-          query: GET_COURSE_MODAL_OPTIONS,
+          query: FETCH_COURSE_MODAL_OPTIONS,
           variables: {
             subjectsInput: { ttid },
             instructorsInput: { ttid },
@@ -56,39 +56,113 @@ export async function fetchCourseModalOptions(
     const { subjects, instructors, courses } = result.data
 
     // GraphQL型からCourseModalの型に変換する
-    const courseModalSubjects: CourseModalSubject[] = subjects
-      ? subjects.map(subject => ({
+    const courseModalSubjects: CourseModalSubject[] = (subjects || []).map(
+      subject => {
+        if (!subject.id) {
+          throw new Error('科目IDが取得できませんでした')
+        }
+        if (!subject.subjectName) {
+          throw new Error('科目名が取得できませんでした')
+        }
+
+        return {
           id: subject.id,
           subjectName: subject.subjectName,
-          credits: subject.credits,
-          discipline: subject.discipline,
-          grade: subject.grade,
-        }))
-      : []
+          discipline: subject.discipline
+            ? (() => {
+                if (!subject.discipline.disciplineCode) {
+                  throw new Error('教科コードが取得できませんでした')
+                }
+                if (!subject.discipline.disciplineName) {
+                  throw new Error('教科名が取得できませんでした')
+                }
+                return {
+                  disciplineCode: subject.discipline.disciplineCode,
+                  disciplineName: subject.discipline.disciplineName,
+                }
+              })()
+            : null,
+          grade: subject.grade
+            ? (() => {
+                if (!subject.grade.id) {
+                  throw new Error('学年IDが取得できませんでした')
+                }
+                if (!subject.grade.gradeName) {
+                  throw new Error('学年名が取得できませんでした')
+                }
+                return {
+                  id: subject.grade.id,
+                  gradeName: subject.grade.gradeName,
+                }
+              })()
+            : null,
+        }
+      }
+    )
 
-    const courseModalInstructors: CourseModalInstructor[] = instructors
-      ? instructors.map(instructor => ({
-          id: instructor.id,
-          instructorName: instructor.instructorName,
-          disciplineCode: instructor.disciplineCode,
-        }))
-      : []
+    const courseModalInstructors: CourseModalInstructor[] = (
+      instructors || []
+    ).map(instructor => {
+      if (!instructor.id) {
+        throw new Error('教員IDが取得できませんでした')
+      }
+      if (!instructor.instructorName) {
+        throw new Error('教員名が取得できませんでした')
+      }
+      if (!instructor.disciplineCode) {
+        throw new Error('教科コードが取得できませんでした')
+      }
 
-    const courseModalCourses: CourseModalCourse[] = courses
-      ? courses
-          .filter(course => course.subject?.id)
-          .map(course => ({
-            id: course.id,
-            courseName: course.courseName,
-            subjectId: course.subject!.id,
-            instructorIds: course.courseDetails
-              .map(detail => detail.instructor?.id)
-              .filter((id): id is string => Boolean(id)),
-            instructorNames: course.courseDetails
-              .map(detail => detail.instructor?.instructorName)
-              .filter((name): name is string => Boolean(name)),
-          }))
-      : []
+      return {
+        id: instructor.id,
+        instructorName: instructor.instructorName,
+        disciplineCode: instructor.disciplineCode,
+      }
+    })
+
+    const courseModalCourses: CourseModalCourse[] = (courses || [])
+      .filter(course => {
+        if (!course.id) {
+          throw new Error('講座IDが取得できませんでした')
+        }
+        if (!course.courseName) {
+          throw new Error('講座名が取得できませんでした')
+        }
+        if (!course.subject?.id) {
+          return false
+        }
+        return true
+      })
+      .map(course => {
+        if (!course.subject) {
+          throw new Error('科目情報が取得できませんでした')
+        }
+        if (!course.subject.id) {
+          throw new Error('科目IDが取得できませんでした')
+        }
+
+        return {
+          id: course.id!,
+          courseName: course.courseName!,
+          subjectId: course.subject.id,
+          instructorIds: (course.courseDetails || [])
+            .map(detail => {
+              if (!detail.instructor?.id) {
+                return null
+              }
+              return detail.instructor.id
+            })
+            .filter((id): id is string => id !== null),
+          instructorNames: (course.courseDetails || [])
+            .map(detail => {
+              if (!detail.instructor?.instructorName) {
+                return null
+              }
+              return detail.instructor.instructorName
+            })
+            .filter((name): name is string => name !== null),
+        }
+      })
 
     return successResult({
       subjects: courseModalSubjects,

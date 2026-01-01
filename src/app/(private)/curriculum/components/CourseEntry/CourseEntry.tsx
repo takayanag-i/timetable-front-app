@@ -1,19 +1,17 @@
+'use client'
 import styles from './CourseEntry.module.css'
+import type { OnEditCourseData } from '@/app/(private)/curriculum/components/HomeroomEntry/types'
 
-/**
- * CourseEntry コンポーネントのProps
- */
 interface CourseEntryProps {
   courseId: string
   courseName: string
   instructorNames: string
   room: string
   subjectId?: string
-  instructorIds?: string[]
-  laneId?: string
+  instructorIds: string[]
+  laneId: string
   gradeId: string | null
-  /** Server Actionを受け取る */
-  onEdit?: (formData: FormData) => void
+  onEdit?: (data: OnEditCourseData) => void
 }
 
 // 文字数制限ユーティリティ関数
@@ -33,28 +31,30 @@ export default function CourseEntry({
   gradeId,
   onEdit,
 }: CourseEntryProps) {
+  const handleClick = () => {
+    if (!onEdit) return
+    onEdit({
+      courseId,
+      courseName,
+      subjectId: subjectId || null,
+      instructorIds,
+      laneId,
+      gradeId,
+    })
+  }
+
   return (
-    <form action={onEdit} className={styles.courseForm}>
-      <input type="hidden" name="courseId" value={courseId} />
-      <input type="hidden" name="courseName" value={courseName} />
-      {subjectId && <input type="hidden" name="subjectId" value={subjectId} />}
-      {instructorIds?.length
-        ? instructorIds.map(id => (
-            <input key={id} type="hidden" name="instructorIds" value={id} />
-          ))
-        : null}
-      {laneId && <input type="hidden" name="laneId" value={laneId} />}
-      <input type="hidden" name="gradeId" value={gradeId || ''} />
-      <button
-        type="submit"
-        className={`${styles.courseEntry} ${
-          onEdit ? styles.courseEntryClickable : styles.courseEntryDefault
-        }`}
-      >
-        <div title={courseName}>{truncateText(courseName, 8)}</div>
-        <div title={instructorNames}>{truncateText(instructorNames, 6)}</div>
-        <div title={room}>{truncateText(room, 6)}</div>
-      </button>
-    </form>
+    <button
+      type="button"
+      onClick={handleClick}
+      className={`${styles.courseEntry} ${
+        onEdit ? styles.courseEntryClickable : styles.courseEntryDefault
+      }`}
+      disabled={!onEdit}
+    >
+      <div title={courseName}>{truncateText(courseName, 8)}</div>
+      <div title={instructorNames}>{truncateText(instructorNames, 6)}</div>
+      <div title={room}>{truncateText(room, 6)}</div>
+    </button>
   )
 }

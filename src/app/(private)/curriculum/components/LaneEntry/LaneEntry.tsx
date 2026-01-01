@@ -1,6 +1,11 @@
+'use client'
 import styles from './LaneEntry.module.css'
 import CourseEntry from '@/app/(private)/curriculum/components/CourseEntry/CourseEntry'
-import { Course as CourseEntity } from '@/core/domain/entity'
+import type { Course } from '@/app/(private)/curriculum/types'
+import type {
+  OnAddCourseData,
+  OnEditCourseData,
+} from '@/app/(private)/curriculum/components/HomeroomEntry/types'
 
 /**
  * LaneEntry コンポーネントのProps
@@ -9,11 +14,9 @@ interface LaneEntryProps {
   id: string
   blockId: string
   gradeId: string | null
-  courses?: CourseEntity[]
-  /** Server Actionを受け取る */
-  onAddCourse?: (formData: FormData) => void
-  /** Server Actionを受け取る */
-  onEditCourse?: (formData: FormData) => void
+  courses?: Course[]
+  onAddCourse?: (data: OnAddCourseData) => void
+  onEditCourse?: (data: OnEditCourseData) => void
 }
 
 export default function LaneEntry({
@@ -24,6 +27,15 @@ export default function LaneEntry({
   onAddCourse,
   onEditCourse,
 }: LaneEntryProps) {
+  const handleAddCourse = () => {
+    if (!onAddCourse) return
+    onAddCourse({
+      laneId: id,
+      blockId,
+      gradeId,
+    })
+  }
+
   return (
     <div className={styles.lane}>
       <div className={styles.courseContainer}>
@@ -48,19 +60,15 @@ export default function LaneEntry({
           />
         ))}
 
-        {/* フォームのaction属性でServer Actionを使用 */}
-        <form action={onAddCourse}>
-          <input type="hidden" name="laneId" value={id} />
-          <input type="hidden" name="blockId" value={blockId} />
-          <input type="hidden" name="gradeId" value={gradeId || ''} />
-          <button
-            type="submit"
-            className={styles.addCourseButton}
-            aria-label="講座を追加"
-          >
-            +
-          </button>
-        </form>
+        <button
+          type="button"
+          onClick={handleAddCourse}
+          className={styles.addCourseButton}
+          aria-label="講座を追加"
+          disabled={!onAddCourse}
+        >
+          +
+        </button>
       </div>
     </div>
   )

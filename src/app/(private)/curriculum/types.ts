@@ -7,6 +7,33 @@ export interface Grade {
   ttid?: string
 }
 
+// 教科型
+export interface Discipline {
+  disciplineCode: string
+  disciplineName: string
+}
+
+// 科目型
+export interface Subject {
+  id: string
+  subjectName: string
+  discipline?: Discipline
+  credits?: number | null
+  grade?: Grade | null
+}
+
+// 教員型
+export interface Instructor {
+  id: string
+  instructorName: string
+}
+
+// 教室型
+export interface Room {
+  id: string
+  roomName: string
+}
+
 // 学校曜日型
 export interface SchoolDay {
   id: string
@@ -25,26 +52,15 @@ export interface HomeroomDay {
 
 export interface CourseDetail {
   id: string
-  instructor: {
-    id: string
-    instructorName: string
-    disciplineCode: string
-  }
-  room: {
-    id: string
-    roomName: string
-  } | null
+  instructor: Instructor
+  room: Room | null
 }
 
 export interface Course {
   id: string
   courseName: string
   courseDetails: CourseDetail[]
-  subject: {
-    id: string
-    subjectName: string
-    credits: number | null
-  } | null
+  subject?: Subject | null
 }
 
 export interface Lane {

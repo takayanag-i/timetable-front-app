@@ -7,16 +7,17 @@ import {
   executeGraphQLForServerAction,
   executeGraphQLMutation,
 } from '@/lib/graphql-client'
-import { GET_LANES } from '@/app/(private)/curriculum/graphql/queries'
+import { FETCH_LANES } from '@/app/(private)/curriculum/graphql/queries'
 import { UPSERT_LANES } from '@/app/(private)/curriculum/graphql/mutations'
+import type { GraphQLLane } from '@/app/(private)/curriculum/graphql/types'
 import { logger } from '@/lib/logger'
-import { createAppError, ErrorCode } from '@/lib/errors'
+import { createAppError, ErrorCode, UNKNOWN_ERROR_MESSAGE } from '@/lib/errors'
 
 /**
  * レーンから講座を削除するServer Action
  *
- * @param _prevState - 前回の状態（未使用）
- * @param formData - フォームデータ（laneId, courseId）
+ * @param _prevState - 前回の状態
+ * @param formData - フォームデータ
  * @returns 講座削除結果
  */
 export async function removeCourseFromLane(
@@ -26,17 +27,21 @@ export async function removeCourseFromLane(
   const laneId = formData.get('laneId') as string
   const courseId = formData.get('courseId') as string
 
+  // システムエラー
   if (!laneId || !courseId) {
-    return errorResult('レーンIDと講座IDが必要です')
+    const appError = createAppError(
+      new Error('レーンIDと講座IDが必要です'),
+      ErrorCode.DATA_VALIDATION_ERROR
+    )
+    logger.error(appError.getMessage())
+    return errorResult(appError)
   }
 
   try {
-    // 1. 既存のレーン情報を取得
-    const lanesResult = await executeGraphQLForServerAction<
-      Array<{ id: string; courses: Array<{ id: string }> }>
-    >(
+    // レーンを取得
+    const lanesResult = await executeGraphQLForServerAction<GraphQLLane[]>(
       {
-        query: GET_LANES,
+        query: FETCH_LANES,
         variables: {
           input: {
             id: laneId,
@@ -51,27 +56,38 @@ export async function removeCourseFromLane(
       !lanesResult.data ||
       lanesResult.data.length === 0
     ) {
+      // レーンの取得に失敗した場合
       const appError = createAppError(
-        new Error(lanesResult.error || '不明なエラー'),
+        new Error(lanesResult.error || UNKNOWN_ERROR_MESSAGE),
         ErrorCode.DATA_NOT_FOUND
       )
-      logger.error('Failed to fetch lane information', appError)
-      return errorResult(
-        `レーン情報の取得に失敗しました: ${appError.getMessage()}`
-      )
+      logger.error(appError.getMessage())
+      return errorResult(appError)
     }
 
-    const existingCourseIds = lanesResult.data[0].courses.map(
-      course => course.id
-    )
+    const lane = lanesResult.data[0]
+    if (!lane.courses) {
+      // 講座情報が取得できなかった場合
+      const appError = createAppError(
+        new Error('講座情報が取得できませんでした'),
+        ErrorCode.DATA_VALIDATION_ERROR
+      )
+      logger.error(appError.getMessage())
+      return errorResult(appError)
+    }
 
-    // 2. 指定された講座を除外
+    const existingCourseIds = lane.courses.map(course => {
+      if (!course.id) {
+        throw new Error('講座IDが取得できませんでした')
+      }
+      return course.id
+    })
+
+    // 指定された講座を除外する
     const updatedCourseIds = existingCourseIds.filter(id => id !== courseId)
 
-    // 3. レーンを更新（講座を削除）
-    const updatedLanesResult = await executeGraphQLMutation<
-      Array<{ id: string }>
-    >(
+    // レーンを更新する
+    const updatedLanesResult = await executeGraphQLMutation<GraphQLLane[]>(
       {
         query: UPSERT_LANES,
         variables: {
@@ -90,20 +106,21 @@ export async function removeCourseFromLane(
     )
 
     if (!updatedLanesResult.success || !updatedLanesResult.data) {
+      // レーンの更新に失敗した場合
       const appError = createAppError(
-        new Error(updatedLanesResult.error || '不明なエラー'),
+        new Error(updatedLanesResult.error || UNKNOWN_ERROR_MESSAGE),
         ErrorCode.DATA_VALIDATION_ERROR
       )
-      logger.error('Failed to update lane', appError)
-      return errorResult(`レーンの更新に失敗しました: ${appError.getMessage()}`)
+      logger.error(appError.getMessage())
+      return errorResult(appError)
     }
 
     // キャッシュを再検証
     revalidatePath('/curriculum')
-    return successResult({ message: 'レーンから講座を削除しました' })
+    return successResult({})
   } catch (error) {
     const appError = createAppError(error, ErrorCode.DATA_VALIDATION_ERROR)
-    logger.error('Error removing course from lane', appError)
+    logger.error(appError.getMessage())
     return errorResult(appError)
   }
 }

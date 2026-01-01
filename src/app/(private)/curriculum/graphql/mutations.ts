@@ -18,7 +18,6 @@ export const UPSERT_COURSES = `
   mutation UpsertCourses($input: UpsertCoursesInput!) {
     upsertCourses(input: $input) {
       id
-      courseName
     }
   }
 `
@@ -29,7 +28,6 @@ export const UPSERT_LANES = `
       id
       courses {
         id
-        courseName
       }
     }
   }

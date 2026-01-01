@@ -1,10 +1,18 @@
 /**
+ * 講座詳細（教員情報）
+ */
+export interface CourseFormCourseDetail {
+  instructorId: string
+}
+
+/**
  * CourseModal で扱うフォーム値
  */
 export interface CourseFormValues {
+  courseId: string
   subjectId: string
   courseName: string
-  courseDetails: { instructorId: string }[]
+  courseDetails: CourseFormCourseDetail[]
 }
 
 /**
@@ -17,21 +25,29 @@ export interface CourseModalOptions {
 }
 
 /**
+ * CourseModal用の教科型
+ */
+export interface CourseModalDiscipline {
+  disciplineCode: string
+  disciplineName: string
+}
+
+/**
+ * CourseModal用の学年型
+ */
+export interface CourseModalGrade {
+  id: string
+  gradeName: string
+}
+
+/**
  * CourseModal用の科目型
  */
 export interface CourseModalSubject {
   id: string
   subjectName: string
-  credits?: number | null
-  discipline?: {
-    disciplineCode: string
-    disciplineName: string
-  }
-  grade?: {
-    id: string
-    gradeName: string
-    ttid?: string
-  } | null
+  discipline: CourseModalDiscipline | null
+  grade: CourseModalGrade | null
 }
 
 /**

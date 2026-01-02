@@ -167,10 +167,13 @@ export async function fetchCourseDetails(
 ): Promise<ActionResult<Course>> {
   try {
     // GraphQL型をジェネリクスに指定
-    const result = await executeGraphQLForServerAction<GraphQLCourse[]>({
-      query: FETCH_COURSE_DETAILS,
-      variables: { input: { id: courseId } },
-    }, 'courses')
+    const result = await executeGraphQLForServerAction<GraphQLCourse[]>(
+      {
+        query: FETCH_COURSE_DETAILS,
+        variables: { input: { id: courseId } },
+      },
+      'courses'
+    )
 
     if (!result.success || !result.data || result.data.length === 0) {
       const appError = createAppError(
@@ -326,6 +329,114 @@ return (
 3. **コードが簡潔**: `FormData`の構築が関数内で完結
 4. **パフォーマンス**: DOM要素の削減により、レンダリングとメモリ使用が改善
 5. **UIの応答性**: `startTransition`により、Server Actionの実行が非緊急の更新として扱われ、UIがブロックされない
+
+### 配列型のフォームデータの扱い方
+
+Server Actionで配列型のデータを受け取る場合、以下の2つのパターンを使用すること：
+
+#### パターン1: 単純な文字列配列（推奨）
+
+同じキーで複数の値を送信し、`formData.getAll()`で取得する。
+
+**クライアント側（送信）**:
+
+```typescript
+const formData = new FormData()
+courseDetailsValue.forEach(detail => {
+  if (detail.instructorId) {
+    formData.append('instructorIds', detail.instructorId)
+  }
+})
+```
+
+**Server Action側（受信）**:
+
+```typescript
+const instructorIds = Array.from(
+  new Set(
+    formData
+      .getAll('instructorIds')
+      .filter((value): value is string => typeof value === 'string')
+      .map(value => value.trim())
+      .filter(value => value.length > 0)
+  )
+)
+```
+
+#### パターン2: オブジェクトの配列
+
+オブジェクトの配列も、各フィールドを別々の配列として送信し、Server Action側でインデックスを使って再構築する。
+
+**クライアント側（送信）**:
+
+```typescript
+const handleSave = () => {
+  const formData = new FormData()
+  formData.append('homeroomName', homeroomNameValue)
+  formData.append('gradeId', gradeIdValue)
+  formData.append('id', homeroomIdValue)
+
+  homeroomDaysValue.forEach(day => {
+    formData.append('dayOfWeeks', day.dayOfWeek)
+    formData.append('periods', day.periods.toString())
+    formData.append('ids', day.id || '')
+  })
+
+  startTransition(() => {
+    saveAction(formData)
+  })
+}
+```
+
+**Server Action側（受信）**:
+
+```typescript
+const dayOfWeeks = formData
+  .getAll('dayOfWeeks')
+  .filter((value): value is string => typeof value === 'string')
+const periods = formData
+  .getAll('periods')
+  .filter((value): value is string => typeof value === 'string')
+const ids = formData
+  .getAll('ids')
+  .filter((value): value is string => typeof value === 'string')
+
+if (dayOfWeeks.length !== periods.length || dayOfWeeks.length !== ids.length) {
+  const appError = createAppError(
+    new Error('学級曜日データの配列長が一致しません'),
+    ErrorCode.DATA_PARSING_ERROR
+  )
+  logger.error(appError.getMessage())
+  return errorResult(appError)
+}
+
+const homeroomDays: HomeroomDayType[] = dayOfWeeks.map((dayOfWeek, index) => {
+  const periodsValue = periods[index]
+  const periodsNumber = parseInt(periodsValue, 10)
+  if (Number.isNaN(periodsNumber)) {
+    const appError = createAppError(
+      new Error(`Invalid periods value: ${periodsValue}`),
+      ErrorCode.DATA_PARSING_ERROR
+    )
+    logger.error(appError.getMessage())
+    throw appError
+  }
+
+  return {
+    id: ids[index] || '',
+    dayOfWeek,
+    periods: periodsNumber,
+  }
+})
+```
+
+#### 統一ルール
+
+- **`JSON.stringify()`は使用しない**: 型安全性とデバッグの容易さのため、各フィールドを個別に送信する
+- **パターン1を優先**: 単純な文字列配列の場合は`formData.append()`と`formData.getAll()`を使用
+- **パターン2も`getAll()`を使用**: オブジェクトの配列の場合も、各フィールドを別々の配列として送信し、`getAll()`で取得する。`formData.append()`で順番に追加すれば、`getAll()`でも同じ順序で取得できる
+- **配列長の検証**: パターン2では、各配列の長さが一致することを確認する
+- **型変換のエラーハンドリング**: 数値変換などが必要な場合は、適切なエラーハンドリングを実装する
 
 ## GraphQLクライアント
 

@@ -12,8 +12,8 @@ import { createAppError, ErrorCode, UNKNOWN_ERROR_MESSAGE } from '@/lib/errors'
 /**
  * 学級を作成するServer Action
  *
- * @param _prevState - 前回の状態（未使用）
- * @param formData - フォームデータ（id, homeroomName, homeroomDays, gradeId）
+ * @param _prevState - 前回の状態
+ * @param formData - フォームデータ
  * @returns 学級作成結果
  */
 export async function createHomeroom(
@@ -23,7 +23,6 @@ export async function createHomeroom(
   try {
     const id = formData.get('id') as string
     const homeroomName = formData.get('homeroomName') as string
-    const homeroomDaysData = formData.get('homeroomDays') as string
     const gradeId = formData.get('gradeId') as string
 
     if (!homeroomName?.trim()) {
@@ -34,19 +33,49 @@ export async function createHomeroom(
       return errorResult('学年を選択してください')
     }
 
-    let homeroomDays: HomeroomDayType[] = []
-    if (homeroomDaysData) {
-      try {
-        homeroomDays = JSON.parse(homeroomDaysData)
-      } catch (e) {
-        const appError = createAppError(
-          new Error('Invalid homeroomDays JSON'),
-          ErrorCode.DATA_PARSING_ERROR
-        )
-        logger.error('Invalid homeroomDays JSON', appError)
-        return errorResult('学級曜日データの形式が正しくありません')
-      }
+    // homeroomDaysを配列として取得
+    const dayOfWeeks = formData
+      .getAll('dayOfWeeks')
+      .filter((value): value is string => typeof value === 'string')
+    const periods = formData
+      .getAll('periods')
+      .filter((value): value is string => typeof value === 'string')
+    const ids = formData
+      .getAll('ids')
+      .filter((value): value is string => typeof value === 'string')
+
+    if (
+      dayOfWeeks.length !== periods.length ||
+      dayOfWeeks.length !== ids.length
+    ) {
+      const appError = createAppError(
+        new Error('学級曜日データの配列長が一致しません'),
+        ErrorCode.DATA_PARSING_ERROR
+      )
+      logger.error(appError.getMessage())
+      return errorResult(appError)
     }
+
+    const homeroomDays: HomeroomDayType[] = dayOfWeeks.map(
+      (dayOfWeek, index) => {
+        const periodsValue = periods[index]
+        const periodsNumber = parseInt(periodsValue, 10)
+        if (Number.isNaN(periodsNumber)) {
+          const appError = createAppError(
+            new Error(`Invalid periods value: ${periodsValue}`),
+            ErrorCode.DATA_PARSING_ERROR
+          )
+          logger.error(appError.getMessage())
+          throw appError
+        }
+
+        return {
+          id: ids[index] || '',
+          dayOfWeek,
+          periods: periodsNumber,
+        }
+      }
+    )
 
     const ttid = getDefaultTtid()
 

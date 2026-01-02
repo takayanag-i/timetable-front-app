@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, startTransition } from 'react'
 import Modal from '@/components/shared/Modal'
 import Input from '@/components/shared/Input'
 import type { Grade } from '@/app/(private)/curriculum/types'
@@ -119,11 +119,37 @@ export default function HomeroomModal({
     }
   }, [grades, gradeIdValue, setValue])
 
+  // 保存処理
+  const handleSave = () => {
+    if (savePending || !homeroomNameValue.trim() || !gradeIdValue.trim()) {
+      return
+    }
+
+    const formData = new FormData()
+    formData.append('id', homeroomIdValue)
+    formData.append('homeroomName', homeroomNameValue)
+    formData.append('gradeId', gradeIdValue)
+    homeroomDaysValue.forEach(day => {
+      formData.append('dayOfWeeks', day.dayOfWeek)
+      formData.append('periods', day.periods.toString())
+      formData.append('ids', day.id || '')
+    })
+
+    startTransition(() => {
+      saveAction(formData)
+    })
+  }
+
   // 削除確認処理
   const handleDeleteClick = () => {
     if (confirm('本当に削除しますか？')) {
-      const form = document.getElementById('deleteForm') as HTMLFormElement
-      form?.requestSubmit()
+      const formData = new FormData()
+      formData.append('id', homeroomIdValue)
+      formData.append('gradeId', gradeIdValue)
+
+      startTransition(() => {
+        deleteAction(formData)
+      })
     }
   }
 
@@ -245,51 +271,28 @@ export default function HomeroomModal({
       </table>
 
       <div className={styles.buttonGroup}>
-        {/* 保存フォーム */}
-        <form action={saveAction}>
-          <input
-            type="hidden"
-            name="homeroomName"
-            value={homeroomNameValue}
-            readOnly
-          />
-          <input type="hidden" name="gradeId" value={gradeIdValue} readOnly />
-          <input
-            type="hidden"
-            name="homeroomDays"
-            value={JSON.stringify(homeroomDaysValue)}
-            readOnly
-          />
-          <input
-            type="hidden"
-            {...register('id')}
-            value={homeroomIdValue}
-            readOnly
-          />
-          <input
-            type="submit"
-            value={savePending ? '保存中...' : '保存'}
-            className={styles.saveButton}
-            disabled={
-              savePending || !homeroomNameValue.trim() || !gradeIdValue.trim()
-            }
-          />
-        </form>
+        {/* 保存ボタン */}
+        <button
+          type="button"
+          onClick={handleSave}
+          className={styles.saveButton}
+          disabled={
+            savePending || !homeroomNameValue.trim() || !gradeIdValue.trim()
+          }
+        >
+          {savePending ? '保存中...' : '保存'}
+        </button>
 
-        {/* 削除フォーム（編集時のみ表示） */}
+        {/* 削除ボタン（編集時のみ表示） */}
         {initialValues.id && (
-          <form id="deleteForm" action={deleteAction}>
-            <input type="hidden" name="id" value={homeroomIdValue} />
-            <input type="hidden" name="gradeId" value={gradeIdValue} />
-            <button
-              type="button"
-              onClick={handleDeleteClick}
-              className={styles.deleteButton}
-              disabled={deletePending}
-            >
-              {deletePending ? '削除中...' : '削除'}
-            </button>
-          </form>
+          <button
+            type="button"
+            onClick={handleDeleteClick}
+            className={styles.deleteButton}
+            disabled={deletePending}
+          >
+            {deletePending ? '削除中...' : '削除'}
+          </button>
         )}
 
         <button

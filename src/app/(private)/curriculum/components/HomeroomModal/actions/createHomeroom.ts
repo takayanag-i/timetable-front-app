@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import type { ActionResult } from '@/types/server-action-types'
-import type { HomeroomDayType } from '../types'
+import type { UpsertHomeroomsInput } from '@/app/(private)/curriculum/graphql/types'
 import { errorResult, successResult } from '@/lib/action-helpers'
 import { executeGraphQLMutation, getDefaultTtid } from '@/lib/graphql-client'
 import { UPSERT_HOMEROOMS } from '@/app/(private)/curriculum/graphql/mutations'
@@ -21,7 +21,6 @@ export async function createHomeroom(
   formData: FormData
 ): Promise<ActionResult> {
   try {
-    const id = formData.get('id') as string
     const homeroomName = formData.get('homeroomName') as string
     const gradeId = formData.get('gradeId') as string
 
@@ -40,14 +39,9 @@ export async function createHomeroom(
     const periods = formData
       .getAll('periods')
       .filter((value): value is string => typeof value === 'string')
-    const ids = formData
-      .getAll('ids')
-      .filter((value): value is string => typeof value === 'string')
 
-    if (
-      dayOfWeeks.length !== periods.length ||
-      dayOfWeeks.length !== ids.length
-    ) {
+    if (dayOfWeeks.length !== periods.length) {
+      // 学級曜日データの配列長が一致しない場合
       const appError = createAppError(
         new Error('学級曜日データの配列長が一致しません'),
         ErrorCode.DATA_PARSING_ERROR
@@ -56,34 +50,39 @@ export async function createHomeroom(
       return errorResult(appError)
     }
 
-    const homeroomDays: HomeroomDayType[] = dayOfWeeks.map(
-      (dayOfWeek, index) => {
-        const periodsValue = periods[index]
-        const periodsNumber = parseInt(periodsValue, 10)
-        if (Number.isNaN(periodsNumber)) {
-          const appError = createAppError(
-            new Error(`Invalid periods value: ${periodsValue}`),
-            ErrorCode.DATA_PARSING_ERROR
-          )
-          logger.error(appError.getMessage())
-          throw appError
-        }
-
-        return {
-          id: ids[index] || '',
-          dayOfWeek,
-          periods: periodsNumber,
-        }
-      }
-    )
-
     const ttid = getDefaultTtid()
 
-    const sanitizedHomeroomDays = homeroomDays.map(day => ({
-      ...(day.id ? { id: day.id } : {}),
-      dayOfWeek: day.dayOfWeek,
-      periods: day.periods,
-    }))
+    const homeroomDays = dayOfWeeks.map((dayOfWeek, index) => {
+      // 時限をパース
+      const periodsValue = periods[index]
+      const periodsNumber = parseInt(periodsValue, 10)
+      if (Number.isNaN(periodsNumber)) {
+        // パースエラー
+        const appError = createAppError(
+          new Error(`Invalid periods value: ${periodsValue}`),
+          ErrorCode.DATA_PARSING_ERROR
+        )
+        logger.error(appError.getMessage())
+        throw appError
+      }
+
+      return {
+        dayOfWeek,
+        periods: periodsNumber,
+      }
+    })
+
+    const input: UpsertHomeroomsInput = {
+      ttid,
+      by: 'system',
+      homerooms: [
+        {
+          homeroomName,
+          homeroomDays,
+          gradeId,
+        },
+      ],
+    }
 
     const result = await executeGraphQLMutation<
       Array<{ homeroomName: string }>
@@ -91,18 +90,7 @@ export async function createHomeroom(
       {
         query: UPSERT_HOMEROOMS,
         variables: {
-          input: {
-            ttid,
-            by: 'system',
-            homerooms: [
-              {
-                ...(id && { id }),
-                homeroomName,
-                homeroomDays: sanitizedHomeroomDays,
-                gradeId,
-              },
-            ],
-          },
+          input,
         },
       },
       'upsertHomerooms'

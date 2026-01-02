@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import type { ActionResult } from '@/types/server-action-types'
-import type { HomeroomDayType } from '../types'
+import type { UpsertHomeroomsInput } from '@/app/(private)/curriculum/graphql/types'
 import { errorResult, successResult } from '@/lib/action-helpers'
 import { executeGraphQLMutation, getDefaultTtid } from '@/lib/graphql-client'
 import { UPSERT_HOMEROOMS } from '@/app/(private)/curriculum/graphql/mutations'
@@ -13,7 +13,7 @@ import { createAppError, ErrorCode, UNKNOWN_ERROR_MESSAGE } from '@/lib/errors'
  * 学級を更新するServer Action
  *
  * @param _prevState - 前回の状態（未使用）
- * @param formData - フォームデータ（id, homeroomName, homeroomDays, gradeId）
+ * @param formData - フォームデータ（homeroomId, homeroomName, homeroomDays, gradeId）
  * @returns 学級更新結果
  */
 export async function updateHomeroom(
@@ -21,11 +21,11 @@ export async function updateHomeroom(
   formData: FormData
 ): Promise<ActionResult> {
   try {
-    const id = formData.get('id') as string
+    const homeroomId = formData.get('homeroomId') as string
     const homeroomName = formData.get('homeroomName') as string
     const gradeId = formData.get('gradeId') as string
 
-    if (!id) {
+    if (!homeroomId) {
       return errorResult('学級IDが見つかりません')
     }
 
@@ -38,19 +38,19 @@ export async function updateHomeroom(
     }
 
     // homeroomDaysを配列として取得
+    const homeroomDayIds = formData
+      .getAll('homeroomDayIds')
+      .filter((value): value is string => typeof value === 'string')
     const dayOfWeeks = formData
       .getAll('dayOfWeeks')
       .filter((value): value is string => typeof value === 'string')
     const periods = formData
       .getAll('periods')
       .filter((value): value is string => typeof value === 'string')
-    const ids = formData
-      .getAll('ids')
-      .filter((value): value is string => typeof value === 'string')
 
     if (
-      dayOfWeeks.length !== periods.length ||
-      dayOfWeeks.length !== ids.length
+      homeroomDayIds.length !== dayOfWeeks.length ||
+      homeroomDayIds.length !== periods.length
     ) {
       const appError = createAppError(
         new Error('学級曜日データの配列長が一致しません'),
@@ -60,34 +60,41 @@ export async function updateHomeroom(
       return errorResult(appError)
     }
 
-    const homeroomDays: HomeroomDayType[] = dayOfWeeks.map(
-      (dayOfWeek, index) => {
-        const periodsValue = periods[index]
-        const periodsNumber = parseInt(periodsValue, 10)
-        if (Number.isNaN(periodsNumber)) {
-          const appError = createAppError(
-            new Error(`Invalid periods value: ${periodsValue}`),
-            ErrorCode.DATA_PARSING_ERROR
-          )
-          logger.error(appError.getMessage())
-          throw appError
-        }
-
-        return {
-          id: ids[index] || '',
-          dayOfWeek,
-          periods: periodsNumber,
-        }
-      }
-    )
-
     const ttid = getDefaultTtid()
 
-    const sanitizedHomeroomDays = homeroomDays.map(day => ({
-      ...(day.id ? { id: day.id } : {}),
-      dayOfWeek: day.dayOfWeek,
-      periods: day.periods,
-    }))
+    // GraphQL mutation用のhomeroomDaysを構築（空文字列のidは除外）
+    const homeroomDays = homeroomDayIds.map((homeroomDayId, index) => {
+      const dayOfWeek = dayOfWeeks[index]
+      const periodsValue = periods[index]
+      const periodsNumber = parseInt(periodsValue, 10)
+      if (Number.isNaN(periodsNumber)) {
+        const appError = createAppError(
+          new Error(`Invalid periods value: ${periodsValue}`),
+          ErrorCode.DATA_PARSING_ERROR
+        )
+        logger.error(appError.getMessage())
+        throw appError
+      }
+
+      return {
+        ...(homeroomDayId ? { id: homeroomDayId } : {}),
+        dayOfWeek,
+        periods: periodsNumber,
+      }
+    })
+
+    const input: UpsertHomeroomsInput = {
+      ttid,
+      by: 'system',
+      homerooms: [
+        {
+          id: homeroomId,
+          homeroomName,
+          homeroomDays,
+          gradeId,
+        },
+      ],
+    }
 
     const result = await executeGraphQLMutation<
       Array<{ homeroomName: string }>
@@ -95,18 +102,7 @@ export async function updateHomeroom(
       {
         query: UPSERT_HOMEROOMS,
         variables: {
-          input: {
-            ttid,
-            by: 'system',
-            homerooms: [
-              {
-                id,
-                homeroomName,
-                homeroomDays: sanitizedHomeroomDays,
-                gradeId,
-              },
-            ],
-          },
+          input,
         },
       },
       'upsertHomerooms'

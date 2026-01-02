@@ -12,7 +12,7 @@ import { createAppError, ErrorCode, UNKNOWN_ERROR_MESSAGE } from '@/lib/errors'
  * 学級を削除するServer Action
  *
  * @param _prevState - 前回の状態（未使用）
- * @param formData - フォームデータ（id）
+ * @param formData - フォームデータ（homeroomId）
  * @returns 学級削除結果
  */
 export async function deleteHomeroom(
@@ -20,9 +20,9 @@ export async function deleteHomeroom(
   formData: FormData
 ): Promise<ActionResult> {
   try {
-    const id = formData.get('id') as string
+    const homeroomId = formData.get('homeroomId') as string
 
-    if (!id) {
+    if (!homeroomId) {
       return errorResult('学級IDが見つかりません')
     }
 
@@ -30,7 +30,7 @@ export async function deleteHomeroom(
       {
         query: DELETE_HOMEROOM,
         variables: {
-          id,
+          id: homeroomId,
         },
       },
       'deleteHomeroom'

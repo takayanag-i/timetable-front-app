@@ -126,13 +126,13 @@ export default function HomeroomModal({
     }
 
     const formData = new FormData()
-    formData.append('id', homeroomIdValue)
+    formData.append('homeroomId', homeroomIdValue)
     formData.append('homeroomName', homeroomNameValue)
     formData.append('gradeId', gradeIdValue)
     homeroomDaysValue.forEach(day => {
       formData.append('dayOfWeeks', day.dayOfWeek)
       formData.append('periods', day.periods.toString())
-      formData.append('ids', day.id || '')
+      formData.append('homeroomDayIds', day.id || '')
     })
 
     startTransition(() => {
@@ -144,7 +144,7 @@ export default function HomeroomModal({
   const handleDeleteClick = () => {
     if (confirm('本当に削除しますか？')) {
       const formData = new FormData()
-      formData.append('id', homeroomIdValue)
+      formData.append('homeroomId', homeroomIdValue)
       formData.append('gradeId', gradeIdValue)
 
       startTransition(() => {

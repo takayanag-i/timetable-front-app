@@ -41,7 +41,7 @@ import type {
 } from '@/app/(private)/curriculum/components/HomeroomEntry/types'
 import type { HomeroomFormValues } from '@/app/(private)/curriculum/components/HomeroomModal/types'
 import { ActionResult } from '@/types/server-action-types'
-import { defaultHomeroomDays } from '@/app/(private)/curriculum/components/HomeroomModal/hooks/useHomeroomModal'
+import { createDefaultHomeroomDays } from '@/app/(private)/curriculum/components/HomeroomModal/utils'
 import ValidationErrorAlert from '@/app/(private)/curriculum/components/ValidationErrorAlert'
 import {
   validateHomeroomCredits,
@@ -160,8 +160,25 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
     }
   }, [blockModalContext])
 
+  // 学校曜日からデフォルト学級曜日を生成
+  const defaultHomeroomDaysFromSchoolDays = useMemo(() => {
+    if (
+      fetchedSchoolDaysResult?.success &&
+      fetchedSchoolDaysResult.data
+    ) {
+      return createDefaultHomeroomDays(fetchedSchoolDaysResult.data)
+    }
+    // 学校曜日が取得できていない場合はnullを返す（エラー状態）
+    return null
+  }, [fetchedSchoolDaysResult])
+
   // 学級モーダルの初期値を計算
-  const homeroomModalInitialValues = useMemo<HomeroomFormValues>(() => {
+  const homeroomModalInitialValues = useMemo<HomeroomFormValues | null>(() => {
+    // 学校曜日が取得できていない場合はnullを返す（エラー状態）
+    if (defaultHomeroomDaysFromSchoolDays === null) {
+      return null
+    }
+
     if (homeroomModalData) {
       return {
         id: homeroomModalData.id ?? '',
@@ -170,7 +187,7 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
           homeroomModalData.homeroomDays &&
           homeroomModalData.homeroomDays.length
             ? homeroomModalData.homeroomDays
-            : defaultHomeroomDays,
+            : defaultHomeroomDaysFromSchoolDays,
         gradeId: homeroomModalData.gradeId ?? '',
       }
     }
@@ -178,10 +195,10 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
     return {
       id: '',
       homeroomName: '',
-      homeroomDays: defaultHomeroomDays,
+      homeroomDays: defaultHomeroomDaysFromSchoolDays,
       gradeId: '',
     }
-  }, [homeroomModalData])
+  }, [homeroomModalData, defaultHomeroomDaysFromSchoolDays])
 
   useEffect(() => {
     if (!selectedGradeId) {
@@ -233,8 +250,17 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
       )
     } else if (fetchedSchoolDaysResult?.success === false) {
       alert(`エラー: ${fetchedSchoolDaysResult.error}`)
+      // エラー時はモーダルを閉じる
+      closeModal()
     }
-  }, [fetchedSchoolDaysResult, openCreateModalWithSchoolDays, selectedGradeId])
+  }, [fetchedSchoolDaysResult, openCreateModalWithSchoolDays, selectedGradeId, closeModal])
+
+  // 学校曜日が取得できていない場合はモーダルを閉じる
+  useEffect(() => {
+    if (isOpen && defaultHomeroomDaysFromSchoolDays === null) {
+      closeModal()
+    }
+  }, [isOpen, defaultHomeroomDaysFromSchoolDays, closeModal])
 
   // 講座フォームデータ取得が成功したら講座モーダルを開く
   useEffect(() => {
@@ -470,19 +496,22 @@ export default function CurriculumUi({ homerooms, grades }: CurriculumUiProps) {
         </div>
       </div>
 
-      <HomeroomModal
-        key={homeroomModalData?.id || 'new'}
-        isOpen={isOpen}
-        title={
-          homeroomModalData?.id
-            ? `${homeroomModalData.homeroomName}を編集`
-            : '学級を追加しましょう！'
-        }
-        initialValues={homeroomModalInitialValues}
-        grades={grades}
-        onSuccess={closeModal}
-        onClose={closeModal}
-      />
+      {homeroomModalInitialValues && (
+        <HomeroomModal
+          key={homeroomModalData?.id || 'new'}
+          isOpen={isOpen}
+          mode={homeroomModalData?.id ? 'edit' : 'create'}
+          title={
+            homeroomModalData?.id
+              ? `${homeroomModalData.homeroomName}を編集`
+              : '学級を追加しましょう！'
+          }
+          initialValues={homeroomModalInitialValues}
+          grades={grades}
+          onSuccess={closeModal}
+          onClose={closeModal}
+        />
+      )}
 
       {/* 講座モーダル */}
       <CourseModal

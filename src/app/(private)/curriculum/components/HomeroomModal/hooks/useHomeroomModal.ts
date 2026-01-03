@@ -1,34 +1,44 @@
 import { useState, useEffect, useActionState, useRef, useCallback } from 'react'
-import type { HomeroomDayType, HomeroomFormValues } from '../types'
-import { createHomeroom, deleteHomeroom } from '../actions'
+import { createHomeroom, updateHomeroom, deleteHomeroom } from '../actions'
 import type { ActionResult } from '@/types/server-action-types'
 
-export const defaultHomeroomDays: HomeroomDayType[] = [
-  { id: 'mon', dayOfWeek: 'mon', periods: 0 },
-  { id: 'tue', dayOfWeek: 'tue', periods: 0 },
-  { id: 'wed', dayOfWeek: 'wed', periods: 0 },
-  { id: 'thu', dayOfWeek: 'thu', periods: 0 },
-  { id: 'fri', dayOfWeek: 'fri', periods: 0 },
-]
-
 interface UseHomeroomModalArgs {
-  initialValues: HomeroomFormValues
+  mode: 'create' | 'edit'
+  homeroomId: string
 }
 
-export function useHomeroomModal({ initialValues }: UseHomeroomModalArgs) {
+export function useHomeroomModal({ mode, homeroomId }: UseHomeroomModalArgs) {
+  // エラーメッセージ
   const [error, setError] = useState<string | null>(null)
+  
+  // エラーをクリアする
+  const clearError = useCallback(() => {
+    setError(null)
+  }, [])
 
-  const prevIdRef = useRef<string>(initialValues.id)
+  // 前回の値を保持する
+  const prevHomeroomIdRef = useRef<string>(homeroomId)
+  const prevModeRef = useRef<'create' | 'edit'>(mode)
 
+  // 現在の値が前回の値と変わっていたら、エラーをクリア
   useEffect(() => {
-    if (prevIdRef.current !== initialValues.id) {
-      setError(null)
-      prevIdRef.current = initialValues.id
+    if (
+      prevHomeroomIdRef.current !== homeroomId ||
+      prevModeRef.current !== mode
+    ) {
+      clearError()
+      prevHomeroomIdRef.current = homeroomId
+      prevModeRef.current = mode
     }
-  }, [initialValues.id])
+  }, [homeroomId, mode, clearError])
 
-  const [saveResult, saveAction, savePending] = useActionState(
+  // Server Action
+  const [createResult, createAction, createPending] = useActionState(
     createHomeroom,
+    null as ActionResult | null
+  )
+  const [updateResult, updateAction, updatePending] = useActionState(
+    updateHomeroom,
     null as ActionResult | null
   )
   const [deleteResult, deleteAction, deletePending] = useActionState(
@@ -36,29 +46,39 @@ export function useHomeroomModal({ initialValues }: UseHomeroomModalArgs) {
     null as ActionResult | null
   )
 
-  // 保存結果を監視してエラーを表示
+  // 保存（作成または更新）結果を監視してエラーを表示
   useEffect(() => {
-    if (saveResult?.success === false) {
-      setError(saveResult.error || '学級の保存に失敗しました')
-    }
-  }, [saveResult])
+    const result = mode === 'create' ? createResult : updateResult
 
+    if (result?.success === false) {
+      const defaultMessage =
+        mode === 'create'
+          ? '学級の作成に失敗しました'
+          : '学級の更新に失敗しました'
+      setError(
+        result.errorCode ? defaultMessage : result.error || defaultMessage
+      )
+    }
+  }, [createResult, updateResult, mode])
+
+  // 削除結果を監視してエラーを表示
   useEffect(() => {
     if (deleteResult?.success === false) {
-      setError(deleteResult.error || '学級の削除に失敗しました')
+      const defaultMessage = '学級の削除に失敗しました'
+      setError(
+        deleteResult.errorCode
+          ? defaultMessage
+          : deleteResult.error || defaultMessage
+      )
     }
   }, [deleteResult])
-
-  const clearError = useCallback(() => {
-    setError(null)
-  }, [])
 
   return {
     error,
     clearError,
-    saveAction,
-    savePending,
-    saveResult,
+    saveAction: mode === 'create' ? createAction : updateAction,
+    savePending: mode === 'create' ? createPending : updatePending,
+    saveResult: mode === 'create' ? createResult : updateResult,
     deleteAction,
     deletePending,
     deleteResult,

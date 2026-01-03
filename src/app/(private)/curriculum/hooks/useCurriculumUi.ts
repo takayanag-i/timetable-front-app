@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import { useModal } from '@/components/shared/Modal'
 import type { HomeroomModalData } from '@/app/(private)/curriculum/components/HomeroomModal/types'
 import type { SchoolDay } from '@/app/(private)/curriculum/types'
+import { createDefaultHomeroomDays } from '@/app/(private)/curriculum/components/HomeroomModal/utils'
 
 /**
  * カリキュラム設定画面のホームルームモーダル状態を管理するカスタムフック
@@ -21,14 +22,11 @@ export function useCurriculumUi() {
    */
   const openCreateModalWithSchoolDays = useCallback(
     (schoolDays: SchoolDay[], defaultGradeId: string | null = null) => {
-      // 利用可能な学校曜日のみを抽出してHomeroomDay配列を生成
-      const homeroomDays = schoolDays
-        .filter(day => day.isAvailable)
-        .map(day => ({
-          id: '',
-          dayOfWeek: day.dayOfWeek,
-          periods: day.amPeriods + day.pmPeriods,
-        }))
+      // 学校曜日から学級曜日のデフォルト値を生成（新規作成時はidを空文字列にする）
+      const homeroomDays = createDefaultHomeroomDays(schoolDays).map(day => ({
+        ...day,
+        id: '',
+      }))
 
       setHomeroomModalData({
         id: null,

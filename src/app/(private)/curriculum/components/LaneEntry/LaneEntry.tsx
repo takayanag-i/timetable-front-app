@@ -7,9 +7,7 @@ import type {
   OnEditCourseData,
 } from '@/app/(private)/curriculum/components/HomeroomEntry/types'
 
-/**
- * LaneEntry コンポーネントのProps
- */
+
 interface LaneEntryProps {
   id: string
   blockId: string

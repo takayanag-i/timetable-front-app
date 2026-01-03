@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import type { ActionResult } from '@/types/server-action-types'
+import type { GraphQLHomeroom } from '@/types/graphql-types'
 import type { UpsertHomeroomsInput } from '@/app/(private)/curriculum/graphql/types'
 import { errorResult, successResult } from '@/lib/action-helpers'
 import { executeGraphQLMutation, getDefaultTtid } from '@/lib/graphql-client'
@@ -84,9 +85,7 @@ export async function createHomeroom(
       ],
     }
 
-    const result = await executeGraphQLMutation<
-      Array<{ homeroomName: string }>
-    >(
+    const result = await executeGraphQLMutation<GraphQLHomeroom[]>(
       {
         query: UPSERT_HOMEROOMS,
         variables: {

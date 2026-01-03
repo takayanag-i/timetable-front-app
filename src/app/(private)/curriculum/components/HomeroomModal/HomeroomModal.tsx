@@ -9,44 +9,30 @@ import styles from './HomeroomModal.module.css'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { DAY_OF_WEEK_MAP } from '@/constants'
 
-// 後方互換性のためのエイリアス
-const dayOfWeekMap = DAY_OF_WEEK_MAP
 
-/**
- * HomeroomModal コンポーネントのProps
- */
 interface HomeroomModalProps {
-  /** モーダルの表示状態 */
   isOpen: boolean
-  /** モーダルのタイトル */
+  mode: 'create' | 'edit'
   title: string
-  /** フォームの初期値 */
   initialValues: HomeroomFormValues
-  /** 学年の選択肢 */
   grades: Grade[]
-  /** 処理成功時のコールバック */
   onSuccess: () => void
-  /** モーダルを閉じる際に呼び出されるコールバック */
   onClose: () => void
 }
 
 /**
  * 学級モーダル
- *
- * @param props.isOpen - モーダルの表示状態
- * @param props.title - モーダルのタイトル
- * @param props.initialValues - フォームの初期値
- * @param props.onSuccess - 処理成功時のコールバック
- * @param props.onClose - モーダルを閉じる際のコールバック
  */
 export default function HomeroomModal({
   isOpen,
+  mode,
   title,
   initialValues,
   grades,
   onSuccess,
   onClose,
 }: HomeroomModalProps) {
+  // カスタムフック
   const {
     error,
     clearError,
@@ -57,21 +43,37 @@ export default function HomeroomModal({
     deletePending,
     deleteResult,
   } = useHomeroomModal({
-    initialValues,
+    mode,
+    homeroomId: initialValues.id,
   })
 
+  // RHFのフック
   const {
     control,
     register,
     reset,
     watch,
+    getValues,
     setValue,
+    trigger,
     formState: { errors },
   } = useForm<HomeroomFormValues>({
     defaultValues: initialValues,
     mode: 'onChange',
   })
 
+  const homeroomNameRegister = register('homeroomName', {
+    // 必須チェック
+    validate: value =>
+      value.trim().length > 0 || '学級名を入力してください',
+  })
+  const gradeIdRegister = register('gradeId', {
+    // 必須チェック
+    validate: value =>
+      value.trim().length > 0 || '学年を選択してください',
+  })
+
+  // 配列項目のフック
   const { fields, replace } = useFieldArray({
     control,
     name: 'homeroomDays',
@@ -86,32 +88,57 @@ export default function HomeroomModal({
     }
   }, [isOpen, reset, replace, initialValues, clearError])
 
-  // 成功時の処理
+  // 前回の保存結果を保持
   const prevSaveResultRef = useRef<typeof saveResult>(null)
+
+  // 保存成功時の処理
   useEffect(() => {
     if (saveResult?.success && saveResult !== prevSaveResultRef.current) {
-      reset(initialValues)
-      clearError()
+      // コールバックを呼び出し
       onSuccess()
+
+      // リセット
+      const resetValues: HomeroomFormValues = {
+        ...initialValues,
+        homeroomName: initialValues.id ? initialValues.homeroomName : '',
+        gradeId: initialValues.id ? initialValues.gradeId : '',
+      }
+      reset(resetValues)
+
+      // エラークリア
+      clearError()
     }
     prevSaveResultRef.current = saveResult
-  }, [saveResult, reset, initialValues, clearError, onSuccess])
+  }, [saveResult, initialValues, onSuccess, reset, clearError])
+
+  // 前回の削除結果を保持
+  const prevDeleteResultRef = useRef<typeof deleteResult>(null)
 
   // 削除成功時の処理
-  const prevDeleteResultRef = useRef<typeof deleteResult>(null)
   useEffect(() => {
     if (deleteResult?.success && deleteResult !== prevDeleteResultRef.current) {
-      reset(initialValues)
-      clearError()
+      // コールバックを呼び出し
       onSuccess()
+
+      // リセット
+      reset(initialValues)
+
+      // エラークリア
+      clearError()
     }
     prevDeleteResultRef.current = deleteResult
-  }, [deleteResult, reset, initialValues, clearError, onSuccess])
+  }, [clearError, initialValues, deleteResult, onSuccess, reset])
 
+  // モーダルを閉じるときの処理
+  const handleClose = () => {
+    reset(initialValues)
+    clearError()
+    onClose()
+  }
+
+  // フォームの値を監視
   const homeroomNameValue = watch('homeroomName') ?? ''
   const gradeIdValue = watch('gradeId') ?? ''
-  const homeroomDaysValue = watch('homeroomDays')
-  const homeroomIdValue = watch('id') ?? ''
 
   useEffect(() => {
     if (grades.length === 1 && !gradeIdValue) {
@@ -119,45 +146,55 @@ export default function HomeroomModal({
     }
   }, [grades, gradeIdValue, setValue])
 
-  // 保存処理
-  const handleSave = () => {
-    if (savePending || !homeroomNameValue.trim() || !gradeIdValue.trim()) {
-      return
-    }
+  // 保存ボタンの無効化条件
+  const isSaveDisabled =
+    savePending ||
+    !!errors.homeroomName ||
+    !!errors.gradeId
 
+  // 保存処理
+  const handleSave = async () => {
+    const isValid = await trigger()
+    if (!isValid) return
+
+    // FormDataを作成
+    const values = getValues()
     const formData = new FormData()
-    formData.append('homeroomId', homeroomIdValue)
-    formData.append('homeroomName', homeroomNameValue)
+    formData.append('homeroomId', values.id)
+    formData.append('homeroomName', homeroomNameValue.trim())
     formData.append('gradeId', gradeIdValue)
-    homeroomDaysValue.forEach(day => {
+    values.homeroomDays.forEach(day => {
       formData.append('dayOfWeeks', day.dayOfWeek)
       formData.append('periods', day.periods.toString())
       formData.append('homeroomDayIds', day.id || '')
     })
 
+    // Server Actionを実行
     startTransition(() => {
       saveAction(formData)
     })
   }
 
-  // 削除確認処理
-  const handleDeleteClick = () => {
-    if (confirm('本当に削除しますか？')) {
-      const formData = new FormData()
-      formData.append('homeroomId', homeroomIdValue)
-      formData.append('gradeId', gradeIdValue)
-
-      startTransition(() => {
-        deleteAction(formData)
-      })
+  // 削除処理
+  const handleDelete = () => {
+    if (
+      !window.confirm(
+        'この学級を削除すると、学級内のブロックや講座も削除されます。本当に削除しますか？'
+      )
+    ) {
+      return
     }
-  }
 
-  // 閉じる際は状態を初期化
-  const handleClose = () => {
-    reset(initialValues)
-    clearError()
-    onClose()
+    // FormDataを作成
+    const values = getValues()
+    const formData = new FormData()
+    formData.append('homeroomId', values.id)
+    formData.append('gradeId', gradeIdValue)
+
+    // Server Actionを実行
+    startTransition(() => {
+      deleteAction(formData)
+    })
   }
 
   return (
@@ -179,10 +216,7 @@ export default function HomeroomModal({
         id="homeroomName"
         label="学級名"
         placeholder="学級名を入力"
-        {...register('homeroomName', {
-          validate: value =>
-            value.trim().length > 0 || '学級名を入力してください',
-        })}
+        {...homeroomNameRegister}
         aria-invalid={errors.homeroomName ? 'true' : 'false'}
       />
       {errors.homeroomName && (
@@ -197,10 +231,7 @@ export default function HomeroomModal({
           id="gradeId"
           className={styles.select}
           disabled={grades.length === 0}
-          {...register('gradeId', {
-            validate: value =>
-              value.trim().length > 0 || '学年を選択してください',
-          })}
+          {...gradeIdRegister}
           aria-invalid={errors.gradeId ? 'true' : 'false'}
         >
           <option value="">学年を選択</option>
@@ -227,7 +258,7 @@ export default function HomeroomModal({
           {fields.map((field, index) => (
             <tr key={field.id ?? field.dayOfWeek}>
               <td style={{ textAlign: 'center', padding: '8px' }}>
-                {dayOfWeekMap[field.dayOfWeek] || field.dayOfWeek}
+                {DAY_OF_WEEK_MAP[field.dayOfWeek] || field.dayOfWeek}
               </td>
               <td style={{ textAlign: 'center', padding: '8px' }}>
                 <input
@@ -276,9 +307,7 @@ export default function HomeroomModal({
           type="button"
           onClick={handleSave}
           className={styles.saveButton}
-          disabled={
-            savePending || !homeroomNameValue.trim() || !gradeIdValue.trim()
-          }
+          disabled={isSaveDisabled}
         >
           {savePending ? '保存中...' : '保存'}
         </button>
@@ -287,7 +316,7 @@ export default function HomeroomModal({
         {initialValues.id && (
           <button
             type="button"
-            onClick={handleDeleteClick}
+            onClick={handleDelete}
             className={styles.deleteButton}
             disabled={deletePending}
           >
